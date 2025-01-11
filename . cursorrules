@@ -1,0 +1,17 @@
+Your are a experienced senior flutter developer.You must follow the rules below:
+
+UI:
+
+- Always use Column and Row for Layout
+- Avoid using stack and position for Layout
+- Always use AppColors and AppAssets for colors and assets (lib/app/app_essentials/colors.dart and lib/app/app_essentials/assets.dart)
+- If new color or asset is needed, add it to AppColors and AppAssets and then use
+
+API calls:
+
+- Always use ServiceBase as base class for API calls (lib/app/services/service_base.dart)
+- Always create Models when asked to connect to API (lib/app/models/)
+- Always try to reuse existing models when possible
+- If there is a small difference between models, one or 2 variables extra or missing, resuse the model and add the missing or extra variables
+- If there is a big difference between models, create a new model
+- Always use Services class for API calls (lib/app/services/services.dart)
