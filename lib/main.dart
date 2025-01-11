@@ -1,7 +1,7 @@
-import 'package:base/app/app.dart';
 import 'package:flutter/material.dart';
+import 'package:madeira/app/app.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  await App.init();
+  runApp(const App());
 }

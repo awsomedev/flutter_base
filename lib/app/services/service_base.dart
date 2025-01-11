@@ -16,7 +16,9 @@ class ServiceBase {
   String get baseUrl => _baseUrl;
 
   // Get stored auth token
-  String? get authToken => _prefs.getString('auth_token');
+  String? get authToken =>
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM2NjgyODU2LCJpYXQiOjE3MzY1OTY0NTYsImp0aSI6ImU3MzFiZTk3NWQwMjQ1ZDU5OTEzNzVjNDE2Y2IzNmZhIiwidXNlcl9pZCI6M30.9n38EsXVo9nlYaie9aZ14yX-oJpxdWXcx01d4Fy80TQ';
+  // String? get authToken => _prefs.getString('auth_token');
 
   // Get stored user ID
   String? get userId => _prefs.getString('user_id');
@@ -146,5 +148,10 @@ class ServiceBase {
   Future<void> clearAuth() async {
     await _prefs.remove('auth_token');
     await _prefs.remove('user_id');
+  }
+
+  static Future<bool> isLoggedIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token') != null;
   }
 }

@@ -1,18 +1,24 @@
-import 'package:base/app/pages/splash_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:madeira/app/services/services.dart';
+import 'package:madeira/app/pages/login_page.dart';
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class App extends StatelessWidget {
+  const App({super.key});
+
+  static Future<void> init() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Services.init();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter',
+      title: 'Your App Name',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      home: const SplashScreen(),
+      home: const LoginPage(),
     );
   }
 }

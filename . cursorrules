@@ -9,9 +9,14 @@ UI:
 
 API calls:
 
+- Donot create new classes for Api calls use Services (lib/app/services/services.dart) for all api calls
 - Always use ServiceBase as base class for API calls (lib/app/services/service_base.dart)
-- Always create Models when asked to connect to API (lib/app/models/)
+- Always create Models when asked to connect to API (lib/app/models/) always create model with nullable variables
 - Always try to reuse existing models when possible
 - If there is a small difference between models, one or 2 variables extra or missing, resuse the model and add the missing or extra variables
 - If there is a big difference between models, create a new model
 - Always use Services class for API calls (lib/app/services/services.dart)
+
+Utils:
+
+- Any utillty function check if extension is already available in (lib/app/extensions/) if not then create a new extension
