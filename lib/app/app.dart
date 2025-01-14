@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:madeira/app/pages/splash_screen.dart';
 import 'package:madeira/app/services/services.dart';
-import 'package:madeira/app/pages/login_page.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -18,7 +18,7 @@ class App extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      home: const LoginPage(),
+      home: const SplashScreen(),
     );
   }
 }

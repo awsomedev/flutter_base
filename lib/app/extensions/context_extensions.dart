@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 extension ContextExtensions on BuildContext {
   // Push a new route
-  Future<T?> push<T>(Widget page) {
+  Future<T?> push<T>(Widget Function() page) {
     return Navigator.push<T>(
       this,
-      MaterialPageRoute(builder: (context) => page),
+      MaterialPageRoute(builder: (context) => page()),
     );
   }
 
@@ -15,25 +15,25 @@ extension ContextExtensions on BuildContext {
   }
 
   // Push replacement
-  Future<T?> pushReplacement<T, TO>(Widget page) {
+  Future<T?> pushReplacement<T, TO>(Widget Function() page) {
     return Navigator.pushReplacement<T, TO>(
       this,
-      MaterialPageRoute(builder: (context) => page),
+      MaterialPageRoute(builder: (context) => page()),
     );
   }
 
   // Push and remove until
   Future<T?> pushAndRemoveUntil<T>(
-      Widget page, bool Function(Route) predicate) {
+      Widget Function() page, bool Function(Route) predicate) {
     return Navigator.pushAndRemoveUntil<T>(
       this,
-      MaterialPageRoute(builder: (context) => page),
+      MaterialPageRoute(builder: (context) => page()),
       predicate,
     );
   }
 
   // Replace all routes with a new one
-  Future<T?> pushAndRemoveAll<T>(Widget page) {
+  Future<T?> pushAndRemoveAll<T>(Widget Function() page) {
     return pushAndRemoveUntil<T>(page, (route) => false);
   }
 

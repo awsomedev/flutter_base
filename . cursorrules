@@ -2,10 +2,13 @@ Your are a experienced senior flutter developer.You must follow the rules below:
 
 UI:
 
+- Create sleek ui apple recomended way
 - Always use Column and Row for Layout
 - Avoid using stack and position for Layout
 - Always use AppColors and AppAssets for colors and assets (lib/app/app_essentials/colors.dart and lib/app/app_essentials/assets.dart)
 - If new color or asset is needed, add it to AppColors and AppAssets and then use
+- Always try to create resusable component and widgets (Function returning widget should not be created) inside lib/app/widgets/
+- Dont use Get(Getx) function in UI
 
 API calls:
 
