@@ -23,7 +23,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final response = await Services().login(
+      await Services().login(
         phone: _phoneController.text,
         password: _passwordController.text,
       );

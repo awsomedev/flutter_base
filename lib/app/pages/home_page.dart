@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:madeira/app/extensions/context_extensions.dart';
+import 'package:madeira/app/pages/enquiry/enquiry_page.dart';
 import 'package:madeira/app/pages/inventory/category_list_page.dart';
 import 'package:madeira/app/pages/process/process_list_page.dart';
 import 'package:madeira/app/pages/users/user_list_page.dart';
-import 'inventory/inventory.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -32,6 +32,8 @@ class _HomePageState extends State<HomePage> {
       case 'Process':
         context.push(() => const ProcessListPage());
         break;
+      case 'Enquiry':
+        context.push(() => const EnquiryPage());
     }
   }
 

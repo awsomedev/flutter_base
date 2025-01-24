@@ -6,7 +6,7 @@ enum HttpMethod { get, post, put, delete, patch }
 
 class ServiceBase {
   static const String _baseUrl =
-      'http://35.154.110.144:8000/api/'; // Update with your actual base URL
+      'http://13.233.147.131:8000/api/'; // Update with your actual base URL
   static const Duration _timeout = Duration(seconds: 30);
 
   ServiceBase(this._prefs);
@@ -17,7 +17,7 @@ class ServiceBase {
 
   // Get stored auth token
   String? get authToken =>
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM2OTQ5NDg4LCJpYXQiOjE3MzY4NjMwODgsImp0aSI6ImE0N2YwYTdkY2U5YjQ1OGU4ODU4OTAyMmUwMWI4NjhiIiwidXNlcl9pZCI6M30.gS9OF5Hl8Iu-4LUJlj_Vng4eDt40DZ-6-kng-YGX5mU';
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjo0ODkwNzc1NTc3LCJpYXQiOjE3MzcxNzU1NzcsImp0aSI6IjRmNThkZDUxYjVlZDQ4OWQ5YWFjODNjZTM2NWM1MTc4IiwidXNlcl9pZCI6MX0.hJJY5fY1gUN1PbW2Z5-tXf4CdnqTV_btZogojn0SsTw';
   // String? get authToken => _prefs.getString('auth_token');
 
   // Get stored user ID
@@ -72,13 +72,11 @@ class ServiceBase {
       }
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        print("JSON: " + response.body);
         if (fromJson != null) {
           return fromJson(jsonDecode(response.body));
         }
         return jsonDecode(response.body) as T;
       } else {
-        print(response.statusCode);
         throw Exception(
           'Request failed with status: ${response.statusCode}\n${response.body}',
         );
@@ -156,6 +154,6 @@ class ServiceBase {
   static Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     return true;
-    return prefs.getString('auth_token') != null;
+    // return prefs.getString('auth_token') != null;
   }
 }

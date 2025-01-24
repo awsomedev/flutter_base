@@ -1,3 +1,4 @@
+import 'package:madeira/app/models/enquiry_model.dart';
 import 'package:madeira/app/models/login_model.dart';
 import 'package:madeira/app/models/category_model.dart';
 import 'package:madeira/app/models/material_model.dart';
@@ -170,5 +171,31 @@ class Services extends ServiceBase {
     await delete(
       endpoint: 'processes/$id/delete/',
     );
+  }
+
+  Future<List<Enquiry>> getEnquiries() async {
+    final response = await get(
+      endpoint: 'orders/status/enquiry/',
+    );
+
+    if (response is List) {
+      return response.map((json) => Enquiry.fromJson(json)).toList();
+    }
+    throw Exception('Invalid response format');
+  }
+
+  Future<Map<String, dynamic>> getEnquiryCreationData() async {
+    final response = await get(
+      endpoint: 'orders/creation-data/',
+    );
+    return response;
+  }
+
+  Future<Enquiry> createEnquiry(Map<String, dynamic> data) async {
+    final response = await post(
+      endpoint: 'orders/create/',
+      body: data,
+    );
+    return Enquiry.fromJson(response);
   }
 }
