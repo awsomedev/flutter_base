@@ -6,7 +6,7 @@ enum HttpMethod { get, post, put, delete, patch }
 
 class ServiceBase {
   static const String _baseUrl =
-      'http://13.233.147.131:8000/api/'; // Update with your actual base URL
+      'http://13.232.166.23:8000/api/'; // Update with your actual base URL
   static const Duration _timeout = Duration(seconds: 30);
 
   ServiceBase(this._prefs);

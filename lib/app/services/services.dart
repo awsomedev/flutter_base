@@ -198,4 +198,22 @@ class Services extends ServiceBase {
     );
     return Enquiry.fromJson(response);
   }
+
+  Future<void> requestCarpenter(int enquiryId) async {
+    await post(
+      endpoint: 'orders/carpenter_request/$enquiryId/',
+      body: {},
+    );
+  }
+
+  Future<List<Enquiry>> getOrdersByStatus(String status) async {
+    final response = await get(
+      endpoint: 'orders/status/$status/',
+    );
+
+    if (response is List) {
+      return response.map((json) => Enquiry.fromJson(json)).toList();
+    }
+    throw Exception('Invalid response format');
+  }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:madeira/app/extensions/context_extensions.dart';
 import 'package:madeira/app/pages/enquiry/enquiry_page.dart';
 import 'package:madeira/app/pages/inventory/category_list_page.dart';
+import 'package:madeira/app/pages/orders/order_list_page.dart';
 import 'package:madeira/app/pages/process/process_list_page.dart';
 import 'package:madeira/app/pages/users/user_list_page.dart';
 
@@ -34,6 +35,10 @@ class _HomePageState extends State<HomePage> {
         break;
       case 'Enquiry':
         context.push(() => const EnquiryPage());
+        break;
+      case 'Orders':
+        context.push(() => const OrderListPage());
+        break;
     }
   }
 

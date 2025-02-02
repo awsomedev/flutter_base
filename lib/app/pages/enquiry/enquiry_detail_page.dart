@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../models/enquiry_model.dart';
 import '../../app_essentials/colors.dart';
+import '../../services/services.dart';
+import '../../extensions/context_extensions.dart';
 
 class EnquiryDetailPage extends StatelessWidget {
   final Enquiry enquiry;
@@ -9,6 +11,27 @@ class EnquiryDetailPage extends StatelessWidget {
     Key? key,
     required this.enquiry,
   }) : super(key: key);
+
+  Future<void> _requestCarpenter(BuildContext context) async {
+    try {
+      await Services().requestCarpenter(enquiry.id!);
+      if (context.mounted) {
+        context.showSnackBar(
+          'Carpenter requested successfully',
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        context.showSnackBar(
+          'Failed to request carpenter: $e',
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+        );
+      }
+    }
+  }
 
   Widget _buildSection({
     required String title,
@@ -129,6 +152,28 @@ class EnquiryDetailPage extends StatelessWidget {
                     'Over Due', enquiry.overDue == true ? 'Yes' : 'No'),
               ],
             ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                onPressed: () => _requestCarpenter(context),
+                icon: const Icon(Icons.build),
+                label: const Text(
+                  'Send to Carpenter',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 40,
+            )
           ],
         ),
       ),
