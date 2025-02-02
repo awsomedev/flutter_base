@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 class Enquiry {
   final int? id;
   final List<EnquiryImage>? images;
@@ -21,6 +23,7 @@ class Enquiry {
   final String? email;
   final String? address;
   final String? enquiryStatus;
+  final String? currentProcessStatus;
   final double? materialCost;
   final double? ongoingExpense;
   final bool? overDue;
@@ -53,6 +56,7 @@ class Enquiry {
     this.email,
     this.address,
     this.enquiryStatus,
+    this.currentProcessStatus,
     this.materialCost,
     this.ongoingExpense,
     this.overDue,
@@ -84,13 +88,16 @@ class Enquiry {
       estimatedDeliveryDate: json['estimated_delivery_date'] != null
           ? DateTime.parse(json['estimated_delivery_date'])
           : null,
-      estimatedPrice: (json['estimated_price'] as num?)?.toDouble(),
+      estimatedPrice: json['estimated_price'] != null
+          ? double.parse(json['estimated_price'].toString())
+          : null,
       customerName: json['customer_name'] as String?,
       contactNumber: json['contact_number'] as String?,
       whatsappNumber: json['whatsapp_number'] as String?,
       email: json['email'] as String?,
       address: json['address'] as String?,
       enquiryStatus: json['enquiry_status'] as String?,
+      currentProcessStatus: json['current_process_status'] as String?,
       materialCost: (json['material_cost'] as num?)?.toDouble(),
       ongoingExpense: (json['ongoing_expense'] as num?)?.toDouble(),
       overDue: json['over_due'] as bool?,
@@ -105,6 +112,42 @@ class Enquiry {
           .toList(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'images': images?.map((image) => image.toJson()).toList(),
+      'priority': priority,
+      'status': status,
+      'product_name': productName,
+      'product_name_mal': productNameMal,
+      'product_description': productDescription,
+      'product_description_mal': productDescriptionMal,
+      'product_length': productLength,
+      'product_height': productHeight,
+      'product_width': productWidth,
+      'reference_image': referenceImage,
+      'finish': finish,
+      'event': event,
+      'estimated_delivery_date': estimatedDeliveryDate?.toIso8601String(),
+      'estimated_price': estimatedPrice,
+      'customer_name': customerName,
+      'contact_number': contactNumber,
+      'whatsapp_number': whatsappNumber,
+      'email': email,
+      'address': address,
+      'enquiry_status': enquiryStatus,
+      'current_process_status': currentProcessStatus,
+      'material_cost': materialCost,
+      'ongoing_expense': ongoingExpense,
+      'over_due': overDue,
+      'current_process': currentProcess,
+      'main_manager_id': mainManagerId,
+      'carpenter_id': carpenterId,
+      'material_ids': materialIds,
+      'completed_processes': completedProcesses,
+    };
+  }
 }
 
 class EnquiryImage {
@@ -118,5 +161,12 @@ class EnquiryImage {
       id: json['id'] as int?,
       image: json['image'] as String?,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'image': image,
+    };
   }
 }

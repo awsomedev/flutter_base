@@ -6,7 +6,7 @@ enum HttpMethod { get, post, put, delete, patch }
 
 class ServiceBase {
   static const String _baseUrl =
-      'http://13.232.166.23:8000/api/'; // Update with your actual base URL
+      'http://3.110.136.32:8000/api/'; // Update with your actual base URL
   static const Duration _timeout = Duration(seconds: 30);
 
   ServiceBase(this._prefs);
@@ -144,6 +144,11 @@ class ServiceBase {
 
   Future<void> saveUserId(String id) async {
     await _prefs.setString('user_id', id);
+  }
+
+  Future<String?> getUserId() async {
+    return '4';
+    // return _prefs.getString('user_id');
   }
 
   Future<void> clearAuth() async {

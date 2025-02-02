@@ -4,6 +4,8 @@ import 'package:madeira/app/models/category_model.dart';
 import 'package:madeira/app/models/material_model.dart';
 import 'package:madeira/app/models/process_model.dart';
 import 'package:madeira/app/models/user_model.dart';
+import 'package:madeira/app/models/carpenter_request_model.dart';
+import 'package:madeira/app/models/request_detail_model.dart';
 import 'package:madeira/app/services/service_base.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -215,5 +217,39 @@ class Services extends ServiceBase {
       return response.map((json) => Enquiry.fromJson(json)).toList();
     }
     throw Exception('Invalid response format');
+  }
+
+  Future<CarpenterRequestResponse> getCarpenterRequests() async {
+    final carpenterId = await getUserId();
+    final response = await get(endpoint: 'carpenter_requests/$carpenterId/');
+    return CarpenterRequestResponse.fromJson(response);
+  }
+
+  Future<void> acceptCarpenterRequest(int orderId) async {
+    await put(
+      endpoint: 'carpenter_requests/$orderId/accept/',
+      body: {},
+    );
+  }
+
+  Future<RequestDetail> getRequestDetail(int orderId) async {
+    final response = await get(endpoint: 'carpenter_requests/$orderId/view/');
+    return RequestDetail.fromJson(response['data']);
+  }
+
+  Future<void> updateRequestDimensions(List<Map<String, dynamic>> data) async {
+    await put(
+      endpoint: 'carpenter_requests/update/',
+      body: {
+        'data': data,
+      },
+    );
+  }
+
+  Future<void> finishRequest(int orderId) async {
+    await put(
+      endpoint: 'carpenter_requests/$orderId/respond/',
+      body: {},
+    );
   }
 }
