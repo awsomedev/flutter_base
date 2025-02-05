@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:madeira/app/app_essentials/colors.dart';
+import 'package:madeira/app/extensions/string_extension.dart';
 import 'package:madeira/app/models/request_detail_model.dart';
 import 'package:madeira/app/services/services.dart';
 import 'package:madeira/app/widgets/confirmation_dialog.dart';
@@ -20,6 +21,7 @@ class RequestViewPage extends StatefulWidget {
 class _RequestViewPageState extends State<RequestViewPage> {
   late Future<RequestDetail> _requestDetailFuture;
   final Map<int, Map<String, TextEditingController>> _dimensionControllers = {};
+  int _currentImageIndex = 0;
 
   @override
   void initState() {
@@ -236,51 +238,81 @@ class _RequestViewPageState extends State<RequestViewPage> {
     return Column(
       children: [
         if (request.images.isNotEmpty) ...[
-          CarouselSlider(
-            options: CarouselOptions(
-              height: 200,
-              viewportFraction: 1.0,
-              enlargeCenterPage: false,
-              autoPlay: request.images.length > 1,
-              autoPlayInterval: const Duration(seconds: 3),
-            ),
-            items: request.images.map((image) {
-              return Container(
-                width: double.infinity,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+          Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              CarouselSlider(
+                options: CarouselOptions(
+                  height: 200,
+                  viewportFraction: 1.0,
+                  enlargeCenterPage: false,
+                  autoPlay: request.images.length > 1,
+                  autoPlayInterval: const Duration(seconds: 3),
+                  onPageChanged: (index, reason) {
+                    setState(() {
+                      _currentImageIndex = index;
+                    });
+                  },
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    'http://3.110.136.32:8000/api${image.image}',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
+                items: request.images.map((image) {
+                  return Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        image.image.toImageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: Icon(
+                                Icons.error_outline,
+                                color: Colors.grey,
+                                size: 32,
+                              ),
+                            ),
+                          );
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: CupertinoActivityIndicator(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              if (request.images.length > 1)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: request.images.asMap().entries.map((entry) {
                       return Container(
-                        color: Colors.grey[200],
-                        child: const Center(
-                          child: Icon(
-                            Icons.error_outline,
-                            color: Colors.grey,
-                            size: 32,
+                        width: 8,
+                        height: 8,
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(
+                            _currentImageIndex == entry.key ? 0.9 : 0.4,
                           ),
                         ),
                       );
-                    },
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        color: Colors.grey[200],
-                        child: const Center(
-                          child: CupertinoActivityIndicator(),
-                        ),
-                      );
-                    },
+                    }).toList(),
                   ),
                 ),
-              );
-            }).toList(),
+            ],
           ),
           const SizedBox(height: 16),
         ],

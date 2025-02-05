@@ -4,6 +4,7 @@ import 'package:madeira/app/pages/enquiry/enquiry_page.dart';
 import 'package:madeira/app/pages/inventory/category_list_page.dart';
 import 'package:madeira/app/pages/orders/order_list_page.dart';
 import 'package:madeira/app/pages/process/process_list_page.dart';
+import 'package:madeira/app/pages/process_manager/process_manager_order_list.dart';
 import 'package:madeira/app/pages/requests/request_list.dart';
 import 'package:madeira/app/pages/users/user_list_page.dart';
 
@@ -22,6 +23,8 @@ class _HomePageState extends State<HomePage> {
     {'title': 'Users', 'icon': Icons.people},
     {'title': 'Process', 'icon': Icons.production_quantity_limits},
     {'title': 'Requests', 'icon': Icons.request_quote},
+    {'title': 'Managers Orders', 'icon': Icons.request_quote},
+    {'title': 'Process Managers Orders', 'icon': Icons.request_quote},
   ];
 
   void navigateToPage(String page) {
@@ -43,6 +46,16 @@ class _HomePageState extends State<HomePage> {
         break;
       case 'Requests':
         context.push(() => const RequestListPage());
+        break;
+      case 'Managers Orders':
+        context.push(() => const OrderListPage(
+              managerId: 2,
+            ));
+        break;
+      case 'Process Managers Orders':
+        context.push(() => const ProcessManagerOrderList(
+              processManagerId: 8,
+            ));
         break;
     }
   }

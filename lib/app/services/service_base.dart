@@ -13,7 +13,7 @@ class ServiceBase {
   final SharedPreferences _prefs;
 
   // Getter for base URL
-  String get baseUrl => _baseUrl;
+  static String get baseUrl => _baseUrl;
 
   // Get stored auth token
   String? get authToken =>
@@ -77,11 +77,16 @@ class ServiceBase {
         }
         return jsonDecode(response.body) as T;
       } else {
-        throw Exception(
-          'Request failed with status: ${response.statusCode}\n${response.body}',
+        throw ApiMessageError(
+          jsonDecode(response.body)['error'] ??
+              jsonDecode(response.body)['message'] ??
+              'Unknown error',
         );
       }
     } catch (e) {
+      if (e is ApiMessageError) {
+        rethrow;
+      }
       throw Exception('Network error: $e');
     }
   }
@@ -161,4 +166,14 @@ class ServiceBase {
     return true;
     // return prefs.getString('auth_token') != null;
   }
+}
+
+class ApiMessageError extends Error {
+  final String message;
+  @override
+  String toString() {
+    return message;
+  }
+
+  ApiMessageError(this.message);
 }

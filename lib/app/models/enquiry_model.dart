@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 class Enquiry {
   final int? id;
   final List<EnquiryImage>? images;

@@ -6,6 +6,9 @@ import 'package:madeira/app/models/process_model.dart';
 import 'package:madeira/app/models/user_model.dart';
 import 'package:madeira/app/models/carpenter_request_model.dart';
 import 'package:madeira/app/models/request_detail_model.dart';
+import 'package:madeira/app/models/manager_order_detail_model.dart';
+import 'package:madeira/app/models/process_manager_order_model.dart';
+import 'package:madeira/app/models/process_detail_model.dart';
 import 'package:madeira/app/services/service_base.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -110,10 +113,7 @@ class Services extends ServiceBase {
   }
 
   Future<List<User>> getUsers() async {
-    final response = await get(
-      endpoint: 'users',
-    );
-
+    final response = await get(endpoint: 'users/');
     if (response is List) {
       return response.map((json) => User.fromJson(json)).toList();
     }
@@ -219,6 +219,18 @@ class Services extends ServiceBase {
     throw Exception('Invalid response format');
   }
 
+  Future<List<Enquiry>> getManagerOrdersByStatus(
+      int managerId, String status) async {
+    final response = await get(
+      endpoint: 'orders/manager/$managerId/$status/',
+    );
+
+    if (response is List) {
+      return response.map((json) => Enquiry.fromJson(json)).toList();
+    }
+    throw Exception('Invalid response format');
+  }
+
   Future<CarpenterRequestResponse> getCarpenterRequests() async {
     final carpenterId = await getUserId();
     final response = await get(endpoint: 'carpenter_requests/$carpenterId/');
@@ -251,5 +263,62 @@ class Services extends ServiceBase {
       endpoint: 'carpenter_requests/$orderId/respond/',
       body: {},
     );
+  }
+
+  Future<void> addToProcess({
+    required int orderId,
+    required int processId,
+    required int processManagerId,
+    required List<int> processWorkersId,
+    required String expectedCompletionDate,
+  }) async {
+    await post(
+      endpoint: 'orders/manager/add_to_process/',
+      body: {
+        'order_id': orderId,
+        'process_id': processId,
+        'process_manager_id': processManagerId,
+        'process_workers_id': processWorkersId,
+        'expected_completion_date': expectedCompletionDate,
+      },
+    );
+  }
+
+  Future<List<Enquiry>> getManagerEnquiries(int managerId) async {
+    final response = await get(
+      endpoint: 'orders/manager/$managerId/enquiry/',
+    );
+
+    if (response is List) {
+      return response.map((json) => Enquiry.fromJson(json)).toList();
+    }
+    throw Exception('Invalid response format');
+  }
+
+  Future<ManagerOrderDetail> getManagerOrderDetail(int orderId) async {
+    final response = await get(endpoint: 'orders/manager/$orderId/');
+    return ManagerOrderDetail.fromJson(response);
+  }
+
+  Future<ProcessManagerOrderResponse> getProcessManagerOrders(
+      int processManagerId) async {
+    final response = await get(
+      endpoint: 'process_details/$processManagerId/list/',
+    );
+    return ProcessManagerOrderResponse.fromJson(response);
+  }
+
+  Future<void> acceptProcessOrder(int orderId) async {
+    await put(
+      endpoint: 'process_details/$orderId/accept/',
+      body: {},
+    );
+  }
+
+  Future<ProcessDetailResponse> getProcessDetail(int processId) async {
+    final response = await get(
+      endpoint: 'process_details/$processId/view/',
+    );
+    return ProcessDetailResponse.fromJson(response);
   }
 }

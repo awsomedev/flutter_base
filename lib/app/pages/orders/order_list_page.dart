@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:madeira/app/models/enquiry_model.dart';
+import 'package:madeira/app/pages/manager/manager_order_detail_page.dart';
 import 'package:madeira/app/services/services.dart';
 import 'package:madeira/app/app_essentials/colors.dart';
 import 'package:madeira/app/extensions/context_extensions.dart';
 import 'package:madeira/app/pages/enquiry/enquiry_detail_page.dart';
 
 class OrderListPage extends StatefulWidget {
-  const OrderListPage({super.key});
+  const OrderListPage({super.key, this.managerId});
+  final int? managerId;
 
   @override
   State<OrderListPage> createState() => _OrderListPageState();
@@ -16,7 +18,7 @@ class _OrderListPageState extends State<OrderListPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final List<(String, String)> _tabs = [
-    // ('enquiry', 'Enquiry'),
+    ('enquiry', 'Enquiry'),
     ('on_going', 'On Going'),
     ('over_due', 'Over due'),
     ('completed', 'Completed'),
@@ -25,7 +27,7 @@ class _OrderListPageState extends State<OrderListPage>
 
   Map<String, List<Enquiry>?> _ordersByStatus = {};
   final Map<String, bool> _loadingStatus = {
-    // 'enquiry': false,
+    'enquiry': false,
     'on_going': false,
     'over_due': false,
     'completed': false,
@@ -60,7 +62,13 @@ class _OrderListPageState extends State<OrderListPage>
       });
 
       try {
-        final orders = await Services().getOrdersByStatus(status);
+        late List<Enquiry> orders;
+        if (widget.managerId != null) {
+          orders = await Services()
+              .getManagerOrdersByStatus(widget.managerId!, status);
+        } else {
+          orders = await Services().getOrdersByStatus(status);
+        }
         setState(() {
           _ordersByStatus[status] = orders;
           _loadingStatus[status] = false;
@@ -69,13 +77,13 @@ class _OrderListPageState extends State<OrderListPage>
         setState(() {
           _loadingStatus[status] = false;
         });
-        if (mounted) {
-          context.showSnackBar(
-            'Failed to load orders: $e',
-            backgroundColor: Colors.red,
-            textColor: Colors.white,
-          );
-        }
+        // if (mounted) {
+        //   context.showSnackBar(
+        //     'Failed to load orders: $e',
+        //     backgroundColor: Colors.red,
+        //     textColor: Colors.white,
+        //   );
+        // }
       }
     }
   }
@@ -94,12 +102,18 @@ class _OrderListPageState extends State<OrderListPage>
     }
   }
 
-  Widget _buildOrderCard(Enquiry order) {
+  Widget _buildOrderCard(Enquiry order, {int? managerId}) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
         onTap: () {
-          context.push(() => EnquiryDetailPage(enquiry: order));
+          if (managerId != null) {
+            if (order.id != null) {
+              context.push(() => ManagerOrderDetailPage(orderId: order.id!));
+            }
+          } else {
+            context.push(() => EnquiryDetailPage(enquiry: order));
+          }
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -222,7 +236,8 @@ class _OrderListPageState extends State<OrderListPage>
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: orders.length,
-        itemBuilder: (context, index) => _buildOrderCard(orders[index]),
+        itemBuilder: (context, index) =>
+            _buildOrderCard(orders[index], managerId: widget.managerId),
       ),
     );
   }
