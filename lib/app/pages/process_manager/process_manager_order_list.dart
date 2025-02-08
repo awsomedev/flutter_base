@@ -81,7 +81,6 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
         onTap: () {
           context.push(
             () => ProcessDetailPage(
-              orderId: order.id ?? 0,
               processDetailsId: process.id ?? 0,
             ),
           );

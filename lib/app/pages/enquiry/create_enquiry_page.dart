@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:madeira/app/widgets/image_list_picker.dart';
 import '../../models/enquiry_creation_data.dart';
 import '../../models/material_model.dart';
 import '../../models/user_model.dart';
@@ -40,6 +43,7 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
   User? _selectedManager;
   User? _selectedCarpenter;
   List<MaterialModel> _selectedMaterials = [];
+  List<File> _selectedImages = [];
 
   @override
   void initState() {
@@ -244,7 +248,9 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
         'material_ids': _selectedMaterials.map((m) => m.id).toList(),
       };
 
-      await Services().createEnquiry(data);
+      await Services().createEnquiry(data, {
+        'reference_image': _selectedImages,
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -482,6 +488,21 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
                         borderRadius: BorderRadius.circular(8),
                         side: const BorderSide(color: AppColors.divider),
                       ),
+                    ),
+                    const SizedBox(height: 16),
+                    ImageListPicker(
+                      onAdd: (allImages, _) {
+                        setState(() {
+                          _selectedImages =
+                              allImages.map((e) => e.file!).toList();
+                        });
+                      },
+                      onRemove: (removedImages, _) {
+                        setState(() {
+                          _selectedImages =
+                              removedImages.map((e) => e.file!).toList();
+                        });
+                      },
                     ),
                     const SizedBox(height: 32),
                     SizedBox(

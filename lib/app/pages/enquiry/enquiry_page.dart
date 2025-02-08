@@ -58,7 +58,7 @@ class _EnquiryPageState extends State<EnquiryPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => EnquiryDetailPage(enquiry: enquiry),
+              builder: (context) => EnquiryDetailPage(enquiryId: enquiry.id!),
             ),
           );
         },

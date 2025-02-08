@@ -11,14 +11,15 @@ import 'package:madeira/app/widgets/searchable_picker.dart';
 import 'package:madeira/app/widgets/quantity_input_dialog.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:intl/intl.dart';
+import 'dart:io';
+import 'package:madeira/app/widgets/image_list_picker.dart';
+import 'package:madeira/app/extensions/context_extensions.dart';
 
 class ProcessDetailPage extends StatefulWidget {
-  final int orderId;
   final int processDetailsId;
 
   const ProcessDetailPage({
     Key? key,
-    required this.orderId,
     required this.processDetailsId,
   }) : super(key: key);
 
@@ -39,7 +40,7 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
   }
 
   void _loadDetails() {
-    _detailFuture = Services().getProcessDetail(widget.orderId);
+    _detailFuture = Services().getProcessDetail(widget.processDetailsId);
   }
 
   Future<void> _loadMaterials() async {
@@ -136,6 +137,117 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
     }
   }
 
+  Future<void> _showVerificationImagePicker(BuildContext context) async {
+    List<File>? selectedImages;
+    List<ImageItem> currentImages = [];
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Please select images for approval',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ImageListPicker(
+                onAdd: (images, newImage) {
+                  currentImages = images;
+                  selectedImages = currentImages
+                      .where((item) => item.isFile)
+                      .map((item) => item.file!)
+                      .toList();
+                },
+                onRemove: (images, removedImage) {
+                  currentImages = images;
+                  selectedImages = currentImages
+                      .where((item) => item.isFile)
+                      .map((item) => item.file!)
+                      .toList();
+                },
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    if (selectedImages != null && selectedImages!.isNotEmpty) {
+                      Navigator.pop(context, selectedImages);
+                    } else {
+                      context.showSnackBar(
+                        'Please select at least one image',
+                        backgroundColor: Colors.red,
+                      );
+                    }
+                  },
+                  child: const Text('Confirm'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (selectedImages != null && selectedImages!.isNotEmpty) {
+      // Show confirmation dialog
+      final shouldProceed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Confirm Submission'),
+          content: const Text(
+              'Are you sure you want to submit these images for verification?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Yes'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldProceed == true && context.mounted) {
+        try {
+          await Services().sendProcessVerificationImages(
+              widget.processDetailsId, selectedImages!);
+          if (context.mounted) {
+            context.showSnackBar(
+              'Images submitted successfully',
+              backgroundColor: Colors.green,
+            );
+          }
+        } catch (e) {
+          if (context.mounted) {
+            context.showSnackBar(
+              'Failed to submit images: $e',
+              backgroundColor: Colors.red,
+            );
+          }
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -192,6 +304,17 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
                       foregroundColor: Colors.white,
                     ),
                     child: const Text('Add Materials'),
+                  ),
+                ),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => _showVerificationImagePicker(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Send completion request'),
                   ),
                 ),
               ],

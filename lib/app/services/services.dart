@@ -1,14 +1,18 @@
+import 'dart:io';
+
 import 'package:madeira/app/models/enquiry_model.dart';
 import 'package:madeira/app/models/login_model.dart';
 import 'package:madeira/app/models/category_model.dart';
 import 'package:madeira/app/models/material_model.dart';
 import 'package:madeira/app/models/process_model.dart';
-import 'package:madeira/app/models/user_model.dart';
+import 'package:madeira/app/models/user_model.dart' as user_model;
 import 'package:madeira/app/models/carpenter_request_model.dart';
 import 'package:madeira/app/models/request_detail_model.dart';
 import 'package:madeira/app/models/manager_order_detail_model.dart';
 import 'package:madeira/app/models/process_manager_order_model.dart';
 import 'package:madeira/app/models/process_detail_model.dart';
+import 'package:madeira/app/models/enquiry_detail_response_model.dart'
+    as detail_model;
 import 'package:madeira/app/services/service_base.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -112,10 +116,10 @@ class Services extends ServiceBase {
     return MaterialModel.fromJson(response);
   }
 
-  Future<List<User>> getUsers() async {
+  Future<List<user_model.User>> getUsers() async {
     final response = await get(endpoint: 'users/');
     if (response is List) {
-      return response.map((json) => User.fromJson(json)).toList();
+      return response.map((json) => user_model.User.fromJson(json)).toList();
     }
     throw Exception('Invalid response format');
   }
@@ -126,20 +130,20 @@ class Services extends ServiceBase {
     );
   }
 
-  Future<User> createUser(Map<String, dynamic> data) async {
+  Future<user_model.User> createUser(Map<String, dynamic> data) async {
     final response = await post(
       endpoint: 'create-user/',
       body: data,
     );
-    return User.fromJson(response);
+    return user_model.User.fromJson(response);
   }
 
-  Future<User> updateUser(int id, Map<String, dynamic> data) async {
+  Future<user_model.User> updateUser(int id, Map<String, dynamic> data) async {
     final response = await put(
       endpoint: 'users/$id/update/',
       body: data,
     );
-    return User.fromJson(response);
+    return user_model.User.fromJson(response);
   }
 
   Future<List<Process>> getProcesses() async {
@@ -193,10 +197,12 @@ class Services extends ServiceBase {
     return response;
   }
 
-  Future<Enquiry> createEnquiry(Map<String, dynamic> data) async {
-    final response = await post(
+  Future<Enquiry> createEnquiry(
+      Map<String, dynamic> data, Map<String, List<File>>? files) async {
+    final response = await uploadFormData(
       endpoint: 'orders/create/',
-      body: data,
+      fields: data,
+      files: files,
     );
     return Enquiry.fromJson(response);
   }
@@ -327,9 +333,6 @@ class Services extends ServiceBase {
     required int materialId,
     required int quantity,
   }) async {
-    print(processDetailsId);
-    print(materialId);
-    print(quantity);
     await post(
       endpoint: 'process_materials/create/',
       body: {
@@ -338,5 +341,25 @@ class Services extends ServiceBase {
         'quantity': quantity,
       },
     );
+  }
+
+  Future<void> sendProcessVerificationImages(
+      int processId, List<File> images) async {
+    final Map<String, List<File>> files = {
+      'image': images,
+    };
+    await uploadFormData(
+      endpoint: 'process_details/add_to_process_verification/$processId/',
+      method: 'PUT',
+      files: files,
+    );
+  }
+
+  Future<detail_model.EnquiryDetailResponse> getEnquiryDetails(
+      int enquiryId) async {
+    final response = await get(
+      endpoint: 'orders/$enquiryId/',
+    );
+    return detail_model.EnquiryDetailResponse.fromJson(response);
   }
 }

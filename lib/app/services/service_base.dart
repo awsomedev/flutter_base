@@ -1,12 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 enum HttpMethod { get, post, put, delete, patch }
 
 class ServiceBase {
   static const String _baseUrl =
-      'http://3.110.136.32:8000/api/'; // Update with your actual base URL
+      'http://3.110.104.222:8000/api/'; // Update with your actual base URL
   static const Duration _timeout = Duration(seconds: 30);
 
   ServiceBase(this._prefs);
@@ -26,6 +29,12 @@ class ServiceBase {
   // Common headers for all requests
   Map<String, String> get _headers => {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        if (authToken != null) 'Authorization': 'Bearer $authToken',
+      };
+
+  // Headers without content type for multipart requests
+  Map<String, String> get _authHeaders => {
         'Accept': 'application/json',
         if (authToken != null) 'Authorization': 'Bearer $authToken',
       };
@@ -140,6 +149,98 @@ class ServiceBase {
       method: HttpMethod.delete,
       fromJson: fromJson,
     );
+  }
+
+  // FormData upload method
+  Future<T> uploadFormData<T>({
+    required String endpoint,
+    String method = 'POST',
+    Map<String, dynamic>? fields,
+    Map<String, List<File>>? files,
+    void Function(int, int)? onSendProgress,
+    T Function(Map<String, dynamic>)? fromJson,
+  }) async {
+    try {
+      final dio = Dio(BaseOptions(
+        baseUrl: _baseUrl,
+        headers: _authHeaders,
+      ));
+
+      final Map<String, dynamic> formDataMap = {};
+
+      // Add fields if any
+      if (fields != null) {
+        formDataMap.addAll(fields);
+      }
+
+      // Add files if any
+      if (files != null) {
+        await Future.forEach(files.entries,
+            (MapEntry<String, List<File>> entry) async {
+          if (entry.value.isNotEmpty) {
+            if (entry.value.length == 1) {
+              // Single file
+              final file = entry.value.first;
+              formDataMap[entry.key] = await MultipartFile.fromFile(
+                file.path,
+                filename: file.path.split('/').last,
+              );
+            } else {
+              // Multiple files
+              final multipartFiles = await Future.wait(
+                entry.value.map((file) => MultipartFile.fromFile(
+                      file.path,
+                      filename: file.path.split('/').last,
+                    )),
+              );
+              formDataMap[entry.key] = multipartFiles;
+            }
+          }
+        });
+      }
+
+      final formDataObj = FormData.fromMap(formDataMap);
+
+      Response response;
+      switch (method.toUpperCase()) {
+        case 'PUT':
+          response = await dio.put(
+            endpoint,
+            data: formDataObj,
+            onSendProgress: onSendProgress,
+          );
+          break;
+        case 'PATCH':
+          response = await dio.patch(
+            endpoint,
+            data: formDataObj,
+            onSendProgress: onSendProgress,
+          );
+          break;
+        default:
+          response = await dio.post(
+            endpoint,
+            data: formDataObj,
+            onSendProgress: onSendProgress,
+          );
+      }
+
+      if (response.statusCode! >= 200 && response.statusCode! < 300) {
+        if (fromJson != null) {
+          return fromJson(response.data);
+        }
+        return response.data as T;
+      } else {
+        throw ApiMessageError(
+          response.data['error'] ?? response.data['message'] ?? 'Unknown error',
+        );
+      }
+    } catch (e) {
+      if (e is ApiMessageError) {
+        rethrow;
+      }
+      throw Exception('Network error: $e');
+    }
   }
 
   // Token management methods

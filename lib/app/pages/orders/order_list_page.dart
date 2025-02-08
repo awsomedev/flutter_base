@@ -112,7 +112,7 @@ class _OrderListPageState extends State<OrderListPage>
               context.push(() => ManagerOrderDetailPage(orderId: order.id!));
             }
           } else {
-            context.push(() => EnquiryDetailPage(enquiry: order));
+            context.push(() => EnquiryDetailPage(enquiryId: order.id!));
           }
         },
         child: Padding(
