@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'package:madeira/app/models/process_model.dart';
 
 class ProcessManagerOrderResponse {
   final List<ProcessManagerOrder> data;
@@ -15,19 +16,36 @@ class ProcessManagerOrderResponse {
 }
 
 class ProcessManagerOrder {
-  final int id;
-  final String priority;
-  final String status;
-  final String productName;
-  final String productNameMal;
-  final String productDescription;
-  final String productDescriptionMal;
-  final DateTime? estimatedDeliveryDate;
-  final String currentProcessStatus;
-  final bool overDue;
-  final int currentProcess;
+  final OrderData orderData;
+  final Process process;
 
   ProcessManagerOrder({
+    required this.orderData,
+    required this.process,
+  });
+
+  factory ProcessManagerOrder.fromJson(Map<String, dynamic> json) {
+    return ProcessManagerOrder(
+      orderData: OrderData.fromJson(json['order_data']),
+      process: Process.fromJson(json['process']),
+    );
+  }
+}
+
+class OrderData {
+  final int? id;
+  final String? priority;
+  final String? status;
+  final String? productName;
+  final String? productNameMal;
+  final String? productDescription;
+  final String? productDescriptionMal;
+  final DateTime? estimatedDeliveryDate;
+  final String? currentProcessStatus;
+  final bool? overDue;
+  final int? currentProcess;
+
+  OrderData({
     required this.id,
     required this.priority,
     required this.status,
@@ -41,21 +59,21 @@ class ProcessManagerOrder {
     required this.currentProcess,
   });
 
-  factory ProcessManagerOrder.fromJson(Map<String, dynamic> json) {
-    return ProcessManagerOrder(
-      id: json['id'] as int,
-      priority: json['priority'] as String,
-      status: json['status'] as String,
-      productName: json['product_name'] as String,
-      productNameMal: json['product_name_mal'] as String,
-      productDescription: json['product_description'] as String,
-      productDescriptionMal: json['product_description_mal'] as String,
+  factory OrderData.fromJson(Map<String, dynamic> json) {
+    return OrderData(
+      id: json['id'] as int?,
+      priority: json['priority'] as String?,
+      status: json['status'] as String?,
+      productName: json['product_name'] as String?,
+      productNameMal: json['product_name_mal'] as String?,
+      productDescription: json['product_description'] as String?,
+      productDescriptionMal: json['product_description_mal'] as String?,
       estimatedDeliveryDate: json['estimated_delivery_date'] != null
           ? DateTime.parse(json['estimated_delivery_date'])
           : null,
-      currentProcessStatus: json['current_process_status'] as String,
-      overDue: json['over_due'] as bool,
-      currentProcess: json['current_process'] as int,
+      currentProcessStatus: json['current_process_status'] as String?,
+      overDue: json['over_due'] as bool?,
+      currentProcess: json['current_process'] as int?,
     );
   }
 
@@ -64,8 +82,8 @@ class ProcessManagerOrder {
     return DateFormat('dd MMM yyyy').format(estimatedDeliveryDate!);
   }
 
-  String get priorityText => priority.toUpperCase();
+  String get priorityText => priority?.toUpperCase() ?? '';
 
   String get statusText =>
-      currentProcessStatus.replaceAll('_', ' ').toUpperCase();
+      currentProcessStatus?.replaceAll('_', ' ').toUpperCase() ?? '';
 }

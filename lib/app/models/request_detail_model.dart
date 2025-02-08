@@ -3,9 +3,9 @@ class RequestDetail {
   final String priority;
   final List<EnquiryImage> images;
   final String productName;
-  final String productNameMal;
-  final String productDescription;
-  final String productDescriptionMal;
+  final String? productNameMal;
+  final String? productDescription;
+  final String? productDescriptionMal;
   final double productLength;
   final double productHeight;
   final double productWidth;

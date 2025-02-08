@@ -321,4 +321,22 @@ class Services extends ServiceBase {
     );
     return ProcessDetailResponse.fromJson(response);
   }
+
+  Future<void> createProcessMaterial({
+    required int processDetailsId,
+    required int materialId,
+    required int quantity,
+  }) async {
+    print(processDetailsId);
+    print(materialId);
+    print(quantity);
+    await post(
+      endpoint: 'process_materials/create/',
+      body: {
+        'process_details_id': processDetailsId,
+        'material_id': materialId,
+        'quantity': quantity,
+      },
+    );
+  }
 }

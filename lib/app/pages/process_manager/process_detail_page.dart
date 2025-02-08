@@ -2,19 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:madeira/app/app_essentials/colors.dart';
 import 'package:madeira/app/extensions/string_extension.dart';
 import 'package:madeira/app/models/process_detail_model.dart';
+import 'package:madeira/app/models/material_model.dart';
 import 'package:madeira/app/models/user_model.dart';
 import 'package:madeira/app/services/services.dart';
 import 'package:madeira/app/widgets/loading_widget.dart';
 import 'package:madeira/app/widgets/error_widget.dart';
+import 'package:madeira/app/widgets/searchable_picker.dart';
+import 'package:madeira/app/widgets/quantity_input_dialog.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:intl/intl.dart';
 
 class ProcessDetailPage extends StatefulWidget {
   final int orderId;
+  final int processDetailsId;
 
   const ProcessDetailPage({
     Key? key,
     required this.orderId,
+    required this.processDetailsId,
   }) : super(key: key);
 
   @override
@@ -23,15 +28,112 @@ class ProcessDetailPage extends StatefulWidget {
 
 class _ProcessDetailPageState extends State<ProcessDetailPage> {
   late Future<ProcessDetailResponse> _detailFuture;
+  List<MaterialModel> _materials = [];
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _loadDetails();
+    _loadMaterials();
   }
 
   void _loadDetails() {
     _detailFuture = Services().getProcessDetail(widget.orderId);
+  }
+
+  Future<void> _loadMaterials() async {
+    try {
+      _materials = await Services().getMaterials();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading materials: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showMaterialPicker() async {
+    if (_materials.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No materials available'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final result = await showModalBottomSheet<MaterialModel>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SearchablePicker<MaterialModel>(
+        title: 'Select Materials',
+        items: _materials,
+        getLabel: (material) => material.name,
+        getSubtitle: (material) =>
+            '${material.description} - ₹${material.price}',
+        allowMultiple: false,
+      ),
+    );
+
+    if (result != null) {
+      List<Future<void>> futures = [];
+
+      final material = result;
+      final quantity = await showDialog<int>(
+        context: context,
+        builder: (context) => QuantityInputDialog(material: material),
+      );
+
+      if (quantity != null) {
+        futures.add(
+          Services()
+              .createProcessMaterial(
+            processDetailsId: widget.processDetailsId,
+            materialId: material.id,
+            quantity: quantity,
+          )
+              .then((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Added ${material.name} successfully'),
+                backgroundColor: AppColors.success,
+              ),
+            );
+          }).catchError((error) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to add ${material.name}: $error'),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }),
+        );
+      }
+
+      if (futures.isNotEmpty) {
+        setState(() {
+          _isLoading = true;
+        });
+
+        try {
+          await Future.wait(futures);
+          _loadDetails(); // Reload the page data
+        } finally {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+        }
+      }
+    }
   }
 
   @override
@@ -80,6 +182,18 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
                 _buildManagerDetails(data.mainManager, data.processManager),
                 const SizedBox(height: 20),
                 _buildWorkersDetails(data.workersData),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _showMaterialPicker,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Add Materials'),
+                  ),
+                ),
               ],
             ),
           );

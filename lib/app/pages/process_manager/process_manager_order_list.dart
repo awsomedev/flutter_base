@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:madeira/app/app_essentials/colors.dart';
 import 'package:madeira/app/extensions/context_extensions.dart';
 import 'package:madeira/app/models/process_manager_order_model.dart';
+import 'package:madeira/app/models/process_model.dart';
 import 'package:madeira/app/pages/process_manager/process_detail_page.dart';
 import 'package:madeira/app/services/services.dart';
 import 'package:madeira/app/widgets/confirmation_dialog.dart';
@@ -65,7 +66,7 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
             itemCount: snapshot.data!.data.length,
             itemBuilder: (context, index) {
               final order = snapshot.data!.data[index];
-              return _buildOrderCard(order);
+              return _buildOrderCard(order.orderData, order.process);
             },
           );
         },
@@ -73,14 +74,15 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
     );
   }
 
-  Widget _buildOrderCard(ProcessManagerOrder order) {
+  Widget _buildOrderCard(OrderData order, Process process) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
         onTap: () {
           context.push(
-            () => const ProcessDetailPage(
-              orderId: 3,
+            () => ProcessDetailPage(
+              orderId: order.id ?? 0,
+              processDetailsId: process.id ?? 0,
             ),
           );
         },
@@ -93,7 +95,7 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
                 children: [
                   Expanded(
                     child: Text(
-                      order.productName,
+                      order.productName ?? '',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -106,16 +108,17 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: order.overDue
+                      color: order.overDue ?? false
                           ? AppColors.error.withOpacity(0.1)
                           : AppColors.success.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      order.overDue ? 'OVERDUE' : 'ON TIME',
+                      order.overDue ?? false ? 'OVERDUE' : 'ON TIME',
                       style: TextStyle(
-                        color:
-                            order.overDue ? AppColors.error : AppColors.success,
+                        color: order.overDue ?? false
+                            ? AppColors.error
+                            : AppColors.success,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -125,26 +128,31 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
               ),
               const SizedBox(height: 8),
               Text(
-                order.productDescription,
+                order.productDescription ?? '',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 16),
+              _buildInfoChip(
+                label: 'Process',
+                value: '${process.name} (${process.nameMal})',
+                color: _getPriorityColor(order.priority ?? ''),
+              ),
               Row(
                 children: [
                   _buildInfoChip(
                     label: 'Priority',
                     value: order.priorityText,
-                    color: _getPriorityColor(order.priority),
+                    color: _getPriorityColor(order.priority ?? ''),
                   ),
                   const SizedBox(width: 8),
                   _buildInfoChip(
                     label: 'Status',
                     value: order.statusText,
-                    color: _getStatusColor(order.currentProcessStatus),
+                    color: _getStatusColor(order.currentProcessStatus ?? ''),
                   ),
                 ],
               ),
@@ -169,7 +177,7 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => _acceptOrder(order.currentProcess),
+                  onPressed: () => _acceptOrder(order.currentProcess ?? 0),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,

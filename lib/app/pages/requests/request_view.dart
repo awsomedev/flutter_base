@@ -337,11 +337,12 @@ class _RequestViewPageState extends State<RequestViewPage> {
                 const SizedBox(height: 16),
                 _buildDetailRow('Name', request.productName),
                 if (request.productNameMal != null)
-                  _buildDetailRow('Name (Malayalam)', request.productNameMal),
-                _buildDetailRow('Description', request.productDescription),
+                  _buildDetailRow('Name (Malayalam)', request.productNameMal!),
+                if (request.productDescription != null)
+                  _buildDetailRow('Description', request.productDescription!),
                 if (request.productDescriptionMal != null)
-                  _buildDetailRow(
-                      'Description (Malayalam)', request.productDescriptionMal),
+                  _buildDetailRow('Description (Malayalam)',
+                      request.productDescriptionMal!),
                 const SizedBox(height: 16),
                 const Text(
                   'Dimensions',
@@ -447,7 +448,7 @@ class _RequestViewPageState extends State<RequestViewPage> {
               const SizedBox(height: 4),
               Text(
                 material.nameMal,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.textSecondary,
                 ),
@@ -459,7 +460,7 @@ class _RequestViewPageState extends State<RequestViewPage> {
               const SizedBox(height: 4),
               Text(
                 material.descriptionMal,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.textSecondary,
                 ),
