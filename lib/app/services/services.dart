@@ -15,6 +15,7 @@ import 'package:madeira/app/models/enquiry_detail_response_model.dart'
     as detail_model;
 import 'package:madeira/app/models/process_completion_request_model.dart';
 import 'package:madeira/app/services/service_base.dart';
+import 'package:madeira/app/widgets/admin_only_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Services extends ServiceBase {
@@ -52,6 +53,8 @@ class Services extends ServiceBase {
     var result = LoginResponse.fromJson(response);
     if (result.access != null) {
       saveAuthToken(result.access!);
+      saveUserId(result.user.id.toString());
+      AdminTracker.saveAdmin(result.user.isAdmin);
     }
     return result;
   }
@@ -368,8 +371,7 @@ class Services extends ServiceBase {
   }
 
   Future<List<ProcessCompletionRequest>> getProcessCompletionRequests() async {
-    final userId = '2';
-    // final userId = await getUserId();
+    final userId = await getUserId();
     final response = await get(
       endpoint: 'orders/manager/$userId/verification/list/',
     );
@@ -378,8 +380,9 @@ class Services extends ServiceBase {
       return response
           .map((json) => ProcessCompletionRequest.fromJson(json))
           .toList();
+    } else {
+      return [];
     }
-    throw Exception('Invalid response format');
   }
 
   Future<ProcessCompletionRequestVerification>
@@ -388,5 +391,26 @@ class Services extends ServiceBase {
       endpoint: 'orders/manager/$orderId/verification/view/',
     );
     return ProcessCompletionRequestVerification.fromJson(response['data']);
+  }
+
+  Future<void> acceptProcessVerification(int orderId) async {
+    await put(
+      endpoint: 'orders/manager/$orderId/verification/accept/',
+      body: {},
+    );
+  }
+
+  Future<void> rejectProcessVerification(int orderId) async {
+    await put(
+      endpoint: 'orders/manager/$orderId/verification/reject/',
+      body: {},
+    );
+  }
+
+  Future<void> finishOrder(int orderId) async {
+    await put(
+      endpoint: 'orders/$orderId/completed/',
+      body: {},
+    );
   }
 }

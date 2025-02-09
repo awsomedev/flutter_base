@@ -143,7 +143,9 @@ class ProcessDetails {
       totalPrice: (json['total_price'] as num).toDouble(),
       image: json['image'] as String?,
       overDue: json['over_due'] as bool,
-      requestAcceptedDate: DateTime.parse(json['request_accepted_date']),
+      requestAcceptedDate: json['request_accepted_date'] != null
+          ? DateTime.parse(json['request_accepted_date'])
+          : null,
       orderId: json['order_id'] as int,
       processId: json['process_id'] as int,
       mainManagerId: json['main_manager_id'] as int,

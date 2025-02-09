@@ -55,6 +55,7 @@ class _ProcessListPageState extends State<ProcessListPage> {
       child: Column(
         children: [
           ExpansionTile(
+            shape: const Border(),
             title: Text(
               process.name ?? '',
               style: const TextStyle(

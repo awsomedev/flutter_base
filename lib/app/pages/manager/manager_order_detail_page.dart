@@ -163,6 +163,9 @@ class _ManagerOrderDetailPageState extends State<ManagerOrderDetailPage> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                      ),
                       onPressed: selectedProcess != null &&
                               selectedManager != null &&
                               selectedWorkers != null &&
@@ -170,7 +173,10 @@ class _ManagerOrderDetailPageState extends State<ManagerOrderDetailPage> {
                               selectedDate != null
                           ? () => Navigator.pop(context, true)
                           : null,
-                      child: const Text('Save'),
+                      child: const Text(
+                        'Save',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
                 ],
@@ -270,6 +276,30 @@ class _ManagerOrderDetailPageState extends State<ManagerOrderDetailPage> {
                       ),
                     ),
                   ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        bool? res = await ConfirmationDialog.show(
+                          title: 'Confirmation',
+                          message:
+                              'Are you sure you want to complete the order?',
+                          context: context,
+                        );
+                        if (res == true) {
+                          await Services().finishOrder(widget.orderId);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                      ),
+                      child: const Text(
+                        'Complete Order',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),

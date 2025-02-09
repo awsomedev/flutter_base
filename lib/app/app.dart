@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:madeira/app/app_essentials/colors.dart';
 import 'package:madeira/app/pages/splash_screen.dart';
 import 'package:madeira/app/services/services.dart';
 
@@ -17,7 +18,8 @@ class App extends StatelessWidget {
       var baseTheme = ThemeData(brightness: brightness);
 
       return baseTheme.copyWith(
-        textTheme: GoogleFonts.notoSansMalayalamTextTheme(baseTheme.textTheme),
+        textTheme: GoogleFonts.poppinsTextTheme(baseTheme.textTheme),
+        primaryColor: AppColors.primary,
       );
     }
 

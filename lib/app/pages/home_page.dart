@@ -7,7 +7,11 @@ import 'package:madeira/app/pages/process/process_list_page.dart';
 import 'package:madeira/app/pages/process_completion/process_completion_request_list.dart';
 import 'package:madeira/app/pages/process_manager/process_manager_order_list.dart';
 import 'package:madeira/app/pages/requests/request_list.dart';
+import 'package:madeira/app/pages/splash_screen.dart';
 import 'package:madeira/app/pages/users/user_list_page.dart';
+import 'package:madeira/app/services/services.dart';
+import 'package:madeira/app/widgets/admin_only_widget.dart';
+import 'package:madeira/app/widgets/confirmation_dialog.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,19 +21,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final List<Map<String, dynamic>> sections = [
-    {'title': 'Enquiry', 'icon': Icons.question_answer},
-    {'title': 'Orders', 'icon': Icons.shopping_cart},
-    {'title': 'Inventory', 'icon': Icons.inventory},
-    {'title': 'Users', 'icon': Icons.people},
-    {'title': 'Process', 'icon': Icons.production_quantity_limits},
-    {'title': 'Carpenter Requests', 'icon': Icons.request_quote},
-    {'title': 'Managers Orders', 'icon': Icons.request_quote},
-    {'title': 'Process Managers Orders', 'icon': Icons.request_quote},
-    {'title': 'Process Completion Requests', 'icon': Icons.request_quote},
-  ];
+  late List<Map<String, dynamic>> sections;
 
-  void navigateToPage(String page) {
+  Future<void> navigateToPage(String page) async {
     switch (page) {
       case 'Inventory':
         context.push(() => const CategoryListPage());
@@ -50,13 +44,17 @@ class _HomePageState extends State<HomePage> {
         context.push(() => const RequestListPage());
         break;
       case 'Managers Orders':
-        context.push(() => const OrderListPage(
-              managerId: 2,
-            ));
+        var userId = await Services().getUserId();
+        context.push(
+          () => OrderListPage(
+            managerId: int.parse(userId!),
+          ),
+        );
         break;
       case 'Process Managers Orders':
-        context.push(() => const ProcessManagerOrderList(
-              processManagerId: 8,
+        var userId = await Services().getUserId();
+        context.push(() => ProcessManagerOrderList(
+              processManagerId: int.parse(userId!),
             ));
         break;
       case 'Process Completion Requests':
@@ -66,11 +64,52 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  void initState() {
+    if (AdminTracker.isAdmin) {
+      sections = [
+        {'title': 'Enquiry', 'icon': Icons.question_answer},
+        {'title': 'Orders', 'icon': Icons.shopping_cart},
+        {'title': 'Inventory', 'icon': Icons.inventory},
+        {'title': 'Users', 'icon': Icons.people},
+        {'title': 'Process', 'icon': Icons.production_quantity_limits},
+        {'title': 'Carpenter Requests', 'icon': Icons.request_quote},
+        {'title': 'Managers Orders', 'icon': Icons.request_quote},
+        {'title': 'Process Managers Orders', 'icon': Icons.request_quote},
+        {'title': 'Process Completion Requests', 'icon': Icons.request_quote},
+      ];
+    } else {
+      sections = [
+        {'title': 'Carpenter Requests', 'icon': Icons.request_quote},
+        {'title': 'Managers Orders', 'icon': Icons.request_quote},
+        {'title': 'Process Managers Orders', 'icon': Icons.request_quote},
+        {'title': 'Process Completion Requests', 'icon': Icons.request_quote}
+      ];
+    }
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: () async {
+              bool? res = await ConfirmationDialog.show(
+                title: 'Logout',
+                message: 'Are you sure you want to logout?',
+                context: context,
+              );
+              if (res == true) {
+                await Services().clearAuth();
+                context.pushAndRemoveAll(() => const SplashScreen());
+              }
+            },
+            icon: const Icon(Icons.logout),
+          ),
+        ],
       ),
       body: GridView.builder(
         padding: const EdgeInsets.all(16),

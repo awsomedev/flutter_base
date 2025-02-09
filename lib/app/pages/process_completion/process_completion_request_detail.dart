@@ -4,6 +4,7 @@ import 'package:madeira/app/extensions/string_extension.dart';
 import 'package:madeira/app/models/process_completion_request_model.dart';
 import 'package:madeira/app/models/process_model.dart';
 import 'package:madeira/app/services/services.dart';
+import 'package:madeira/app/widgets/confirmation_dialog.dart';
 import 'package:madeira/app/widgets/error_widget.dart';
 import 'package:madeira/app/widgets/loading_widget.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -74,7 +75,7 @@ class _ProcessCompletionRequestDetailState
                   _buildMaterialsSection(request.materials),
                   const SizedBox(height: 24),
                 ],
-                _buildActionButtons(),
+                _buildActionButtons(request.processDetails),
               ],
             ),
           );
@@ -433,6 +434,7 @@ class _ProcessCompletionRequestDetailState
               itemCount: materials.length,
               itemBuilder: (context, index) {
                 final material = materials[index];
+
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: Row(
@@ -442,20 +444,20 @@ class _ProcessCompletionRequestDetailState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              material.materialDetails.name,
+                              material.material.name,
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Quantity: ${material.materialUsedInProcess.quantity}',
+                              'Quantity: ${material.quantity}',
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                             Text(
-                              'Price: ₹${material.materialUsedInProcess.materialPrice}',
+                              'Price: ₹${material.materialPrice}',
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                             Text(
-                              'Total: ₹${material.materialUsedInProcess.totalPrice}',
+                              'Total: ₹${material.totalPrice}',
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyMedium
@@ -477,15 +479,44 @@ class _ProcessCompletionRequestDetailState
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(ProcessCompletionRequestDetails process) {
     return Row(
       children: [
         Expanded(
           child: ElevatedButton(
-            onPressed: () {},
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
+              backgroundColor: Colors.red,
             ),
+            onPressed: () async {
+              try {
+                bool? res = await ConfirmationDialog.show(
+                    title: "Confirmation",
+                    message: "Are you sure you want to reject this process?",
+                    context: context);
+                if (res == true) {
+                  await Services().rejectProcessVerification(process.id);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content:
+                            Text('Process verification rejected successfully'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    Navigator.pop(context, true);
+                  }
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.toString()),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
             child: const Text(
               'Reject',
               style: TextStyle(color: Colors.white),
@@ -495,7 +526,36 @@ class _ProcessCompletionRequestDetailState
         const SizedBox(width: 16),
         Expanded(
           child: ElevatedButton(
-            onPressed: () {},
+            onPressed: () async {
+              try {
+                bool? res = await ConfirmationDialog.show(
+                    title: "Confirmation",
+                    message: "Are you sure you want to approve this process?",
+                    context: context);
+                if (res == true) {
+                  await Services().acceptProcessVerification(process.id);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content:
+                            Text('Process verification approved successfully'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    Navigator.pop(context, true);
+                  }
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.toString()),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
             ),

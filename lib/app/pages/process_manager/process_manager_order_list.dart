@@ -24,6 +24,7 @@ class ProcessManagerOrderList extends StatefulWidget {
 
 class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
   late Future<ProcessManagerOrderResponse> _ordersFuture;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -32,7 +33,13 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
   }
 
   void _loadOrders() {
+    setState(() {
+      isLoading = true;
+    });
     _ordersFuture = Services().getProcessManagerOrders(widget.processManagerId);
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
@@ -41,40 +48,42 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
       appBar: AppBar(
         title: const Text('Process Orders'),
       ),
-      body: FutureBuilder<ProcessManagerOrderResponse>(
-        future: _ordersFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingWidget();
-          }
+      body: isLoading
+          ? const LoadingWidget()
+          : FutureBuilder<ProcessManagerOrderResponse>(
+              future: _ordersFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const LoadingWidget();
+                }
 
-          if (snapshot.hasError) {
-            return CustomErrorWidget(
-              error: snapshot.error.toString(),
-              onRetry: _loadOrders,
-            );
-          }
+                if (snapshot.hasError) {
+                  return CustomErrorWidget(
+                    error: snapshot.error.toString(),
+                    onRetry: _loadOrders,
+                  );
+                }
 
-          if (!snapshot.hasData || snapshot.data!.data.isEmpty) {
-            return const Center(
-              child: Text('No orders found'),
-            );
-          }
+                if (!snapshot.hasData || snapshot.data!.data.isEmpty) {
+                  return const Center(
+                    child: Text('No orders found'),
+                  );
+                }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: snapshot.data!.data.length,
-            itemBuilder: (context, index) {
-              final order = snapshot.data!.data[index];
-              return _buildOrderCard(
-                order.orderData,
-                order.process,
-                order.processDetails,
-              );
-            },
-          );
-        },
-      ),
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: snapshot.data!.data.length,
+                  itemBuilder: (context, index) {
+                    final order = snapshot.data!.data[index];
+                    return _buildOrderCard(
+                      order.orderData,
+                      order.process,
+                      order.processDetails,
+                    );
+                  },
+                );
+              },
+            ),
     );
   }
 
@@ -86,7 +95,7 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
         onTap: () {
           context.push(
             () => ProcessDetailPage(
-              processDetailsId: process.id ?? 0,
+              processDetailsId: details.id ?? 0,
             ),
           );
         },

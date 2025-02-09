@@ -341,25 +341,27 @@ class EnquiryDetailPage extends StatelessWidget {
           const SizedBox(height: 24),
           _buildTeamSection(enquiryDetail),
           const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              onPressed: () => _requestCarpenter(context),
-              icon: const Icon(Icons.build),
-              label: const Text(
-                'Send to Carpenter',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+          if (enquiryDetail.orderData.enquiryStatus?.toLowerCase() ==
+              'initiated')
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                onPressed: () => _requestCarpenter(context),
+                icon: const Icon(Icons.build),
+                label: const Text(
+                  'Send to Carpenter',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
-          ),
           const SizedBox(
             height: 40,
           )

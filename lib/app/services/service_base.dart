@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:madeira/app/widgets/admin_only_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
 
@@ -8,7 +9,7 @@ enum HttpMethod { get, post, put, delete, patch }
 
 class ServiceBase {
   static const String _baseUrl =
-      'http://3.110.104.222:8000/api/'; // Update with your actual base URL
+      'http://43.204.196.183:8000/api/'; // Update with your actual base URL
   static const Duration _timeout = Duration(seconds: 30);
 
   ServiceBase(this._prefs);
@@ -235,7 +236,7 @@ class ServiceBase {
         if (fromJson != null) {
           return fromJson(response.data);
         }
-        return response.data as T;
+        return jsonDecode(response.data);
       } else {
         throw ApiMessageError(
           response.data['error'] ?? response.data['message'] ?? 'Unknown error',
@@ -259,19 +260,18 @@ class ServiceBase {
   }
 
   Future<String?> getUserId() async {
-    return '4';
-    // return _prefs.getString('user_id');
+    return _prefs.getString('user_id');
   }
 
   Future<void> clearAuth() async {
     await _prefs.remove('auth_token');
     await _prefs.remove('user_id');
+    await AdminTracker.clearAdmin();
   }
 
   static Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
-    return true;
-    // return prefs.getString('auth_token') != null;
+    return prefs.getString('auth_token') != null;
   }
 }
 

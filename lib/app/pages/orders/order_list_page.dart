@@ -161,25 +161,25 @@ class _OrderListPageState extends State<OrderListPage>
                 ),
                 const SizedBox(height: 8),
               ],
-              Row(
-                children: [
-                  const Icon(Icons.person_outline,
-                      size: 16, color: Colors.grey),
-                  const SizedBox(width: 4),
-                  Text(
-                    order.customerName ?? 'Unknown Customer',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(width: 16),
-                  const Icon(Icons.phone_outlined,
-                      size: 16, color: Colors.grey),
-                  const SizedBox(width: 4),
-                  Text(
-                    order.contactNumber ?? 'No Contact',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
+              // Row(
+              //   children: [
+              //     const Icon(Icons.person_outline,
+              //         size: 16, color: Colors.grey),
+              //     const SizedBox(width: 4),
+              //     Text(
+              //       order.customerName ?? 'Unknown Customer',
+              //       style: Theme.of(context).textTheme.bodyMedium,
+              //     ),
+              //     const SizedBox(width: 16),
+              //     const Icon(Icons.phone_outlined,
+              //         size: 16, color: Colors.grey),
+              //     const SizedBox(width: 4),
+              //     Text(
+              //       order.contactNumber ?? 'No Contact',
+              //       style: Theme.of(context).textTheme.bodyMedium,
+              //     ),
+              //   ],
+              // ),
               const SizedBox(height: 8),
               Row(
                 children: [

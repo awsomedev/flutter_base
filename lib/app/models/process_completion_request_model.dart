@@ -1,5 +1,4 @@
 import 'package:madeira/app/models/process_model.dart';
-import 'package:madeira/app/models/material_model.dart';
 
 class ProcessCompletionRequest {
   final int? id;
@@ -267,48 +266,94 @@ class ProcessImage {
 }
 
 class MaterialUsed {
-  final MaterialModel materialDetails;
-  final MaterialUsedInProcess materialUsedInProcess;
-
-  MaterialUsed({
-    required this.materialDetails,
-    required this.materialUsedInProcess,
-  });
-
-  factory MaterialUsed.fromJson(Map<String, dynamic> json) {
-    return MaterialUsed(
-      materialDetails: MaterialModel.fromJson(json['material_details']),
-      materialUsedInProcess:
-          MaterialUsedInProcess.fromJson(json['material_used_in_process']),
-    );
-  }
-}
-
-class MaterialUsedInProcess {
   final int id;
   final int quantity;
   final double materialPrice;
   final double totalPrice;
   final int processDetailsId;
   final int materialId;
+  final Material material;
 
-  MaterialUsedInProcess({
+  MaterialUsed({
     required this.id,
     required this.quantity,
     required this.materialPrice,
     required this.totalPrice,
     required this.processDetailsId,
     required this.materialId,
+    required this.material,
   });
 
-  factory MaterialUsedInProcess.fromJson(Map<String, dynamic> json) {
-    return MaterialUsedInProcess(
+  factory MaterialUsed.fromJson(Map<String, dynamic> json) {
+    return MaterialUsed(
       id: json['id'] as int,
       quantity: json['quantity'] as int,
       materialPrice: (json['material_price'] as num).toDouble(),
       totalPrice: (json['total_price'] as num).toDouble(),
       processDetailsId: json['process_details_id'] as int,
       materialId: json['material_id'] as int,
+      material: Material.fromJson(json['material']),
+    );
+  }
+}
+
+class Material {
+  final int id;
+  final List<String> materialImages;
+  final String? code;
+  final String name;
+  final String nameMal;
+  final String description;
+  final String descriptionMal;
+  final String colour;
+  final String quality;
+  final int quantity;
+  final String durability;
+  final String stockAvailability;
+  final double price;
+  final String? referenceImage;
+  final double mrpInGst;
+  final int category;
+
+  Material({
+    required this.id,
+    required this.materialImages,
+    this.code,
+    required this.name,
+    required this.nameMal,
+    required this.description,
+    required this.descriptionMal,
+    required this.colour,
+    required this.quality,
+    required this.quantity,
+    required this.durability,
+    required this.stockAvailability,
+    required this.price,
+    this.referenceImage,
+    required this.mrpInGst,
+    required this.category,
+  });
+
+  factory Material.fromJson(Map<String, dynamic> json) {
+    return Material(
+      id: json['id'] as int,
+      materialImages: (json['material_images'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
+      code: json['code'] as String?,
+      name: json['name'] as String,
+      nameMal: json['name_mal'] as String,
+      description: json['description'] as String,
+      descriptionMal: json['description_mal'] as String,
+      colour: json['colour'] as String,
+      quality: json['quality'] as String,
+      quantity: json['quantity'] as int,
+      durability: json['durability'] as String,
+      stockAvailability: json['stock_availability'] as String,
+      price: (json['price'] as num).toDouble(),
+      referenceImage: json['reference_image'] as String?,
+      mrpInGst: (json['mrp_in_gst'] as num).toDouble(),
+      category: json['category'] as int,
     );
   }
 }

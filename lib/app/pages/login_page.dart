@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madeira/app/app_essentials/colors.dart';
 import 'package:madeira/app/extensions/context_extensions.dart';
+import 'package:madeira/app/pages/home_page.dart';
 import 'package:madeira/app/services/services.dart';
 
 class LoginPage extends StatefulWidget {
@@ -30,6 +31,7 @@ class _LoginPageState extends State<LoginPage> {
 
       if (mounted) {
         context.showSnackBar('Login successful!');
+        context.pushReplacement(() => const HomePage());
       }
     } catch (e) {
       setState(() {
@@ -57,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 60),
-                Text(
+                const Text(
                   'Welcome Back',
                   style: TextStyle(
                     fontSize: 32,
@@ -85,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Text(
                       _errorMessage!,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.error,
                         fontSize: 14,
                       ),

@@ -3,6 +3,7 @@ import 'package:madeira/app/extensions/context_extensions.dart';
 import 'package:madeira/app/pages/home_page.dart';
 import 'package:madeira/app/pages/login_page.dart';
 import 'package:madeira/app/services/service_base.dart';
+import 'package:madeira/app/widgets/admin_only_widget.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -16,6 +17,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Future.delayed(const Duration(seconds: 2), () async {
+      await AdminTracker.getAdmin();
       if (await ServiceBase.isLoggedIn()) {
         context.pushReplacement(() => const HomePage());
       } else {
@@ -26,9 +28,25 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('മരം വെട്ടൽ'),
+    return Scaffold(
+      body: Stack(
+        children: [
+          Image.asset(
+            'assets/images/bg.webp',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          ),
+          const Center(
+            child: Text(
+              'Madeira',
+              style: TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
