@@ -66,7 +66,11 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
             itemCount: snapshot.data!.data.length,
             itemBuilder: (context, index) {
               final order = snapshot.data!.data[index];
-              return _buildOrderCard(order.orderData, order.process);
+              return _buildOrderCard(
+                order.orderData,
+                order.process,
+                order.processDetails,
+              );
             },
           );
         },
@@ -74,7 +78,8 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
     );
   }
 
-  Widget _buildOrderCard(OrderData order, Process process) {
+  Widget _buildOrderCard(
+      OrderData order, Process process, ProcessDetails details) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
@@ -173,17 +178,18 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
                 ],
               ),
               const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => _acceptOrder(order.currentProcess ?? 0),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
+              if (details.processStatus?.toLowerCase() == 'requested')
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => _acceptOrder(order.id ?? 0),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Accept'),
                   ),
-                  child: const Text('Accept'),
                 ),
-              ),
             ],
           ),
         ),

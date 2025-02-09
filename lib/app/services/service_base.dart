@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 enum HttpMethod { get, post, put, delete, patch }
 
@@ -82,13 +81,18 @@ class ServiceBase {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         if (fromJson != null) {
-          return fromJson(jsonDecode(response.body));
+          // Properly decode the response body as UTF-8
+          final decodedBody = utf8.decode(response.bodyBytes);
+          return fromJson(jsonDecode(decodedBody));
         }
-        return jsonDecode(response.body) as T;
+        // Properly decode the response body as UTF-8
+        final decodedBody = utf8.decode(response.bodyBytes);
+        return jsonDecode(decodedBody) as T;
       } else {
+        final decodedError = utf8.decode(response.bodyBytes);
         throw ApiMessageError(
-          jsonDecode(response.body)['error'] ??
-              jsonDecode(response.body)['message'] ??
+          jsonDecode(decodedError)['error'] ??
+              jsonDecode(decodedError)['message'] ??
               'Unknown error',
         );
       }
@@ -164,6 +168,8 @@ class ServiceBase {
       final dio = Dio(BaseOptions(
         baseUrl: _baseUrl,
         headers: _authHeaders,
+        responseType:
+            ResponseType.plain, // Ensure raw response for proper UTF-8 handling
       ));
 
       final Map<String, dynamic> formDataMap = {};

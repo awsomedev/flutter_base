@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:madeira/app/pages/splash_screen.dart';
 import 'package:madeira/app/services/services.dart';
 
@@ -12,12 +13,19 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ThemeData _buildTheme(brightness) {
+      var baseTheme = ThemeData(brightness: brightness);
+
+      return baseTheme.copyWith(
+        textTheme: GoogleFonts.notoSansMalayalamTextTheme(baseTheme.textTheme),
+      );
+    }
+
     return MaterialApp(
       title: 'Your App Name',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
+      theme: _buildTheme(Brightness.light),
+      darkTheme: _buildTheme(Brightness.dark),
+      themeMode: ThemeMode.system,
       home: const SplashScreen(),
     );
   }

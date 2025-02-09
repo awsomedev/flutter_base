@@ -19,6 +19,7 @@ class ProcessDetailData {
   final ProcessDetails processDetails;
   final User processManager;
   final List<User> workersData;
+  final List<UsedMaterial> usedMaterials;
 
   ProcessDetailData({
     required this.orderData,
@@ -26,6 +27,7 @@ class ProcessDetailData {
     required this.processDetails,
     required this.processManager,
     required this.workersData,
+    required this.usedMaterials,
   });
 
   factory ProcessDetailData.fromJson(Map<String, dynamic> json) {
@@ -37,6 +39,11 @@ class ProcessDetailData {
       workersData: (json['workers_data'] as List<dynamic>)
           .map((worker) => User.fromJson(worker))
           .toList(),
+      usedMaterials: json['used_materials'] != null
+          ? (json['used_materials'] as List<dynamic>)
+              .map((material) => UsedMaterial.fromJson(material))
+              .toList()
+          : [],
     );
   }
 }
@@ -112,6 +119,7 @@ class ProcessDetails {
   final DateTime? completionDate;
   final bool overDue;
   final DateTime? requestAcceptedDate;
+  final int processId;
 
   ProcessDetails({
     required this.id,
@@ -121,6 +129,7 @@ class ProcessDetails {
     this.completionDate,
     required this.overDue,
     this.requestAcceptedDate,
+    required this.processId,
   });
 
   factory ProcessDetails.fromJson(Map<String, dynamic> json) {
@@ -140,6 +149,7 @@ class ProcessDetails {
       requestAcceptedDate: json['request_accepted_date'] != null
           ? DateTime.parse(json['request_accepted_date'])
           : null,
+      processId: json['process_id'] as int,
     );
   }
 }
@@ -157,6 +167,113 @@ class ProcessImage {
     return ProcessImage(
       id: json['id'] as int,
       image: json['image'] as String,
+    );
+  }
+}
+
+class UsedMaterial {
+  final Material material;
+  final MaterialUsed materialUsed;
+
+  UsedMaterial({
+    required this.material,
+    required this.materialUsed,
+  });
+
+  factory UsedMaterial.fromJson(Map<String, dynamic> json) {
+    return UsedMaterial(
+      material: Material.fromJson(json['material']),
+      materialUsed: MaterialUsed.fromJson(json['material_used']),
+    );
+  }
+}
+
+class Material {
+  final int id;
+  final List<String> materialImages;
+  final String? code;
+  final String name;
+  final String nameMal;
+  final String description;
+  final String descriptionMal;
+  final String colour;
+  final String quality;
+  final int quantity;
+  final String durability;
+  final String stockAvailability;
+  final double price;
+  final String? referenceImage;
+  final double mrpInGst;
+  final int category;
+
+  Material({
+    required this.id,
+    required this.materialImages,
+    this.code,
+    required this.name,
+    required this.nameMal,
+    required this.description,
+    required this.descriptionMal,
+    required this.colour,
+    required this.quality,
+    required this.quantity,
+    required this.durability,
+    required this.stockAvailability,
+    required this.price,
+    this.referenceImage,
+    required this.mrpInGst,
+    required this.category,
+  });
+
+  factory Material.fromJson(Map<String, dynamic> json) {
+    return Material(
+      id: json['id'] as int,
+      materialImages: (json['material_images'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
+      code: json['code'] as String?,
+      name: json['name'] as String,
+      nameMal: json['name_mal'] as String,
+      description: json['description'] as String,
+      descriptionMal: json['description_mal'] as String,
+      colour: json['colour'] as String,
+      quality: json['quality'] as String,
+      quantity: json['quantity'] as int,
+      durability: json['durability'] as String,
+      stockAvailability: json['stock_availability'] as String,
+      price: (json['price'] as num).toDouble(),
+      referenceImage: json['reference_image'] as String?,
+      mrpInGst: (json['mrp_in_gst'] as num).toDouble(),
+      category: json['category'] as int,
+    );
+  }
+}
+
+class MaterialUsed {
+  final int id;
+  final int quantity;
+  final double materialPrice;
+  final double totalPrice;
+  final int processDetailsId;
+  final int materialId;
+
+  MaterialUsed({
+    required this.id,
+    required this.quantity,
+    required this.materialPrice,
+    required this.totalPrice,
+    required this.processDetailsId,
+    required this.materialId,
+  });
+
+  factory MaterialUsed.fromJson(Map<String, dynamic> json) {
+    return MaterialUsed(
+      id: json['id'] as int,
+      quantity: json['quantity'] as int,
+      materialPrice: (json['material_price'] as num).toDouble(),
+      totalPrice: (json['total_price'] as num).toDouble(),
+      processDetailsId: json['process_details_id'] as int,
+      materialId: json['material_id'] as int,
     );
   }
 }

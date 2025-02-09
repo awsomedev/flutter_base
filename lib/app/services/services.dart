@@ -13,6 +13,7 @@ import 'package:madeira/app/models/process_manager_order_model.dart';
 import 'package:madeira/app/models/process_detail_model.dart';
 import 'package:madeira/app/models/enquiry_detail_response_model.dart'
     as detail_model;
+import 'package:madeira/app/models/process_completion_request_model.dart';
 import 'package:madeira/app/services/service_base.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -93,10 +94,12 @@ class Services extends ServiceBase {
     throw Exception('Invalid response format');
   }
 
-  Future<MaterialModel> createMaterial(Map<String, dynamic> data) async {
-    final response = await post(
+  Future<MaterialModel> createMaterial(
+      Map<String, dynamic> data, List<File> images) async {
+    final response = await uploadFormData(
       endpoint: 'materials/create/',
-      body: data,
+      fields: data,
+      files: {'material_image': images},
     );
     return MaterialModel.fromJson(response);
   }
@@ -108,10 +111,11 @@ class Services extends ServiceBase {
   }
 
   Future<MaterialModel> updateMaterial(
-      int id, Map<String, dynamic> data) async {
-    final response = await put(
+      int id, Map<String, dynamic> data, List<File> images) async {
+    final response = await uploadFormData(
       endpoint: 'materials/$id/update/',
-      body: data,
+      fields: data,
+      files: {'material_image': images},
     );
     return MaterialModel.fromJson(response);
   }
@@ -361,5 +365,28 @@ class Services extends ServiceBase {
       endpoint: 'orders/$enquiryId/',
     );
     return detail_model.EnquiryDetailResponse.fromJson(response);
+  }
+
+  Future<List<ProcessCompletionRequest>> getProcessCompletionRequests() async {
+    final userId = '2';
+    // final userId = await getUserId();
+    final response = await get(
+      endpoint: 'orders/manager/$userId/verification/list/',
+    );
+
+    if (response is List) {
+      return response
+          .map((json) => ProcessCompletionRequest.fromJson(json))
+          .toList();
+    }
+    throw Exception('Invalid response format');
+  }
+
+  Future<ProcessCompletionRequestVerification>
+      getProcessCompletionRequestVerification(int orderId) async {
+    final response = await get(
+      endpoint: 'orders/manager/$orderId/verification/view/',
+    );
+    return ProcessCompletionRequestVerification.fromJson(response['data']);
   }
 }

@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:madeira/app/widgets/image_list_picker.dart';
 import '../../models/material_model.dart';
 import '../../services/services.dart';
 import '../../app_essentials/colors.dart';
@@ -26,6 +29,7 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
   final _durabilityController = TextEditingController();
   final _priceController = TextEditingController();
   final _quantityController = TextEditingController();
+  List<File> _images = [];
   bool _isLoading = false;
 
   @override
@@ -81,13 +85,14 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
       };
 
       if (widget.material != null) {
-        await Services().updateMaterial(widget.material!.id, materialData);
+        await Services()
+            .updateMaterial(widget.material!.id, materialData, _images);
         if (mounted) {
           _showSnackBar('Material updated successfully', false);
           Navigator.pop(context, true);
         }
       } else {
-        await Services().createMaterial(materialData);
+        await Services().createMaterial(materialData, _images);
         if (mounted) {
           _showSnackBar('Material created successfully', false);
           Navigator.pop(context, true);
@@ -193,6 +198,19 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
                     }
                   }
                   return null;
+                },
+              ),
+              const SizedBox(height: 10),
+              ImageListPicker(
+                onAdd: (images, _) {
+                  setState(() {
+                    _images = images.map((e) => e.file!).toList();
+                  });
+                },
+                onRemove: (images, _) {
+                  setState(() {
+                    _images = images.map((e) => e.file!).toList();
+                  });
                 },
               ),
               const SizedBox(height: 24),

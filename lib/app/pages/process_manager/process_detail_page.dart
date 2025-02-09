@@ -295,28 +295,34 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
                 const SizedBox(height: 20),
                 _buildWorkersDetails(data.workersData),
                 const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _showMaterialPicker,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                _buildUsedMaterials(data.usedMaterials),
+                const SizedBox(height: 20),
+                if (data.processDetails.processStatus.toLowerCase() ==
+                    'in_progress')
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _showMaterialPicker,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Add Materials'),
                     ),
-                    child: const Text('Add Materials'),
                   ),
-                ),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => _showVerificationImagePicker(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                if (data.processDetails.processStatus.toLowerCase() ==
+                    'in_progress')
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => _showVerificationImagePicker(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Send completion request'),
                     ),
-                    child: const Text('Send completion request'),
                   ),
-                ),
               ],
             ),
           );
@@ -612,6 +618,168 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
                       ),
                     ],
                   ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUsedMaterials(List<UsedMaterial> materials) {
+    if (materials.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Used Materials',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 16),
+              Center(
+                child: Text(
+                  'No materials used yet',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Used Materials',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Total: ₹${materials.fold(0.0, (sum, material) => sum + material.materialUsed.totalPrice).toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: materials.length,
+              separatorBuilder: (context, index) => const Divider(),
+              itemBuilder: (context, index) {
+                final material = materials[index];
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                material.material.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                material.material.nameMal,
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            material.material.stockAvailability.toUpperCase(),
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Quantity: ${material.materialUsed.quantity}',
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                            Text(
+                              'Price: ₹${material.materialUsed.materialPrice}',
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          'Total: ₹${material.materialUsed.totalPrice}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      material.material.description,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      material.material.descriptionMal,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
                 );
               },
             ),

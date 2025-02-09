@@ -18,16 +18,19 @@ class ProcessManagerOrderResponse {
 class ProcessManagerOrder {
   final OrderData orderData;
   final Process process;
+  final ProcessDetails processDetails;
 
   ProcessManagerOrder({
     required this.orderData,
     required this.process,
+    required this.processDetails,
   });
 
   factory ProcessManagerOrder.fromJson(Map<String, dynamic> json) {
     return ProcessManagerOrder(
       orderData: OrderData.fromJson(json['order_data']),
       process: Process.fromJson(json['process']),
+      processDetails: ProcessDetails.fromJson(json['process_details']),
     );
   }
 }
@@ -86,4 +89,68 @@ class OrderData {
 
   String get statusText =>
       currentProcessStatus?.replaceAll('_', ' ').toUpperCase() ?? '';
+}
+
+class ProcessDetails {
+  final int? id;
+  final List<String>? images;
+  final String? processStatus;
+  final DateTime? expectedCompletionDate;
+  final DateTime? completionDate;
+  final double? workersSalary;
+  final double? materialPrice;
+  final double? totalPrice;
+  final String? image;
+  final bool? overDue;
+  final DateTime? requestAcceptedDate;
+  final int? orderId;
+  final int? processId;
+  final int? mainManagerId;
+  final int? processManagerId;
+  final List<int>? processWorkersId;
+
+  ProcessDetails({
+    required this.id,
+    required this.images,
+    required this.processStatus,
+    required this.expectedCompletionDate,
+    this.completionDate,
+    required this.workersSalary,
+    required this.materialPrice,
+    required this.totalPrice,
+    this.image,
+    required this.overDue,
+    required this.requestAcceptedDate,
+    required this.orderId,
+    required this.processId,
+    required this.mainManagerId,
+    required this.processManagerId,
+    required this.processWorkersId,
+  });
+
+  factory ProcessDetails.fromJson(Map<String, dynamic> json) {
+    return ProcessDetails(
+      id: json['id'] as int,
+      images:
+          (json['images'] as List<dynamic>).map((e) => e as String).toList(),
+      processStatus: json['process_status'] as String,
+      expectedCompletionDate: DateTime.parse(json['expected_completion_date']),
+      completionDate: json['completion_date'] != null
+          ? DateTime.parse(json['completion_date'])
+          : null,
+      workersSalary: (json['workers_salary'] as num).toDouble(),
+      materialPrice: (json['material_price'] as num).toDouble(),
+      totalPrice: (json['total_price'] as num).toDouble(),
+      image: json['image'] as String?,
+      overDue: json['over_due'] as bool,
+      requestAcceptedDate: DateTime.parse(json['request_accepted_date']),
+      orderId: json['order_id'] as int,
+      processId: json['process_id'] as int,
+      mainManagerId: json['main_manager_id'] as int,
+      processManagerId: json['process_manager_id'] as int,
+      processWorkersId: (json['process_workers_id'] as List<dynamic>)
+          .map((e) => e as int)
+          .toList(),
+    );
+  }
 }
