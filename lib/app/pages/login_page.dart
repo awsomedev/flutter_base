@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madeira/app/app_essentials/colors.dart';
 import 'package:madeira/app/extensions/context_extensions.dart';
+import 'package:madeira/app/models/user_static.dart';
 import 'package:madeira/app/pages/home_page.dart';
 import 'package:madeira/app/services/services.dart';
 
@@ -24,10 +25,13 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      await Services().login(
+      final user = await Services().login(
         phone: _phoneController.text,
         password: _passwordController.text,
       );
+
+      await Services().saveUser(user.user);
+      UserStatic.setUser(user.user);
 
       if (mounted) {
         context.showSnackBar('Login successful!');

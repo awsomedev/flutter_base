@@ -350,6 +350,19 @@ class Services extends ServiceBase {
     );
   }
 
+  Future<void> deleteProcessMaterial({
+    required int processDetailsId,
+    required int materialId,
+  }) async {
+    await post(
+      endpoint: 'process_materials/delete/',
+      body: {
+        'process_details_id': processDetailsId,
+        'material_id': materialId,
+      },
+    );
+  }
+
   Future<void> sendProcessVerificationImages(
       int processId, List<File> images) async {
     final Map<String, List<File>> files = {

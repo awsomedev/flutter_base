@@ -250,12 +250,12 @@ class Material {
 }
 
 class MaterialUsed {
-  final int id;
-  final int quantity;
-  final double materialPrice;
-  final double totalPrice;
-  final int processDetailsId;
-  final int materialId;
+  final int? id;
+  final int? quantity;
+  final double? materialPrice;
+  final double? totalPrice;
+  final int? processDetailsId;
+  final int? materialId;
 
   MaterialUsed({
     required this.id,
@@ -268,12 +268,12 @@ class MaterialUsed {
 
   factory MaterialUsed.fromJson(Map<String, dynamic> json) {
     return MaterialUsed(
-      id: json['id'] as int,
-      quantity: json['quantity'] as int,
-      materialPrice: (json['material_price'] as num).toDouble(),
-      totalPrice: (json['total_price'] as num).toDouble(),
-      processDetailsId: json['process_details_id'] as int,
-      materialId: json['material_id'] as int,
+      id: json['id'] as int?,
+      quantity: json['quantity'] as int?,
+      materialPrice: (json['material_price'] as num?)?.toDouble(),
+      totalPrice: (json['total_price'] as num?)?.toDouble(),
+      processDetailsId: json['process_details_id'] as int?,
+      materialId: json['material_id'] as int?,
     );
   }
 }

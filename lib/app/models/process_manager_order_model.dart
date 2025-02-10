@@ -93,7 +93,7 @@ class OrderData {
 
 class ProcessDetails {
   final int? id;
-  final List<String>? images;
+  final List<Map<String, dynamic>>? images;
   final String? processStatus;
   final DateTime? expectedCompletionDate;
   final DateTime? completionDate;
@@ -131,8 +131,10 @@ class ProcessDetails {
   factory ProcessDetails.fromJson(Map<String, dynamic> json) {
     return ProcessDetails(
       id: json['id'] as int,
-      images:
-          (json['images'] as List<dynamic>).map((e) => e as String).toList(),
+      images: (json['images'] as List<dynamic>?)
+              ?.map((e) => e as Map<String, dynamic>)
+              .toList() ??
+          [],
       processStatus: json['process_status'] as String,
       expectedCompletionDate: DateTime.parse(json['expected_completion_date']),
       completionDate: json['completion_date'] != null

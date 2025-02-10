@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:madeira/app/extensions/context_extensions.dart';
+import 'package:madeira/app/models/user_static.dart';
 import 'package:madeira/app/pages/enquiry/enquiry_page.dart';
 import 'package:madeira/app/pages/inventory/category_list_page.dart';
 import 'package:madeira/app/pages/orders/order_list_page.dart';
@@ -92,8 +93,11 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
-        centerTitle: true,
+        title: Text(
+          'Welcome, ${UserStatic.getUser()?.username}',
+          style: const TextStyle(fontSize: 18),
+        ),
+        centerTitle: false,
         actions: [
           IconButton(
             onPressed: () async {

@@ -67,7 +67,7 @@ class _ManagerOrderDetailPageState extends State<ManagerOrderDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Change Process',
+                    'Add Process',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -191,7 +191,7 @@ class _ManagerOrderDetailPageState extends State<ManagerOrderDetailPage> {
     if (result == true) {
       endResult = await ConfirmationDialog.show(
             title: 'Confirmation',
-            message: 'Are you sure you want to change the process?',
+            message: 'Are you sure you want to add this process?',
             context: context,
           ) ??
           false;
@@ -271,7 +271,7 @@ class _ManagerOrderDetailPageState extends State<ManagerOrderDetailPage> {
                         backgroundColor: AppColors.primary,
                       ),
                       child: const Text(
-                        'Change current process',
+                        'Add to process',
                         style: TextStyle(color: Colors.white),
                       ),
                     ),

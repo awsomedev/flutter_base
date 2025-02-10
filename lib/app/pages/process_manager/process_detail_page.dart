@@ -5,6 +5,7 @@ import 'package:madeira/app/models/process_detail_model.dart';
 import 'package:madeira/app/models/material_model.dart';
 import 'package:madeira/app/models/user_model.dart';
 import 'package:madeira/app/services/services.dart';
+import 'package:madeira/app/widgets/confirmation_dialog.dart';
 import 'package:madeira/app/widgets/loading_widget.dart';
 import 'package:madeira/app/widgets/error_widget.dart';
 import 'package:madeira/app/widgets/searchable_picker.dart';
@@ -675,7 +676,7 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
                   ),
                 ),
                 Text(
-                  'Total: ₹${materials.fold(0.0, (sum, material) => sum + material.materialUsed.totalPrice).toStringAsFixed(2)}',
+                  'Total: ₹${materials.fold(0.0, (sum, material) => sum + (material.materialUsed.totalPrice ?? 0)).toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -710,7 +711,7 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
                               ),
                               Text(
                                 material.material.nameMal,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: AppColors.textSecondary,
                                   fontSize: 14,
                                 ),
@@ -718,23 +719,52 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
                             ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            material.material.stockAvailability.toUpperCase(),
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                        Column(
+                          children: [
+                            IconButton(
+                              onPressed: () async {
+                                bool? res = await ConfirmationDialog.show(
+                                  title: 'Delete Material',
+                                  message:
+                                      'Are you sure you want to delete this material?',
+                                  context: context,
+                                );
+                                if (res == true) {
+                                  await Services().deleteProcessMaterial(
+                                    processDetailsId: widget.processDetailsId,
+                                    materialId: material.material.id,
+                                  );
+                                  if (context.mounted) {
+                                    context.showSnackBar(
+                                      'Material deleted successfully',
+                                      backgroundColor: Colors.green,
+                                    );
+                                    setState(() {});
+                                  }
+                                }
+                              },
+                              icon: const Icon(Icons.delete),
                             ),
-                          ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                material.material.stockAvailability
+                                    .toUpperCase(),
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

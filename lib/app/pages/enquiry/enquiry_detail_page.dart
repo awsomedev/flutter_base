@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madeira/app/extensions/string_extension.dart';
-import '../../models/enquiry_model.dart';
+import 'package:madeira/app/widgets/progress_indicator_widget.dart';
+
 import '../../models/enquiry_detail_response_model.dart' as detail_model;
 import '../../app_essentials/colors.dart';
 import '../../services/services.dart';
@@ -8,7 +9,7 @@ import '../../extensions/context_extensions.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-class EnquiryDetailPage extends StatelessWidget {
+class EnquiryDetailPage extends StatefulWidget {
   final int enquiryId;
 
   const EnquiryDetailPage({
@@ -16,10 +17,21 @@ class EnquiryDetailPage extends StatelessWidget {
     required this.enquiryId,
   }) : super(key: key);
 
+  @override
+  State<EnquiryDetailPage> createState() => _EnquiryDetailPageState();
+}
+
+class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
+  bool _isCarpenterRequested = false;
+
   Future<void> _requestCarpenter(BuildContext context) async {
     try {
-      await Services().requestCarpenter(enquiryId);
+      await Services().requestCarpenter(widget.enquiryId);
+
       if (context.mounted) {
+        setState(() {
+          _isCarpenterRequested = true;
+        });
         context.showSnackBar(
           'Carpenter requested successfully',
           backgroundColor: Colors.green,
@@ -88,7 +100,7 @@ class EnquiryDetailPage extends StatelessWidget {
   }
 
   Widget _buildImageCarousel(detail_model.EnquiryDetailResponse enquiryDetail) {
-    final images = enquiryDetail.orderData.images;
+    final images = enquiryDetail.product?.materialImages;
     if (images == null || images.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -168,9 +180,9 @@ class EnquiryDetailPage extends StatelessWidget {
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: enquiryDetail.materials.length,
+          itemCount: enquiryDetail.materials?.length ?? 0,
           itemBuilder: (context, index) {
-            final material = enquiryDetail.materials[index];
+            final material = enquiryDetail.materials?[index];
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: Padding(
@@ -179,20 +191,20 @@ class EnquiryDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      material.name,
+                      material?.name ?? 'N/A',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(material.description),
+                    Text(material?.description ?? 'N/A'),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Quantity: ${material.quantity}'),
-                        Text('Price: ₹${material.price}'),
+                        Text('Quantity: ${material?.quantity}'),
+                        Text('Price: ₹${material?.price}'),
                       ],
                     ),
                   ],
@@ -231,15 +243,18 @@ class EnquiryDetailPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildDetailRow('Name', enquiryDetail.mainManager.name),
-                _buildDetailRow('Email', enquiryDetail.mainManager.email),
-                _buildDetailRow('Phone', enquiryDetail.mainManager.phone),
+                _buildDetailRow(
+                    'Name', enquiryDetail.mainManager?.name ?? 'N/A'),
+                _buildDetailRow(
+                    'Email', enquiryDetail.mainManager?.email ?? 'N/A'),
+                _buildDetailRow(
+                    'Phone', enquiryDetail.mainManager?.phone ?? 'N/A'),
               ],
             ),
           ),
         ),
         const SizedBox(height: 16),
-        if (enquiryDetail.carpenterEnquiryData.carpenterUser != null)
+        if (enquiryDetail.carpenterEnquiryData?.carpenterUser != null)
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -255,20 +270,195 @@ class EnquiryDetailPage extends StatelessWidget {
                   const SizedBox(height: 8),
                   _buildDetailRow(
                     'Name',
-                    enquiryDetail.carpenterEnquiryData.carpenterUser.name,
+                    enquiryDetail.carpenterEnquiryData?.carpenterUser?.name ??
+                        'N/A',
                   ),
                   _buildDetailRow(
                     'Email',
-                    enquiryDetail.carpenterEnquiryData.carpenterUser.email,
+                    enquiryDetail.carpenterEnquiryData?.carpenterUser?.email ??
+                        'N/A',
                   ),
                   _buildDetailRow(
                     'Phone',
-                    enquiryDetail.carpenterEnquiryData.carpenterUser.phone,
+                    enquiryDetail.carpenterEnquiryData?.carpenterUser?.phone ??
+                        'N/A',
                   ),
+                  if (enquiryDetail.carpenterEnquiryData?.carpenterData !=
+                          null &&
+                      enquiryDetail.carpenterEnquiryData?.carpenterData
+                              ?.isNotEmpty ==
+                          true)
+                    _buildDetailRow(
+                      'Status',
+                      enquiryDetail.carpenterEnquiryData?.carpenterData?.first
+                              .status ??
+                          'N/A',
+                    ),
                 ],
               ),
             ),
           ),
+        if (enquiryDetail.carpenterEnquiryData?.carpenterData != null)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children:
+                enquiryDetail.carpenterEnquiryData!.carpenterData!.map((data) {
+              return Card(
+                margin: const EdgeInsets.only(top: 8.0),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildDetailRow('Order ID', '${data.orderId ?? 'N/A'}'),
+                      _buildDetailRow(
+                          'Material ID', '${data.materialId ?? 'N/A'}'),
+                      _buildDetailRow(
+                          'Material Length', '${data.materialLength ?? 'N/A'}'),
+                      _buildDetailRow(
+                          'Material Height', '${data.materialHeight ?? 'N/A'}'),
+                      _buildDetailRow(
+                          'Material Width', '${data.materialWidth ?? 'N/A'}'),
+                      _buildDetailRow('Status', data.status ?? 'N/A'),
+                      _buildDetailRow(
+                          'Carpenter ID', '${data.carpenterId ?? 'N/A'}'),
+                      _buildDetailRow(
+                          'Material Cost', '₹${data.materialCost ?? 'N/A'}'),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildCompletedProcesses(
+      List<detail_model.CompletedProcessData>? completedProcesses) {
+    if (completedProcesses == null || completedProcesses.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Completed Processes',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...completedProcesses.map((process) {
+          return Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    process.completedProcess?.name ?? 'N/A',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(process.completedProcess?.description ?? 'N/A'),
+                  const SizedBox(height: 8),
+                  Text(
+                      'Status: ${process.completedProcessDetails?.processStatus ?? 'N/A'}'),
+                  const SizedBox(height: 8),
+                  if (process.materialsUsed != null)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: process.materialsUsed!.map((material) {
+                        final materialDetails = material.materialDetails;
+                        final materialUsedInProcess =
+                            material.materialUsedInProcess;
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            '${materialDetails?.name ?? 'N/A'}: Quantity - ${materialUsedInProcess?.quantity ?? 'N/A'}, Price - ₹${materialUsedInProcess?.materialPrice ?? 'N/A'}',
+                            style:
+                                const TextStyle(color: AppColors.textSecondary),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _buildCurrentProcess(detail_model.CurrentProcess? currentProcess) {
+    if (currentProcess == null || currentProcess.currentProcess == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Current Process',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  currentProcess.currentProcess?.name ?? 'N/A',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(currentProcess.currentProcess?.description ?? 'N/A'),
+                const SizedBox(height: 8),
+                Text(
+                    'Status: ${currentProcess.currentProcessDetails?.processStatus ?? 'N/A'}'),
+                const SizedBox(height: 8),
+                if (currentProcess.currentProcessMaterialsUsed != null)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: currentProcess.currentProcessMaterialsUsed!
+                        .map((material) {
+                      final materialDetails = material.materialDetails;
+                      final materialUsedInProcess =
+                          material.materialUsedInProcess;
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          '${materialDetails?.name ?? 'N/A'}: Quantity - ${materialUsedInProcess?.quantity ?? 'N/A'}, Price - ₹${materialUsedInProcess?.materialPrice ?? 'N/A'}',
+                          style:
+                              const TextStyle(color: AppColors.textSecondary),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
       ],
     );
   }
@@ -285,64 +475,76 @@ class EnquiryDetailPage extends StatelessWidget {
           _buildSection(
             title: 'Product Details',
             children: [
-              _buildDetailRow('Name', orderData.productName ?? 'N/A'),
-              if (orderData.productNameMal != null)
-                _buildDetailRow('Name (Malayalam)', orderData.productNameMal!),
               _buildDetailRow(
-                  'Description', orderData.productDescription ?? 'N/A'),
-              if (orderData.productDescriptionMal != null)
-                _buildDetailRow('Description (Malayalam)',
-                    orderData.productDescriptionMal!),
+                  'Name', enquiryDetail.orderData?.productName ?? 'N/A'),
+              _buildDetailRow('Description',
+                  enquiryDetail.orderData?.productDescription ?? 'N/A'),
+              _buildDetailRow('Name (Malayalam)',
+                  enquiryDetail.orderData?.productNameMal ?? 'N/A'),
+              _buildDetailRow('Description (Malayalam)',
+                  enquiryDetail.orderData?.productDescriptionMal ?? 'N/A'),
               _buildDetailRow('Dimensions',
-                  '${orderData.productLength ?? 'N/A'} x ${orderData.productWidth ?? 'N/A'} x ${orderData.productHeight ?? 'N/A'}'),
-              _buildDetailRow('Finish', orderData.finish ?? 'N/A'),
-              _buildDetailRow('Event', orderData.event ?? 'N/A'),
+                  '${enquiryDetail.orderData?.productLength ?? 'N/A'} x ${enquiryDetail.orderData?.productWidth ?? 'N/A'} x ${enquiryDetail.orderData?.productHeight ?? 'N/A'}'),
+              _buildDetailRow(
+                  'Finish', enquiryDetail.orderData?.finish ?? 'N/A'),
+              _buildDetailRow('Event', enquiryDetail.orderData?.event ?? 'N/A'),
+              _buildDetailRow('Price',
+                  '₹${enquiryDetail.orderData?.estimatedPrice ?? 'N/A'}'),
+              ProgressIndicatorWidget(
+                totalSteps: 100,
+                currentStep: (enquiryDetail.completionPercentage ?? 0).toInt(),
+                height: 10,
+              ),
             ],
           ),
           _buildSection(
             title: 'Customer Information',
             children: [
-              _buildDetailRow('Name', orderData.customerName ?? 'N/A'),
-              _buildDetailRow('Phone', orderData.contactNumber ?? 'N/A'),
-              _buildDetailRow('WhatsApp', orderData.whatsappNumber ?? 'N/A'),
-              _buildDetailRow('Email', orderData.email ?? 'N/A'),
-              _buildDetailRow('Address', orderData.address ?? 'N/A'),
+              _buildDetailRow('Name', orderData?.customerName ?? 'N/A'),
+              _buildDetailRow('Phone', orderData?.contactNumber ?? 'N/A'),
+              _buildDetailRow('WhatsApp', orderData?.whatsappNumber ?? 'N/A'),
+              _buildDetailRow('Email', orderData?.email ?? 'N/A'),
+              _buildDetailRow('Address', orderData?.address ?? 'N/A'),
             ],
           ),
           _buildSection(
             title: 'Order Status',
             children: [
               _buildDetailRow(
-                  'Priority', orderData.priority?.toUpperCase() ?? 'N/A'),
-              _buildDetailRow('Status', orderData.status ?? 'N/A'),
+                  'Priority', orderData?.priority?.toUpperCase() ?? 'N/A'),
+              _buildDetailRow('Status', orderData?.status ?? 'N/A'),
               _buildDetailRow(
-                  'Enquiry Status', orderData.enquiryStatus ?? 'N/A'),
+                  'Enquiry Status', orderData?.enquiryStatus ?? 'N/A'),
               _buildDetailRow('Completion',
-                  '${(enquiryDetail.completionPercentage * 100).toStringAsFixed(1)}%'),
+                  '${((enquiryDetail.completionPercentage ?? 0)).toStringAsFixed(1)}%'),
               _buildDetailRow(
                   'Estimated Delivery',
-                  orderData.estimatedDeliveryDate
+                  orderData?.estimatedDeliveryDate
                           ?.toLocal()
                           .toString()
                           .split(' ')[0] ??
                       'N/A'),
-              if (orderData.estimatedPrice != null)
+              if (orderData?.estimatedPrice != null)
                 _buildDetailRow(
-                    'Estimated Price', '₹${orderData.estimatedPrice}'),
+                    'Estimated Price', '₹${orderData?.estimatedPrice}'),
               _buildDetailRow(
-                  'Material Cost', '₹${orderData.materialCost ?? 0}'),
+                  'Material Cost', '₹${orderData?.materialCost ?? 0}'),
               _buildDetailRow(
-                  'Ongoing Expense', '₹${orderData.ongoingExpense ?? 0}'),
+                  'Ongoing Expense', '₹${orderData?.ongoingExpense ?? 0}'),
               _buildDetailRow(
-                  'Over Due', orderData.overDue == true ? 'Yes' : 'No'),
+                  'Over Due', orderData?.overDue == true ? 'Yes' : 'No'),
             ],
           ),
           _buildMaterialsList(enquiryDetail),
           const SizedBox(height: 24),
           _buildTeamSection(enquiryDetail),
           const SizedBox(height: 24),
-          if (enquiryDetail.orderData.enquiryStatus?.toLowerCase() ==
-              'initiated')
+          _buildCompletedProcesses(enquiryDetail.completedProcessData),
+          _buildCurrentProcess(enquiryDetail.currentProcess),
+          const SizedBox(height: 24),
+          if (enquiryDetail.orderData?.enquiryStatus?.toLowerCase() ==
+                  'initiated' &&
+              !_isCarpenterRequested)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -375,7 +577,7 @@ class EnquiryDetailPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: FutureBuilder<detail_model.EnquiryDetailResponse>(
-        future: Services().getEnquiryDetails(enquiryId),
+        future: Services().getEnquiryDetails(widget.enquiryId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
@@ -421,7 +623,7 @@ class EnquiryDetailPage extends StatelessWidget {
             backgroundColor: AppColors.background,
             appBar: AppBar(
               title: Text(
-                enquiryDetail.orderData.productName ?? 'Enquiry Details',
+                enquiryDetail.orderData?.productName ?? 'Enquiry Details',
                 style: const TextStyle(color: AppColors.textPrimary),
               ),
               backgroundColor: AppColors.surface,

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:madeira/app/models/login_model.dart';
 import 'package:madeira/app/widgets/admin_only_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
@@ -19,9 +20,9 @@ class ServiceBase {
   static String get baseUrl => _baseUrl;
 
   // Get stored auth token
-  String? get authToken =>
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjo0ODkwNzc1NTc3LCJpYXQiOjE3MzcxNzU1NzcsImp0aSI6IjRmNThkZDUxYjVlZDQ4OWQ5YWFjODNjZTM2NWM1MTc4IiwidXNlcl9pZCI6MX0.hJJY5fY1gUN1PbW2Z5-tXf4CdnqTV_btZogojn0SsTw';
-  // String? get authToken => _prefs.getString('auth_token');
+  // String? get authToken =>
+  //     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjo0ODkwNzc1NTc3LCJpYXQiOjE3MzcxNzU1NzcsImp0aSI6IjRmNThkZDUxYjVlZDQ4OWQ5YWFjODNjZTM2NWM1MTc4IiwidXNlcl9pZCI6MX0.hJJY5fY1gUN1PbW2Z5-tXf4CdnqTV_btZogojn0SsTw';
+  String? get authToken => _prefs.getString('auth_token');
 
   // Get stored user ID
   String? get userId => _prefs.getString('user_id');
@@ -263,9 +264,19 @@ class ServiceBase {
     return _prefs.getString('user_id');
   }
 
+  Future<void> saveUser(UserModel user) async {
+    await _prefs.setString('user', jsonEncode(user.toJson()));
+  }
+
+  Future<UserModel?> getUser() async {
+    final userJson = _prefs.getString('user');
+    return userJson != null ? UserModel.fromJson(jsonDecode(userJson)) : null;
+  }
+
   Future<void> clearAuth() async {
     await _prefs.remove('auth_token');
     await _prefs.remove('user_id');
+    await _prefs.remove('user');
     await AdminTracker.clearAdmin();
   }
 

@@ -39,4 +39,13 @@ class UserModel {
       isAdmin: json['isAdmin'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'username': username,
+      'phone': phone,
+      'isAdmin': isAdmin,
+    };
+  }
 }
