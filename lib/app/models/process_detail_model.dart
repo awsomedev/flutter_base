@@ -190,7 +190,7 @@ class UsedMaterial {
 
 class Material {
   final int id;
-  final List<String> materialImages;
+  final List<dynamic> materialImages;
   final String? code;
   final String name;
   final String nameMal;
@@ -228,9 +228,8 @@ class Material {
   factory Material.fromJson(Map<String, dynamic> json) {
     return Material(
       id: json['id'] as int,
-      materialImages: (json['material_images'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
+      materialImages:
+          (json['material_images'] as List<dynamic>).map((e) => e).toList(),
       code: json['code'] as String?,
       name: json['name'] as String,
       nameMal: json['name_mal'] as String,

@@ -310,20 +310,23 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildDetailRow('Order ID', '${data.orderId ?? 'N/A'}'),
                       _buildDetailRow(
-                          'Material ID', '${data.materialId ?? 'N/A'}'),
+                          'Material Name', data.material?.name ?? 'N/A'),
+                      _buildDetailRow('Material Name(Mal)',
+                          data.material?.nameMal ?? 'N/A'),
+                      // _buildDetailRow(
+                      //     'Material ID', '${data.materialId ?? 'N/A'}'),
                       _buildDetailRow(
                           'Material Length', '${data.materialLength ?? 'N/A'}'),
                       _buildDetailRow(
                           'Material Height', '${data.materialHeight ?? 'N/A'}'),
                       _buildDetailRow(
                           'Material Width', '${data.materialWidth ?? 'N/A'}'),
-                      _buildDetailRow('Status', data.status ?? 'N/A'),
+                      // _buildDetailRow('Status', data.status ?? 'N/A'),
+                      // _buildDetailRow(
+                      //     'Carpenter ID', '${data.carpenterId ?? 'N/A'}'),
                       _buildDetailRow(
-                          'Carpenter ID', '${data.carpenterId ?? 'N/A'}'),
-                      _buildDetailRow(
-                          'Material Cost', '₹${data.materialCost ?? 'N/A'}'),
+                          'Material Cost', '₹${data.material?.price ?? 'N/A'}'),
                     ],
                   ),
                 ),

@@ -26,7 +26,7 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: 'Your App Name',
       theme: _buildTheme(Brightness.light),
-      darkTheme: _buildTheme(Brightness.dark),
+      darkTheme: _buildTheme(Brightness.light),
       themeMode: ThemeMode.system,
       home: const SplashScreen(),
     );
