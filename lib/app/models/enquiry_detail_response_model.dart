@@ -626,11 +626,15 @@ class ProcessDetails {
 
 class MaterialUsed {
   final Material? materialDetails;
+  final Material? currentMaterialDetails;
   final MaterialUsedInProcess? materialUsedInProcess;
+  final MaterialUsedInProcess? currentMaterialUsedInProcess;
 
   MaterialUsed({
     this.materialDetails,
+    this.currentMaterialDetails,
     this.materialUsedInProcess,
+    this.currentMaterialUsedInProcess,
   });
 
   factory MaterialUsed.fromJson(Map<String, dynamic> json) {
@@ -642,6 +646,14 @@ class MaterialUsed {
           ? MaterialUsedInProcess.fromJson(
               json['completed_material_used_in_process'])
           : null,
+      currentMaterialDetails: json['current_material_details'] != null
+          ? Material.fromJson(json['current_material_details'])
+          : null,
+      currentMaterialUsedInProcess:
+          json['current_material_used_in_process'] != null
+              ? MaterialUsedInProcess.fromJson(
+                  json['current_material_used_in_process'])
+              : null,
     );
   }
 }

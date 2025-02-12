@@ -499,37 +499,213 @@ class _ManagerOrderDetailPageState extends State<ManagerOrderDetailPage> {
     if (processes.isEmpty) {
       return const SizedBox.shrink();
     }
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Completed Processes',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: processes.length,
-              itemBuilder: (context, index) {
-                final process = processes[index];
-                return ExpansionTile(
-                  title: Text(process.completedProcess.name),
-                  subtitle: Text(process.completedProcess.description),
-                  children: [
-                    _buildProcessDetails(process.completedProcessDetails),
-                    _buildProcessMaterials(process.materialsUsed),
-                    _buildProcessWorkers(process.workersData),
-                  ],
-                );
-              },
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Completed Processes',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
         ),
-      ),
+        const SizedBox(height: 16),
+        ...processes.map((process) {
+          return Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    process.completedProcess?.name ?? 'N/A',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    process.completedProcess?.description ?? 'N/A',
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Status: ${process.completedProcessDetails?.processStatus ?? 'N/A'}',
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                  if (process.completedProcessDetails?.expectedCompletionDate !=
+                      null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'Expected Completion: ${DateFormat('dd MMM yyyy').format(process.completedProcessDetails!.expectedCompletionDate!)}',
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ),
+                  if (process.completedProcessDetails?.completionDate != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'Completed On: ${DateFormat('dd MMM yyyy').format(process.completedProcessDetails!.completionDate!)}',
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  if (process.materialsUsed != null) ...[
+                    const Text(
+                      'Materials Used',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...process.materialsUsed!.map((material) {
+                      final materialDetails = material.materialDetails;
+                      final materialUsedInProcess =
+                          material.materialUsedInProcess;
+                      return Container(
+                        margin: const EdgeInsets.symmetric(vertical: 8.0),
+                        padding: const EdgeInsets.all(12.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8.0),
+                          border: Border.all(
+                            color: Colors.grey.withOpacity(0.2),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              spreadRadius: 1,
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    materialDetails?.name ?? 'N/A',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.inventory_2_outlined,
+                                        size: 16,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Qty: ${materialUsedInProcess?.quantity ?? 'N/A'}',
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      const Icon(
+                                        Icons.currency_rupee,
+                                        size: 16,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      Text(
+                                        '${materialUsedInProcess?.materialPrice ?? 'N/A'}',
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    'Total Price: ₹${materialUsedInProcess?.totalPrice ?? 'N/A'}',
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                  if (process.workersData != null) ...[
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Workers',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...process.workersData!.map((worker) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.grey.withOpacity(0.2),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.person_outline,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    worker.name ?? 'N/A',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  if (worker.phone != null)
+                                    Text(
+                                      worker.phone!,
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ],
     );
   }
 
@@ -602,22 +778,89 @@ class _ManagerOrderDetailPageState extends State<ManagerOrderDetailPage> {
         children: [
           const Text(
             'Materials Used',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: materials.length,
-            itemBuilder: (context, index) {
-              final material = materials[index];
-              return ListTile(
-                title: Text(material.materialDetails.name),
-                subtitle: Text(
-                    'Quantity: ${material.materialUsedInProcess.quantity}'),
-                trailing: Text('₹${material.materialUsedInProcess.totalPrice}'),
-              );
-            },
-          ),
+          const SizedBox(height: 8),
+          ...materials.map((material) {
+            return Container(
+              margin: const EdgeInsets.symmetric(vertical: 8.0),
+              padding: const EdgeInsets.all(12.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8.0),
+                border: Border.all(
+                  color: Colors.grey.withOpacity(0.2),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          material.materialDetails.name ?? 'N/A',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.inventory_2_outlined,
+                              size: 16,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Qty: ${material.materialUsedInProcess.quantity ?? 'N/A'}',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            const Icon(
+                              Icons.currency_rupee,
+                              size: 16,
+                              color: AppColors.textSecondary,
+                            ),
+                            Text(
+                              '${material.materialUsedInProcess.materialPrice ?? 'N/A'}',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          'Total Price: ₹${material.materialUsedInProcess.totalPrice ?? 'N/A'}',
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
         ],
       ),
     );
