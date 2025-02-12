@@ -23,6 +23,7 @@ class CreateMaterialPage extends StatefulWidget {
 class _CreateMaterialPageState extends State<CreateMaterialPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _nameMalayalamController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _colourController = TextEditingController();
   final _qualityController = TextEditingController();
@@ -82,6 +83,7 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
         'price': double.parse(_priceController.text),
         'quantity': int.tryParse(_quantityController.text),
         'category': widget.categoryId,
+        'name_mal': _nameMalayalamController.text,
       };
 
       if (widget.material != null) {
@@ -156,6 +158,10 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
               _buildTextField(
                 controller: _nameController,
                 label: 'Name',
+              ),
+              _buildTextField(
+                controller: _nameMalayalamController,
+                label: 'Name(Mal)',
               ),
               _buildTextField(
                 controller: _descriptionController,

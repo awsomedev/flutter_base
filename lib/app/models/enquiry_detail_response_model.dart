@@ -557,9 +557,23 @@ class Process {
   }
 }
 
+class ProcessImage {
+  final int id;
+  final String image;
+
+  ProcessImage({required this.id, required this.image});
+
+  factory ProcessImage.fromJson(Map<String, dynamic> json) {
+    return ProcessImage(
+      id: json['id'] as int,
+      image: json['image'] as String,
+    );
+  }
+}
+
 class ProcessDetails {
   final int? id;
-  final List<dynamic>? images;
+  final List<ProcessImage>? images;
   final String? processStatus;
   final DateTime? expectedCompletionDate;
   final DateTime? completionDate;
@@ -597,7 +611,11 @@ class ProcessDetails {
   factory ProcessDetails.fromJson(Map<String, dynamic> json) {
     return ProcessDetails(
       id: json['id'] as int?,
-      images: json['images'] as List<dynamic>?,
+      images: json['images'] != null
+          ? (json['images'] as List<dynamic>)
+              .map((image) => ProcessImage.fromJson(image))
+              .toList()
+          : null,
       processStatus: json['process_status'] as String?,
       expectedCompletionDate: json['expected_completion_date'] != null
           ? DateTime.parse(json['expected_completion_date'])

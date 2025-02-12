@@ -299,7 +299,7 @@ class MaterialUsed {
 
 class Material {
   final int id;
-  final List<String> materialImages;
+  final List<dynamic> materialImages;
   final String? code;
   final String name;
   final String nameMal;
@@ -338,7 +338,7 @@ class Material {
     return Material(
       id: json['id'] as int,
       materialImages: (json['material_images'] as List<dynamic>)
-          .map((e) => e as String)
+          .map((e) => e as dynamic)
           .toList(),
       code: json['code'] as String?,
       name: json['name'] as String,

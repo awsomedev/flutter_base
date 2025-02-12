@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:madeira/app/app_essentials/colors.dart';
 import 'package:madeira/app/extensions/string_extension.dart';
@@ -519,24 +520,108 @@ class _ManagerOrderDetailPageState extends State<ManagerOrderDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Text(
+                  //   process.completedProcess?.name ?? 'N/A',
+                  //   style: const TextStyle(
+                  //     fontSize: 16,
+                  //     fontWeight: FontWeight.bold,
+                  //     color: AppColors.textPrimary,
+                  //   ),
+                  // ),
+                  // const SizedBox(height: 8),
+                  // Text(
+                  //   process.completedProcess?.description ?? 'N/A',
+                  //   style: const TextStyle(color: AppColors.textSecondary),
+                  // ),
+                  // const SizedBox(height: 8),
+                  // Text(
+                  //   'Status: ${process.completedProcessDetails?.processStatus ?? 'N/A'}',
+                  //   style: const TextStyle(color: AppColors.textSecondary),
+                  // ),
+
+                  Text(process.completedProcess?.description ?? 'N/A'),
+                  const SizedBox(height: 8),
                   Text(
-                    process.completedProcess?.name ?? 'N/A',
+                      'Status: ${process.completedProcessDetails?.processStatus ?? 'N/A'}'),
+                  const SizedBox(height: 8),
+                  Text(
+                      'Workers Salary: ${process.completedProcessDetails?.workersSalary ?? 'N/A'}'),
+                  const SizedBox(height: 8),
+                  Text(
+                      'Material Price: ${process.completedProcessDetails?.materialPrice ?? 'N/A'}'),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Total Price: ${process.completedProcessDetails?.totalPrice ?? 'N/A'}',
                     style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    process.completedProcess?.description ?? 'N/A',
-                    style: const TextStyle(color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Status: ${process.completedProcessDetails?.processStatus ?? 'N/A'}',
-                    style: const TextStyle(color: AppColors.textSecondary),
-                  ),
+                  if (process.completedProcessDetails?.images != null &&
+                      process.completedProcessDetails!.images!.isNotEmpty)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Process Images',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        CarouselSlider(
+                          options: CarouselOptions(
+                            height: 200,
+                            viewportFraction: 1,
+                            enableInfiniteScroll: false,
+                            enlargeCenterPage: true,
+                            autoPlay: true,
+                          ),
+                          items: process.completedProcessDetails!.images!
+                              .map((image) {
+                            return Builder(
+                              builder: (BuildContext context) {
+                                return Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 5.0),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        spreadRadius: 1,
+                                        blurRadius: 5,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: CachedNetworkImage(
+                                      imageUrl: image.image.toImageUrl,
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) =>
+                                          const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                      errorWidget: (context, url, error) =>
+                                          const Center(
+                                        child: Icon(Icons.error),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
+
                   if (process.completedProcessDetails?.expectedCompletionDate !=
                       null)
                     Padding(
@@ -914,6 +999,111 @@ class _ManagerOrderDetailPageState extends State<ManagerOrderDetailPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class DetailCard extends StatelessWidget {
+  final CompletedProcessData process;
+  const DetailCard({
+    super.key,
+    required this.process,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Materials Used',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: process.materialsUsed!.map((material) {
+            final materialDetails = material.materialDetails;
+            final materialUsedInProcess = material.materialUsedInProcess;
+            return Container(
+              margin: const EdgeInsets.symmetric(vertical: 8.0),
+              padding: const EdgeInsets.all(12.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8.0),
+                border: Border.all(
+                  color: Colors.grey.withOpacity(0.2),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          materialDetails?.name ?? 'N/A',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.inventory_2_outlined,
+                              size: 16,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Qty: ${materialUsedInProcess?.quantity ?? 'N/A'}',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            const Icon(
+                              Icons.currency_rupee,
+                              size: 16,
+                              color: AppColors.textSecondary,
+                            ),
+                            Text(
+                              '${materialUsedInProcess?.materialPrice ?? 'N/A'}',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          'Total Price: ₹${materialUsedInProcess?.totalPrice ?? 'N/A'}',
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }

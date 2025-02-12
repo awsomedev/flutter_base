@@ -36,6 +36,7 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
   final _whatsappNumberController = TextEditingController();
   final _emailController = TextEditingController();
   final _addressController = TextEditingController();
+  final _estimatedPriceController = TextEditingController();
 
   // Selected values
   String _selectedPriority = 'medium';
@@ -222,6 +223,16 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
       return;
     }
 
+    if (_estimatedPriceController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter estimated price'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -246,6 +257,7 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
         'main_manager_id': _selectedManager!.id,
         'carpenter_id': _selectedCarpenter!.id,
         'material_ids': _selectedMaterials.map((m) => m.id).toList(),
+        'estimated_price': double.parse(_estimatedPriceController.text),
       };
 
       await Services().createEnquiry(data, {
@@ -363,6 +375,11 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
                     _buildTextField(
                       controller: _eventController,
                       label: 'Event',
+                    ),
+                    _buildTextField(
+                      controller: _estimatedPriceController,
+                      label: 'Estimated Price',
+                      keyboardType: TextInputType.number,
                     ),
                     const SizedBox(height: 24),
                     const Text(

@@ -99,6 +99,8 @@ class Services extends ServiceBase {
 
   Future<MaterialModel> createMaterial(
       Map<String, dynamic> data, List<File> images) async {
+    print(data);
+
     final response = await uploadFormData(
       endpoint: 'materials/create/',
       fields: data,
@@ -115,11 +117,13 @@ class Services extends ServiceBase {
 
   Future<MaterialModel> updateMaterial(
       int id, Map<String, dynamic> data, List<File> images) async {
+    print(data);
     final response = await uploadFormData(
       endpoint: 'materials/$id/update/',
       fields: data,
       files: {'material_image': images},
     );
+
     return MaterialModel.fromJson(response);
   }
 

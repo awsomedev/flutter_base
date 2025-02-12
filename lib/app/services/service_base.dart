@@ -5,6 +5,7 @@ import 'package:madeira/app/models/login_model.dart';
 import 'package:madeira/app/widgets/admin_only_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
+import 'package:madeira/app/services/dio_config.dart';
 
 enum HttpMethod { get, post, put, delete, patch }
 
@@ -49,60 +50,64 @@ class ServiceBase {
     T Function(Map<String, dynamic>)? fromJson,
   }) async {
     try {
-      print('$_baseUrl$endpoint');
-      final uri = Uri.parse('$_baseUrl$endpoint').replace(
-        queryParameters: queryParameters,
-      );
-
-      http.Response response;
+      final dio = await DioConfig.getInstance();
+      Response response;
 
       switch (method) {
         case HttpMethod.get:
-          response = await http.get(uri, headers: _headers).timeout(_timeout);
+          response = await dio.get(
+            endpoint,
+            queryParameters: queryParameters,
+          );
           break;
         case HttpMethod.post:
-          response = await http
-              .post(uri, headers: _headers, body: jsonEncode(body))
-              .timeout(_timeout);
+          response = await dio.post(
+            endpoint,
+            data: body,
+            queryParameters: queryParameters,
+          );
           break;
         case HttpMethod.put:
-          response = await http
-              .put(uri, headers: _headers, body: jsonEncode(body))
-              .timeout(_timeout);
+          response = await dio.put(
+            endpoint,
+            data: body,
+            queryParameters: queryParameters,
+          );
           break;
         case HttpMethod.delete:
-          response =
-              await http.delete(uri, headers: _headers).timeout(_timeout);
+          response = await dio.delete(
+            endpoint,
+            data: body,
+            queryParameters: queryParameters,
+          );
           break;
         case HttpMethod.patch:
-          response = await http
-              .patch(uri, headers: _headers, body: jsonEncode(body))
-              .timeout(_timeout);
+          response = await dio.patch(
+            endpoint,
+            data: body,
+            queryParameters: queryParameters,
+          );
           break;
       }
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (response.statusCode! >= 200 && response.statusCode! < 300) {
         if (fromJson != null) {
-          // Properly decode the response body as UTF-8
-          final decodedBody = utf8.decode(response.bodyBytes);
-          return fromJson(jsonDecode(decodedBody));
+          return fromJson(response.data);
         }
-        // Properly decode the response body as UTF-8
-        final decodedBody = utf8.decode(response.bodyBytes);
-        return jsonDecode(decodedBody) as T;
+        return response.data as T;
       } else {
-        final decodedError = utf8.decode(response.bodyBytes);
-        throw ApiMessageError(
-          jsonDecode(decodedError)['error'] ??
-              jsonDecode(decodedError)['message'] ??
+        throw ApiException(
+          message: response.data['error'] ??
+              response.data['message'] ??
               'Unknown error',
+          statusCode: response.statusCode,
+          data: response.data,
         );
       }
+    } on DioException catch (e) {
+      throw ApiException.fromDioError(e);
     } catch (e) {
-      if (e is ApiMessageError) {
-        rethrow;
-      }
-      throw Exception('Network error: $e');
+      throw ApiException(message: 'Unexpected error: $e');
     }
   }
 
@@ -167,14 +172,8 @@ class ServiceBase {
     T Function(Map<String, dynamic>)? fromJson,
   }) async {
     try {
-      final dio = Dio(BaseOptions(
-        baseUrl: _baseUrl,
-        headers: _authHeaders,
-        responseType:
-            ResponseType.plain, // Ensure raw response for proper UTF-8 handling
-      ));
-
-      final Map<String, dynamic> formDataMap = {};
+      final dio = await DioConfig.getInstance();
+      final formDataMap = <String, dynamic>{};
 
       // Add fields if any
       if (fields != null) {
@@ -208,8 +207,8 @@ class ServiceBase {
       }
 
       final formDataObj = FormData.fromMap(formDataMap);
-
       Response response;
+
       switch (method.toUpperCase()) {
         case 'PUT':
           response = await dio.put(
@@ -237,17 +236,20 @@ class ServiceBase {
         if (fromJson != null) {
           return fromJson(response.data);
         }
-        return jsonDecode(response.data);
+        return response.data as T;
       } else {
-        throw ApiMessageError(
-          response.data['error'] ?? response.data['message'] ?? 'Unknown error',
+        throw ApiException(
+          message: response.data['error'] ??
+              response.data['message'] ??
+              'Unknown error',
+          statusCode: response.statusCode,
+          data: response.data,
         );
       }
+    } on DioException catch (e) {
+      throw ApiException.fromDioError(e);
     } catch (e) {
-      if (e is ApiMessageError) {
-        rethrow;
-      }
-      throw Exception('Network error: $e');
+      throw ApiException(message: 'Unexpected error: $e');
     }
   }
 
