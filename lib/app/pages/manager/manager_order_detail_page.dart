@@ -220,6 +220,8 @@ class _ManagerOrderDetailPageState extends State<ManagerOrderDetailPage> {
     }
   }
 
+  bool isCompleted = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -264,42 +266,49 @@ class _ManagerOrderDetailPageState extends State<ManagerOrderDetailPage> {
                     _buildCurrentProcess(orderDetail.currentProcess!),
                   ],
                   const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _showChangeProcessBottomSheet,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                      ),
-                      child: const Text(
-                        'Add to process',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        bool? res = await ConfirmationDialog.show(
-                          title: 'Confirmation',
-                          message:
-                              'Are you sure you want to complete the order?',
-                          context: context,
-                        );
-                        if (res == true) {
-                          await Services().finishOrder(widget.orderId);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                      ),
-                      child: const Text(
-                        'Complete Order',
-                        style: TextStyle(color: Colors.white),
+                  if (orderDetail.orderData.status != 'completed' &&
+                      !isCompleted)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _showChangeProcessBottomSheet,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                        ),
+                        child: const Text(
+                          'Add to process',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
-                  ),
+                  if (orderDetail.orderData.status != 'completed' &&
+                      !isCompleted)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          bool? res = await ConfirmationDialog.show(
+                            title: 'Confirmation',
+                            message:
+                                'Are you sure you want to complete the order?',
+                            context: context,
+                          );
+                          if (res == true) {
+                            await Services().finishOrder(widget.orderId);
+                            setState(() {
+                              isCompleted = true;
+                            });
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                        ),
+                        child: const Text(
+                          'Complete Order',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -490,6 +499,28 @@ class _ManagerOrderDetailPageState extends State<ManagerOrderDetailPage> {
                 'Phone', carpenterData.carpenterUser.phone ?? 'N/A'),
             _buildDetailRow(
                 'Email', carpenterData.carpenterUser.email ?? 'N/A'),
+            _buildDetailRow(
+                'Status',
+                carpenterData.carpenterData.isNotEmpty
+                    ? 'Complete'
+                    : 'Pending'),
+            const SizedBox(height: 10),
+            ...carpenterData.carpenterData.map((process) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(children: [
+                  _buildDetailRow('Material', process.material?.name ?? 'N/A'),
+                  _buildDetailRow('Length', '${process.materialLength} ft'),
+                  _buildDetailRow('Height', '${process.materialHeight} ft'),
+                  _buildDetailRow('Width', '${process.materialWidth} ft'),
+                ]),
+              );
+            }),
           ],
         ),
       ),
@@ -520,15 +551,15 @@ class _ManagerOrderDetailPageState extends State<ManagerOrderDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Text(
-                  //   process.completedProcess?.name ?? 'N/A',
-                  //   style: const TextStyle(
-                  //     fontSize: 16,
-                  //     fontWeight: FontWeight.bold,
-                  //     color: AppColors.textPrimary,
-                  //   ),
-                  // ),
-                  // const SizedBox(height: 8),
+                  Text(
+                    process.completedProcess.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   // Text(
                   //   process.completedProcess?.description ?? 'N/A',
                   //   style: const TextStyle(color: AppColors.textSecondary),

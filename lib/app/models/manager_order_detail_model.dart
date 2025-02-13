@@ -154,6 +154,7 @@ class CarpenterData {
   final String status;
   final int carpenterId;
   final double? materialCost;
+  final MaterialModel? material;
 
   CarpenterData({
     required this.id,
@@ -165,6 +166,7 @@ class CarpenterData {
     required this.status,
     required this.carpenterId,
     this.materialCost,
+    this.material,
   });
 
   factory CarpenterData.fromJson(Map<String, dynamic> json) {
@@ -184,6 +186,9 @@ class CarpenterData {
       status: json['status'] as String,
       carpenterId: json['carpenter_id'] as int,
       materialCost: (json['material_cost'] as num?)?.toDouble(),
+      material: json['material'] != null
+          ? MaterialModel.fromJson(json['material'])
+          : null,
     );
   }
 }

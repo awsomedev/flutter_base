@@ -103,8 +103,10 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
   }
 
   Widget _buildImageCarousel(detail_model.EnquiryDetailResponse enquiryDetail) {
-    final images = enquiryDetail.product?.materialImages;
-    if (images == null || images.isEmpty) {
+    final images = enquiryDetail.product?.materialImages ??
+        enquiryDetail.orderData?.images ??
+        [];
+    if (images.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -681,15 +683,15 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
                           .toString()
                           .split(' ')[0] ??
                       'N/A'),
+              _buildDetailRow(
+                  'Material Cost', '₹${orderData?.materialCost ?? 0}'),
+              _buildDetailRow(
+                  'Over Due', orderData?.overDue == true ? 'Yes' : 'No'),
               if (orderData?.estimatedPrice != null)
                 _buildDetailRow(
                     'Estimated Price', '₹${orderData?.estimatedPrice}'),
               _buildDetailRow(
-                  'Material Cost', '₹${orderData?.materialCost ?? 0}'),
-              _buildDetailRow(
                   'Ongoing Expense', '₹${orderData?.ongoingExpense ?? 0}'),
-              _buildDetailRow(
-                  'Over Due', orderData?.overDue == true ? 'Yes' : 'No'),
             ],
           ),
           _buildMaterialsList(enquiryDetail),

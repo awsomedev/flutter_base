@@ -109,10 +109,22 @@ class _OrderListPageState extends State<OrderListPage>
         onTap: () {
           if (managerId != null) {
             if (order.id != null) {
-              context.push(() => ManagerOrderDetailPage(orderId: order.id!));
+              context
+                  .push(() => ManagerOrderDetailPage(orderId: order.id!))
+                  .then((value) {
+                if (value == true) {
+                  _loadOrders(_tabs[_tabController.index].$1);
+                }
+              });
             }
           } else {
-            context.push(() => EnquiryDetailPage(enquiryId: order.id!));
+            context
+                .push(() => EnquiryDetailPage(enquiryId: order.id!))
+                .then((value) {
+              if (value == true) {
+                _loadOrders(_tabs[_tabController.index].$1);
+              }
+            });
           }
         },
         child: Padding(

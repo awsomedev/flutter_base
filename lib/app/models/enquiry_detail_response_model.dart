@@ -153,7 +153,7 @@ class CarpenterEnquiryDetailData {
 
 class Product {
   final int? id;
-  final List<MaterialImage>? materialImages;
+  final List<EnquiryImage>? materialImages;
   final String? code;
   final String? name;
   final String? nameMal;
@@ -192,7 +192,7 @@ class Product {
     return Product(
       id: json['id'] as int?,
       materialImages: (json['material_images'] as List<dynamic>?)
-          ?.map((image) => MaterialImage.fromJson(image))
+          ?.map((image) => EnquiryImage.fromJson(image))
           .toList(),
       code: json['code'] as String?,
       name: json['name'] as String?,
