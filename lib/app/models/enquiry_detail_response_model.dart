@@ -14,7 +14,7 @@ class EnquiryDetailMaterial {
   final double price;
   final String? referenceImage;
   final double mrpInGst;
-  final int category;
+  final int? category;
 
   EnquiryDetailMaterial({
     required this.id,
@@ -52,7 +52,7 @@ class EnquiryDetailMaterial {
       price: (json['price'] as num).toDouble(),
       referenceImage: json['reference_image'] as String?,
       mrpInGst: (json['mrp_in_gst'] as num).toDouble(),
-      category: json['category'] as int,
+      category: json['category'] as int?,
     );
   }
 }
@@ -289,6 +289,23 @@ class EnquiryImage {
   }
 }
 
+class ServerAudio {
+  final int? id;
+  final String? audio;
+
+  ServerAudio({
+    this.id,
+    this.audio,
+  });
+
+  factory ServerAudio.fromJson(Map<String, dynamic> json) {
+    return ServerAudio(
+      id: json['id'] as int?,
+      audio: json['audio'] as String?,
+    );
+  }
+}
+
 class OrderData {
   final int? id;
   final List<EnquiryImage>? images;
@@ -321,6 +338,7 @@ class OrderData {
   final double? ongoingExpense;
   final int? currentProcess;
   final List<int>? completedProcesses;
+  final List<ServerAudio>? audio;
 
   OrderData({
     this.id,
@@ -354,6 +372,7 @@ class OrderData {
     this.ongoingExpense,
     this.currentProcess,
     this.completedProcesses,
+    this.audio,
   });
 
   factory OrderData.fromJson(Map<String, dynamic> json) {
@@ -361,6 +380,9 @@ class OrderData {
       id: json['id'] as int?,
       images: (json['images'] as List<dynamic>?)
           ?.map((image) => EnquiryImage.fromJson(image))
+          .toList(),
+      audio: (json['audios'] as List<dynamic>?)
+          ?.map((audio) => ServerAudio.fromJson(audio))
           .toList(),
       priority: json['priority'] as String?,
       status: json['status'] as String?,

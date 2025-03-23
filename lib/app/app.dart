@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:madeira/app/app_essentials/colors.dart';
+import 'package:madeira/app/examples/audio_player_example.dart';
+import 'package:madeira/app/pages/home_page.dart';
+import 'package:madeira/app/pages/login_page.dart';
 import 'package:madeira/app/pages/splash_screen.dart';
 import 'package:madeira/app/services/services.dart';
 
@@ -24,7 +27,7 @@ class App extends StatelessWidget {
     }
 
     return MaterialApp(
-      title: 'Your App Name',
+      title: 'Madeira',
       theme: _buildTheme(Brightness.light),
       darkTheme: _buildTheme(Brightness.light),
       themeMode: ThemeMode.system,

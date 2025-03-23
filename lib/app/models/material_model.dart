@@ -6,7 +6,7 @@ class MaterialModel {
   final String quality;
   final String durability;
   final String stockAvailability;
-  final int category;
+  final int? category;
   final double price;
   final int? quantity;
 
@@ -32,7 +32,7 @@ class MaterialModel {
       quality: json['quality'] as String,
       durability: json['durability'] as String,
       stockAvailability: json['stock_availability'] as String,
-      category: json['category'] as int,
+      category: json['category'] as int?,
       price: (json['price'] as num).toDouble(),
       quantity: json['quantity'] as int?,
     );

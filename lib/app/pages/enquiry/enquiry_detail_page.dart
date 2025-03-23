@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:madeira/app/extensions/string_extension.dart';
+import 'package:madeira/app/models/enquiry_detail_response_model.dart';
 import 'package:madeira/app/models/manager_order_detail_model.dart';
+import 'package:madeira/app/widgets/audio_player.dart';
 import 'package:madeira/app/widgets/progress_indicator_widget.dart';
 
 import '../../models/enquiry_detail_response_model.dart' as detail_model;
@@ -631,6 +633,12 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildImageCarousel(enquiryDetail),
+          Column(
+            children: [
+              for (ServerAudio audio in enquiryDetail.orderData?.audio ?? [])
+                AudioPlayer(audioUrl: audio.audio.toString().toUrl ?? ''),
+            ],
+          ),
           _buildSection(
             title: 'Product Details',
             children: [

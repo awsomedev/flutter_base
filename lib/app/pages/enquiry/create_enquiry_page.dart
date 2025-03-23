@@ -8,6 +8,7 @@ import '../../models/user_model.dart';
 import '../../services/services.dart';
 import '../../app_essentials/colors.dart';
 import '../../widgets/searchable_picker.dart';
+import '../../widgets/audio_recorder.dart';
 
 class CreateEnquiryPage extends StatefulWidget {
   const CreateEnquiryPage({super.key});
@@ -45,6 +46,7 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
   User? _selectedCarpenter;
   List<MaterialModel> _selectedMaterials = [];
   List<File> _selectedImages = [];
+  File? _audioRecording;
 
   @override
   void initState() {
@@ -260,9 +262,15 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
         'estimated_price': double.parse(_estimatedPriceController.text),
       };
 
-      await Services().createEnquiry(data, {
+      final files = {
         'reference_image': _selectedImages,
-      });
+      };
+
+      if (_audioRecording != null) {
+        files['audio_recording'] = [_audioRecording!];
+      }
+
+      await Services().createEnquiry(data, files);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -505,6 +513,23 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
                         borderRadius: BorderRadius.circular(8),
                         side: const BorderSide(color: AppColors.divider),
                       ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Voice Note',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    AudioRecorder(
+                      onRecordingComplete: (audioFile) {
+                        setState(() {
+                          _audioRecording = audioFile;
+                        });
+                      },
                     ),
                     const SizedBox(height: 16),
                     ImageListPicker(
