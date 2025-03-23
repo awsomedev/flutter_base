@@ -239,7 +239,7 @@ class Services extends ServiceBase {
   Future<List<Enquiry>> getManagerOrdersByStatus(
       int managerId, String status) async {
     final response = await get(
-      endpoint: 'orders/manager/$managerId/$status/',
+      endpoint: 'orders/manager/$status/',
     );
 
     if (response is List) {
@@ -250,7 +250,7 @@ class Services extends ServiceBase {
 
   Future<CarpenterRequestResponse> getCarpenterRequests() async {
     final carpenterId = await getUserId();
-    final response = await get(endpoint: 'carpenter_requests/$carpenterId/');
+    final response = await get(endpoint: 'carpenter_requests/');
     return CarpenterRequestResponse.fromJson(response);
   }
 
@@ -303,7 +303,7 @@ class Services extends ServiceBase {
 
   Future<List<Enquiry>> getManagerEnquiries(int managerId) async {
     final response = await get(
-      endpoint: 'orders/manager/$managerId/enquiry/',
+      endpoint: 'orders/manager/enquiry/',
     );
 
     if (response is List) {
@@ -320,7 +320,7 @@ class Services extends ServiceBase {
   Future<ProcessManagerOrderResponse> getProcessManagerOrders(
       int processManagerId) async {
     final response = await get(
-      endpoint: 'process_details/$processManagerId/list/',
+      endpoint: 'process_details/list/',
     );
     return ProcessManagerOrderResponse.fromJson(response);
   }
@@ -337,6 +337,22 @@ class Services extends ServiceBase {
       endpoint: 'process_details/$processId/view/',
     );
     return ProcessDetailResponse.fromJson(response);
+  }
+
+  Future<void> pauseProcess(int orderId) async {
+    print('pausing process $orderId');
+    await put(
+      endpoint: 'process_details/$orderId/pause/',
+      body: {},
+    );
+  }
+
+  Future<void> resumeProcess(int orderId) async {
+    print('resuming process $orderId');
+    await put(
+      endpoint: 'process_details/$orderId/resume/',
+      body: {},
+    );
   }
 
   Future<void> createProcessMaterial({

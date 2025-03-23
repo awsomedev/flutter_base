@@ -21,9 +21,9 @@ class ServiceBase {
   static String get baseUrl => _baseUrl;
 
   // Get stored auth token
-  String? get authToken =>
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjo0ODk2MzMzNjI1LCJpYXQiOjE3NDI3MzM2MjUsImp0aSI6ImMwMjU5MjI1NTBhNzQwYjg5MTViNDQxMjQzNGE2MjU0IiwidXNlcl9pZCI6MTV9.7wqwJlWHNPnKWKo_H-9l4mdZZyNWTib2-S1DOhvKbK0';
-  // String? get authToken => _prefs.getString('auth_token');
+  // String? get authToken =>
+  //     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjo0ODk2MzMzNjI1LCJpYXQiOjE3NDI3MzM2MjUsImp0aSI6ImMwMjU5MjI1NTBhNzQwYjg5MTViNDQxMjQzNGE2MjU0IiwidXNlcl9pZCI6MTV9.7wqwJlWHNPnKWKo_H-9l4mdZZyNWTib2-S1DOhvKbK0';
+  String? get authToken => _prefs.getString('auth_token');
 
   // Get stored user ID
   String? get userId => _prefs.getString('user_id');

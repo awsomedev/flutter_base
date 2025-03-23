@@ -30,6 +30,7 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
   final _durabilityController = TextEditingController();
   final _priceController = TextEditingController();
   final _quantityController = TextEditingController();
+  final _codeController = TextEditingController();
   List<File> _images = [];
   bool _isLoading = false;
 
@@ -84,6 +85,7 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
         'quantity': int.tryParse(_quantityController.text),
         'category': widget.categoryId,
         'name_mal': _nameMalayalamController.text,
+        'code': _codeController.text,
       };
 
       if (widget.material != null) {
@@ -162,6 +164,10 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
               _buildTextField(
                 controller: _nameMalayalamController,
                 label: 'Name(Mal)',
+              ),
+              _buildTextField(
+                controller: _codeController,
+                label: 'Material Code',
               ),
               _buildTextField(
                 controller: _descriptionController,

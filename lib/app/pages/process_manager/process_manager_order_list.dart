@@ -96,6 +96,7 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
           context.push(
             () => ProcessDetailPage(
               processDetailsId: details.id ?? 0,
+              processName: process.name ?? '',
             ),
           );
         },

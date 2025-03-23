@@ -24,6 +24,7 @@ class _CreateUserPageState extends State<CreateUserPage> {
   final _passwordController = TextEditingController();
   final _salaryController = TextEditingController();
   bool _isAdmin = false;
+  bool _isEnqTaker = false;
   bool _isLoading = false;
 
   @override
@@ -73,6 +74,7 @@ class _CreateUserPageState extends State<CreateUserPage> {
         'phone': _phoneController.text,
         'age': int.parse(_ageController.text),
         'isAdmin': _isAdmin,
+        'enq_taker': _isEnqTaker,
         if (_salaryController.text.isNotEmpty)
           'salary_per_hr': double.parse(_salaryController.text),
       };
@@ -232,6 +234,20 @@ class _CreateUserPageState extends State<CreateUserPage> {
                 onChanged: (bool value) {
                   setState(() {
                     _isAdmin = value;
+                  });
+                },
+                activeColor: AppColors.primary,
+              ),
+              const SizedBox(height: 24),
+              SwitchListTile(
+                title: const Text(
+                  'Is Enquiry Taker',
+                  style: TextStyle(color: AppColors.textPrimary),
+                ),
+                value: _isEnqTaker,
+                onChanged: (bool value) {
+                  setState(() {
+                    _isEnqTaker = value;
                   });
                 },
                 activeColor: AppColors.primary,

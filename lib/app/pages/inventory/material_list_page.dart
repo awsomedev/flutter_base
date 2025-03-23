@@ -56,6 +56,7 @@ class _MaterialListPageState extends State<MaterialListPage> {
 
   @override
   Widget build(BuildContext context) {
+    print('materials: ${materials.length}');
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(

@@ -38,11 +38,23 @@ class ManagerOrderDetail {
   }
 }
 
+class ServerAudioManager {
+  final int id;
+  final String audio;
+
+  ServerAudioManager({required this.id, required this.audio});
+
+  factory ServerAudioManager.fromJson(Map<String, dynamic> json) {
+    return ServerAudioManager(id: json['id'], audio: json['audio']);
+  }
+}
+
 class OrderData extends Enquiry {
   final double? materialCost;
   final double? ongoingExpense;
   final int? currentProcess;
   final List<int>? completedProcesses;
+  final List<ServerAudioManager>? audio;
 
   OrderData({
     required super.id,
@@ -76,6 +88,7 @@ class OrderData extends Enquiry {
     this.ongoingExpense,
     this.currentProcess,
     this.completedProcesses,
+    this.audio,
   });
 
   factory OrderData.fromJson(Map<String, dynamic> json) {
@@ -83,6 +96,9 @@ class OrderData extends Enquiry {
       id: json['id'] as int,
       images: (json['images'] as List<dynamic>?)
           ?.map((image) => EnquiryImage.fromJson(image))
+          .toList(),
+      audio: (json['audios'] as List<dynamic>?)
+          ?.map((audio) => ServerAudioManager.fromJson(audio))
           .toList(),
       priority: json['priority'] as String?,
       status: json['status'] as String?,

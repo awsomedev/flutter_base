@@ -9,6 +9,7 @@ import 'package:madeira/app/models/material_model.dart';
 import 'package:madeira/app/models/process_model.dart';
 import 'package:madeira/app/models/user_model.dart';
 import 'package:madeira/app/services/services.dart';
+import 'package:madeira/app/widgets/audio_player.dart';
 import 'package:madeira/app/widgets/confirmation_dialog.dart';
 import 'package:madeira/app/widgets/searchable_picker.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -249,6 +250,9 @@ class _ManagerOrderDetailPageState extends State<ManagerOrderDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildImageCarousel(orderDetail.orderData.images ?? []),
+                  const SizedBox(height: 20),
+                  for (var audio in orderDetail.orderData.audio ?? [])
+                    AudioPlayer(audioUrl: audio.audio.toString().toUrl),
                   const SizedBox(height: 20),
                   _buildProductDetails(orderDetail.orderData),
                   const SizedBox(height: 20),

@@ -5,6 +5,7 @@ import 'package:madeira/app/models/process_detail_model.dart';
 import 'package:madeira/app/models/material_model.dart';
 import 'package:madeira/app/models/user_model.dart';
 import 'package:madeira/app/services/services.dart';
+import 'package:madeira/app/widgets/audio_player.dart';
 import 'package:madeira/app/widgets/confirmation_dialog.dart';
 import 'package:madeira/app/widgets/loading_widget.dart';
 import 'package:madeira/app/widgets/error_widget.dart';
@@ -18,10 +19,12 @@ import 'package:madeira/app/extensions/context_extensions.dart';
 
 class ProcessDetailPage extends StatefulWidget {
   final int processDetailsId;
+  final String processName;
 
   const ProcessDetailPage({
     Key? key,
     required this.processDetailsId,
+    required this.processName,
   }) : super(key: key);
 
   @override
@@ -29,7 +32,7 @@ class ProcessDetailPage extends StatefulWidget {
 }
 
 class _ProcessDetailPageState extends State<ProcessDetailPage> {
-  late Future<ProcessDetailResponse> _detailFuture;
+  ProcessDetailResponse? _detailFuture;
   List<MaterialModel> _materials = [];
   bool _isLoading = false;
 
@@ -40,8 +43,29 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
     _loadMaterials();
   }
 
-  void _loadDetails() {
-    _detailFuture = Services().getProcessDetail(widget.processDetailsId);
+  Future<void> _loadDetails() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      _detailFuture =
+          await Services().getProcessDetail(widget.processDetailsId);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading details: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadMaterials() async {
@@ -249,33 +273,94 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
     }
   }
 
+  bool _isPaused = false;
+  int _orderId = 0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Process Details'),
+        title: Text(widget.processName),
       ),
-      body: FutureBuilder<ProcessDetailResponse>(
-        future: _detailFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showGeneralDialog(
+            context: context,
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                AlertDialog(
+              title: Text(_isPaused ? 'Resume Process' : 'Pause Process'),
+              content: Text(_isPaused
+                  ? 'Are you sure you want to resume the process?'
+                  : 'Are you sure you want to pause the process?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Close'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    if (_isPaused) {
+                      try {
+                        await Services().resumeProcess(_orderId);
+                        context.showSnackBar(
+                          'Process resumed successfully',
+                          backgroundColor: Colors.green,
+                        );
+                        _loadDetails();
+                      } catch (e) {
+                        context.showSnackBar(
+                          'Failed to resume process: $e',
+                          backgroundColor: Colors.red,
+                        );
+                      }
+                    } else {
+                      try {
+                        await Services().pauseProcess(_orderId);
+                        context.showSnackBar(
+                          'Process paused successfully',
+                          backgroundColor: Colors.green,
+                        );
+                        _loadDetails();
+                      } catch (e) {
+                        context.showSnackBar(
+                          'Failed to pause process: $e',
+                          backgroundColor: Colors.red,
+                        );
+                      }
+                    }
+                    Navigator.pop(context);
+                  },
+                  child: Text(_isPaused ? 'Resume' : 'Pause'),
+                ),
+              ],
+            ),
+          );
+        },
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.play_arrow, color: Colors.white),
+      ),
+      body: Builder(
+        builder: (context) {
+          if (_isLoading) {
             return const LoadingWidget();
           }
 
-          if (snapshot.hasError) {
-            return CustomErrorWidget(
-              error: snapshot.error.toString(),
-              onRetry: _loadDetails,
-            );
-          }
-
-          if (!snapshot.hasData) {
+          if (_detailFuture == null) {
             return const Center(
               child: Text('No data available'),
             );
           }
 
-          final data = snapshot.data!.data;
+          if (_detailFuture == null) {
+            return const Center(
+              child: Text('No data available'),
+            );
+          }
+
+          final data = _detailFuture!.data;
+          _isPaused =
+              data.processDetails.processStatus.toLowerCase() == 'paused';
+          _orderId = data.orderData.id;
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -288,9 +373,12 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
                       .toList(),
                 ),
                 const SizedBox(height: 20),
-                _buildProductDetails(data.orderData),
+                for (var audio in data.orderData.audio)
+                  AudioPlayer(audioUrl: audio.audio.toString().toUrl),
                 const SizedBox(height: 20),
-                _buildProcessDetails(data.processDetails),
+                _buildProcessDetails(data.processDetails, widget.processName),
+                const SizedBox(height: 20),
+                _buildProductDetails(data.orderData),
                 const SizedBox(height: 20),
                 _buildManagerDetails(data.mainManager, data.processManager),
                 const SizedBox(height: 20),
@@ -394,10 +482,10 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
           children: [
             Row(
               children: [
-                Expanded(
+                const Expanded(
                   child: Text(
                     'Product Details',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -448,7 +536,7 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
     );
   }
 
-  Widget _buildProcessDetails(ProcessDetails details) {
+  Widget _buildProcessDetails(ProcessDetails details, String processName) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -462,7 +550,7 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 16),
+            _buildDetailRow('Process', processName),
             _buildDetailRow('Status', details.processStatus.toUpperCase()),
             if (details.expectedCompletionDate != null)
               _buildDetailRow(

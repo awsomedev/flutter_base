@@ -48,9 +48,21 @@ class ProcessDetailData {
   }
 }
 
+class ServerAudio2 {
+  final int id;
+  final String audio;
+
+  ServerAudio2({required this.id, required this.audio});
+
+  factory ServerAudio2.fromJson(Map<String, dynamic> json) {
+    return ServerAudio2(id: json['id'], audio: json['audio']);
+  }
+}
+
 class ProcessOrderData {
   final int id;
   final List<EnquiryImage> images;
+  final List<ServerAudio2> audio;
   final String priority;
   final String status;
   final String productName;
@@ -83,6 +95,7 @@ class ProcessOrderData {
     this.estimatedDeliveryDate,
     required this.currentProcessStatus,
     required this.overDue,
+    required this.audio,
   });
 
   factory ProcessOrderData.fromJson(Map<String, dynamic> json) {
@@ -90,6 +103,9 @@ class ProcessOrderData {
       id: json['id'] as int,
       images: (json['images'] as List<dynamic>)
           .map((image) => EnquiryImage.fromJson(image))
+          .toList(),
+      audio: (json['audios'] as List<dynamic>)
+          .map((audio) => ServerAudio2.fromJson(audio))
           .toList(),
       priority: json['priority'] as String,
       status: json['status'] as String,
