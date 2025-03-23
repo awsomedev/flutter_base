@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:madeira/app/widgets/audio_player.dart';
 import 'package:madeira/app/widgets/image_list_picker.dart';
 import '../../models/enquiry_creation_data.dart';
 import '../../models/material_model.dart';
@@ -46,7 +47,7 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
   User? _selectedCarpenter;
   List<MaterialModel> _selectedMaterials = [];
   List<File> _selectedImages = [];
-  File? _audioRecording;
+  List<File> _audioRecording = [];
 
   @override
   void initState() {
@@ -266,8 +267,8 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
         'reference_image': _selectedImages,
       };
 
-      if (_audioRecording != null) {
-        files['audio_recording'] = [_audioRecording!];
+      if (_audioRecording.isNotEmpty) {
+        files['reference_audios'] = _audioRecording;
       }
 
       await Services().createEnquiry(data, files);
@@ -514,7 +515,7 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
                         side: const BorderSide(color: AppColors.divider),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 12),
                     const Text(
                       'Voice Note',
                       style: TextStyle(
@@ -523,11 +524,36 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    _audioRecording.isEmpty
+                        ? SizedBox.shrink()
+                        : Column(
+                            children: [
+                              const SizedBox(height: 12),
+                              for (File audio in _audioRecording)
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: AudioPlayer(
+                                        audioFile: audio,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          _audioRecording.remove(audio);
+                                        });
+                                      },
+                                      icon: const Icon(Icons.delete),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                    const SizedBox(height: 12),
                     AudioRecorder(
                       onRecordingComplete: (audioFile) {
                         setState(() {
-                          _audioRecording = audioFile;
+                          _audioRecording.add(audioFile);
                         });
                       },
                     ),

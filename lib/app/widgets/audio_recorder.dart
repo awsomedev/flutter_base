@@ -187,7 +187,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppColors.divider),
       ),
@@ -226,6 +226,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   alignment: Alignment.center,
+                  color: Colors.white,
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

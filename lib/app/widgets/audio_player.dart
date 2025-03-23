@@ -12,16 +12,20 @@ import '../controllers/audio_player_controller.dart';
 final audioPlayerController = Get.put(AudioPlayerController());
 
 class AudioPlayer extends StatefulWidget {
-  final String audioUrl;
+  final String? audioUrl;
+  final File? audioFile;
   final String? title;
   final bool showDownloadButton;
 
   const AudioPlayer({
     Key? key,
-    required this.audioUrl,
+    this.audioUrl,
+    this.audioFile,
     this.title,
     this.showDownloadButton = true,
-  }) : super(key: key);
+  })  : assert(audioUrl != null || audioFile != null,
+            'Either audioUrl or audioFile must be provided'),
+        super(key: key);
 
   @override
   _AudioPlayerState createState() => _AudioPlayerState();
@@ -45,7 +49,12 @@ class _AudioPlayerState extends State<AudioPlayer> {
   void initState() {
     super.initState();
     _initPlayer();
-    print('Audio URL: ${widget.audioUrl}');
+    if (widget.audioUrl != null) {
+      print('Audio URL: ${widget.audioUrl}');
+    }
+    if (widget.audioFile != null) {
+      print('Audio File: ${widget.audioFile!.path}');
+    }
 
     // Listen to the GetX controller to know when to pause
     ever(audioPlayerController.currentlyPlayingId, (String id) {
@@ -74,6 +83,7 @@ class _AudioPlayerState extends State<AudioPlayer> {
   void dispose() {
     _positionTimer?.cancel();
     _player.closePlayer();
+    _isPlaying = false;
     super.dispose();
   }
 
@@ -106,8 +116,12 @@ class _AudioPlayerState extends State<AudioPlayer> {
           await _player.resumePlayer();
         } else {
           // Start playing and show buffering state
+          String audioSource = widget.audioFile != null
+              ? widget.audioFile!.path
+              : widget.audioUrl!;
+
           await _player.startPlayer(
-            fromURI: widget.audioUrl,
+            fromURI: audioSource,
             whenFinished: () {
               if (mounted) {
                 setState(() {
@@ -226,7 +240,7 @@ class _AudioPlayerState extends State<AudioPlayer> {
   }
 
   Future<void> _downloadAudio() async {
-    if (_isDownloading) return;
+    if (_isDownloading || widget.audioUrl == null) return;
 
     setState(() {
       _isDownloading = true;
@@ -235,7 +249,7 @@ class _AudioPlayerState extends State<AudioPlayer> {
 
     try {
       // Get the file name from the URL
-      final fileName = widget.audioUrl.split('/').last;
+      final fileName = widget.audioUrl!.split('/').last;
       final documentsDir = await getApplicationDocumentsDirectory();
       final filePath = '${documentsDir.path}/$fileName';
 
@@ -257,7 +271,7 @@ class _AudioPlayerState extends State<AudioPlayer> {
       }
 
       // Create http client for download with progress tracking
-      final request = http.Request('GET', Uri.parse(widget.audioUrl));
+      final request = http.Request('GET', Uri.parse(widget.audioUrl!));
       final response = await http.Client().send(request);
 
       final totalBytes = response.contentLength ?? 0;
@@ -472,6 +486,27 @@ class _AudioPlayerState extends State<AudioPlayer> {
               ],
             ),
           ),
+
+          // Only show download button if we have a URL and showDownloadButton is true
+          if (widget.audioUrl != null && widget.showDownloadButton)
+            IconButton(
+              icon: _isDownloading
+                  ? SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        value: _downloadProgress > 0 ? _downloadProgress : null,
+                        strokeWidth: 2,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      ),
+                    )
+                  : const Icon(Icons.download, size: 20),
+              onPressed: _isDownloading ? null : _downloadAudio,
+              color: AppColors.primary,
+              padding: EdgeInsets.zero,
+              splashRadius: 20,
+            ),
         ],
       ),
     );
