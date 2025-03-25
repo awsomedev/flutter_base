@@ -99,6 +99,7 @@ class _AudioPlayerState extends State<AudioPlayer> {
   }
 
   Future<void> _togglePlay() async {
+    print('Toggle play ${widget.audioFile?.path}');
     if (!_isPlayerInitialized) return;
 
     if (_isPlaying) {
@@ -116,10 +117,19 @@ class _AudioPlayerState extends State<AudioPlayer> {
           await _player.resumePlayer();
         } else {
           // Start playing and show buffering state
-          String audioSource = widget.audioFile != null
-              ? widget.audioFile!.path
-              : widget.audioUrl!;
+          String audioSource;
+          if (widget.audioFile != null) {
+            // Check if file exists
+            if (!await widget.audioFile!.exists()) {
+              throw Exception('Audio file does not exist');
+            }
+            // Use file:// protocol for local files
+            audioSource = 'file://${widget.audioFile!.path}';
+          } else {
+            audioSource = widget.audioUrl!;
+          }
 
+          print('Playing audio from: $audioSource');
           await _player.startPlayer(
             fromURI: audioSource,
             whenFinished: () {

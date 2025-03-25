@@ -91,11 +91,25 @@ class _AudioRecorderState extends State<AudioRecorder> {
     });
 
     if (_recordedFilePath != null) {
-      final file = File(_recordedFilePath!);
-      if (await file.exists()) {
-        widget.onRecordingComplete(file);
+      final tempFile = File(_recordedFilePath!);
+      if (await tempFile.exists()) {
+        // Move file to permanent location
+        final documentsDir = await getApplicationDocumentsDirectory();
+        final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.aac';
+        final permanentPath = '${documentsDir.path}/$fileName';
+        final permanentFile = File(permanentPath);
+
+        // Copy the file to permanent location
+        await tempFile.copy(permanentPath);
+
+        // Delete the temporary file
+        await tempFile.delete();
+
+        // Pass the permanent file to the callback
+        widget.onRecordingComplete(permanentFile);
       }
     }
+    _cancelRecording();
   }
 
   Future<void> _playRecording() async {
