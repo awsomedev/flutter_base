@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:madeira/app/extensions/string_extension.dart';
 import 'package:madeira/app/models/enquiry_detail_response_model.dart';
 import 'package:madeira/app/models/manager_order_detail_model.dart';
+import 'package:madeira/app/pages/enquiry/create_enquiry_page.dart';
 import 'package:madeira/app/widgets/audio_player.dart';
 import 'package:madeira/app/widgets/progress_indicator_widget.dart';
 
@@ -54,10 +56,292 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
     }
   }
 
-  Widget _buildSection({
-    required String title,
-    required List<Widget> children,
-  }) {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: FutureBuilder<detail_model.EnquiryDetailResponse>(
+        future: Services().getEnquiryDetails(widget.enquiryId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.red,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error: ${snapshot.error}',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          if (!snapshot.hasData) {
+            return const Center(
+              child: Text('No data available'),
+            );
+          }
+
+          final enquiryDetail = snapshot.data!;
+          return Scaffold(
+            backgroundColor: AppColors.background,
+            appBar: AppBar(
+              title: Text(
+                enquiryDetail.orderData?.productName ?? 'Enquiry Details',
+                style: const TextStyle(color: AppColors.textPrimary),
+              ),
+              backgroundColor: AppColors.surface,
+            ),
+            body: Stack(
+              children: [
+                EnquiryDetailContent(
+                  enquiryDetail: enquiryDetail,
+                  isCarpenterRequested: _isCarpenterRequested,
+                  onCarpenterRequested: (value) {
+                    setState(() {
+                      _isCarpenterRequested = value;
+                    });
+                  },
+                ),
+                if (enquiryDetail.orderData?.overDue == true)
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: const Text(
+                        'Over Due',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class EnquiryDetailContent extends StatelessWidget {
+  final detail_model.EnquiryDetailResponse enquiryDetail;
+  final bool isCarpenterRequested;
+  final Function(bool) onCarpenterRequested;
+
+  const EnquiryDetailContent({
+    Key? key,
+    required this.enquiryDetail,
+    required this.isCarpenterRequested,
+    required this.onCarpenterRequested,
+  }) : super(key: key);
+
+  Future<void> _requestCarpenter(BuildContext context) async {
+    try {
+      await Services().requestCarpenter(enquiryDetail.orderData?.id ?? 0);
+
+      if (context.mounted) {
+        onCarpenterRequested(true);
+        context.showSnackBar(
+          'Carpenter requested successfully',
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        context.showSnackBar(
+          'Failed to request carpenter: $e',
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final orderData = enquiryDetail.orderData;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ImageCarousel(
+            images: enquiryDetail.product?.materialImages ??
+                enquiryDetail.orderData?.images ??
+                [],
+          ),
+          Column(
+            children: [
+              for (ServerAudio audio in enquiryDetail.orderData?.audio ?? [])
+                AudioPlayer(audioUrl: audio.audio.toString().toUrl ?? ''),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Section(
+            title: 'Product Details',
+            children: [
+              DetailRow(
+                  label: 'Name',
+                  value: enquiryDetail.orderData?.productName ?? 'N/A'),
+              DetailRow(
+                  label: 'Description',
+                  value: enquiryDetail.orderData?.productDescription ?? 'N/A'),
+              DetailRow(
+                  label: 'Name (Malayalam)',
+                  value: enquiryDetail.orderData?.productNameMal ?? 'N/A'),
+              DetailRow(
+                  label: 'Description (Malayalam)',
+                  value:
+                      enquiryDetail.orderData?.productDescriptionMal ?? 'N/A'),
+              DetailRow(
+                label: 'Dimensions',
+                value:
+                    '${enquiryDetail.orderData?.productLength ?? 'N/A'} x ${enquiryDetail.orderData?.productWidth ?? 'N/A'} x ${enquiryDetail.orderData?.productHeight ?? 'N/A'}',
+              ),
+              DetailRow(
+                  label: 'Finish',
+                  value: enquiryDetail.orderData?.finish ?? 'N/A'),
+              DetailRow(
+                  label: 'Event',
+                  value: enquiryDetail.orderData?.event ?? 'N/A'),
+              DetailRow(
+                  label: 'Price',
+                  value:
+                      '₹${enquiryDetail.orderData?.estimatedPrice ?? 'N/A'}'),
+              ProgressIndicatorWidget(
+                totalSteps: 100,
+                currentStep: (enquiryDetail.completionPercentage ?? 0).toInt(),
+                height: 10,
+              ),
+            ],
+          ),
+          Section(
+            title: 'Customer Information',
+            children: [
+              DetailRow(label: 'Name', value: orderData?.customerName ?? 'N/A'),
+              DetailRow(
+                  label: 'Phone', value: orderData?.contactNumber ?? 'N/A'),
+              DetailRow(
+                  label: 'WhatsApp', value: orderData?.whatsappNumber ?? 'N/A'),
+              DetailRow(label: 'Email', value: orderData?.email ?? 'N/A'),
+              DetailRow(label: 'Address', value: orderData?.address ?? 'N/A'),
+            ],
+          ),
+          Section(
+            title: 'Order Status',
+            children: [
+              DetailRow(
+                  label: 'Priority',
+                  value: orderData?.priority?.toUpperCase() ?? 'N/A'),
+              DetailRow(label: 'Status', value: orderData?.status ?? 'N/A'),
+              DetailRow(
+                  label: 'Enquiry Status',
+                  value: orderData?.enquiryStatus ?? 'N/A'),
+              DetailRow(
+                  label: 'Completion',
+                  value:
+                      '${((enquiryDetail.completionPercentage ?? 0)).toStringAsFixed(1)}%'),
+              DetailRow(
+                label: 'Estimated Delivery',
+                value: orderData?.estimatedDeliveryDate
+                        ?.toLocal()
+                        .toString()
+                        .split(' ')[0] ??
+                    'N/A',
+              ),
+              DetailRow(
+                  label: 'Material Cost',
+                  value: '₹${orderData?.materialCost ?? 0}'),
+              DetailRow(
+                  label: 'Over Due',
+                  value: orderData?.overDue == true ? 'Yes' : 'No'),
+              if (orderData?.estimatedPrice != null)
+                DetailRow(
+                    label: 'Estimated Price',
+                    value: '₹${orderData?.estimatedPrice}'),
+              DetailRow(
+                  label: 'Ongoing Expense',
+                  value: '₹${orderData?.ongoingExpense ?? 0}'),
+            ],
+          ),
+          MaterialsList(materials: enquiryDetail.materials ?? []),
+          const SizedBox(height: 24),
+          TeamSection(enquiryDetail: enquiryDetail),
+          const SizedBox(height: 24),
+          CompletedProcessesSection(
+              completedProcesses: enquiryDetail.completedProcessData),
+          CurrentProcessSection(currentProcess: enquiryDetail.currentProcess),
+          const SizedBox(height: 24),
+          if (enquiryDetail.orderData?.enquiryStatus?.toLowerCase() ==
+                  'initiated' &&
+              !isCarpenterRequested)
+            RequestCarpenterButton(
+              onPressed: () => _requestCarpenter(context),
+            ),
+          const SizedBox(height: 10),
+          if (enquiryDetail.orderData?.enquiryStatus?.toLowerCase() ==
+                  'initiated' &&
+              !isCarpenterRequested)
+            EditEnquiryButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CreateEnquiryPage(
+                      orderData: enquiryDetail.orderData,
+                    ),
+                  ),
+                );
+              },
+            ),
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+}
+
+class Section extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+
+  const Section({
+    Key? key,
+    required this.title,
+    required this.children,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -75,8 +359,20 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
       ],
     );
   }
+}
 
-  Widget _buildDetailRow(String label, String value) {
+class DetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const DetailRow({
+    Key? key,
+    required this.label,
+    required this.value,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -103,11 +399,18 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
       ),
     );
   }
+}
 
-  Widget _buildImageCarousel(detail_model.EnquiryDetailResponse enquiryDetail) {
-    final images = enquiryDetail.product?.materialImages ??
-        enquiryDetail.orderData?.images ??
-        [];
+class ImageCarousel extends StatelessWidget {
+  final List<dynamic> images;
+
+  const ImageCarousel({
+    Key? key,
+    required this.images,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     if (images.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -151,7 +454,7 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: CachedNetworkImage(
-                      imageUrl: image.image.toImageUrl,
+                      imageUrl: image.image?.toString().toUrl ?? '',
                       fit: BoxFit.cover,
                       placeholder: (context, url) => const Center(
                         child: CircularProgressIndicator(),
@@ -170,8 +473,18 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
       ],
     );
   }
+}
 
-  Widget _buildMaterialsList(detail_model.EnquiryDetailResponse enquiryDetail) {
+class MaterialsList extends StatelessWidget {
+  final List<dynamic> materials;
+
+  const MaterialsList({
+    Key? key,
+    required this.materials,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -187,9 +500,9 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: enquiryDetail.materials?.length ?? 0,
+          itemCount: materials.length,
           itemBuilder: (context, index) {
-            final material = enquiryDetail.materials?[index];
+            final material = materials[index];
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: Padding(
@@ -223,8 +536,18 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
       ],
     );
   }
+}
 
-  Widget _buildTeamSection(detail_model.EnquiryDetailResponse enquiryDetail) {
+class TeamSection extends StatelessWidget {
+  final detail_model.EnquiryDetailResponse enquiryDetail;
+
+  const TeamSection({
+    Key? key,
+    required this.enquiryDetail,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -250,12 +573,15 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildDetailRow(
-                    'Name', enquiryDetail.mainManager?.name ?? 'N/A'),
-                _buildDetailRow(
-                    'Email', enquiryDetail.mainManager?.email ?? 'N/A'),
-                _buildDetailRow(
-                    'Phone', enquiryDetail.mainManager?.phone ?? 'N/A'),
+                DetailRow(
+                    label: 'Name',
+                    value: enquiryDetail.mainManager?.name ?? 'N/A'),
+                DetailRow(
+                    label: 'Email',
+                    value: enquiryDetail.mainManager?.email ?? 'N/A'),
+                DetailRow(
+                    label: 'Phone',
+                    value: enquiryDetail.mainManager?.phone ?? 'N/A'),
               ],
             ),
           ),
@@ -275,19 +601,22 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _buildDetailRow(
-                    'Name',
-                    enquiryDetail.carpenterEnquiryData?.carpenterUser?.name ??
+                  DetailRow(
+                    label: 'Name',
+                    value: enquiryDetail
+                            .carpenterEnquiryData?.carpenterUser?.name ??
                         'N/A',
                   ),
-                  _buildDetailRow(
-                    'Email',
-                    enquiryDetail.carpenterEnquiryData?.carpenterUser?.email ??
+                  DetailRow(
+                    label: 'Email',
+                    value: enquiryDetail
+                            .carpenterEnquiryData?.carpenterUser?.email ??
                         'N/A',
                   ),
-                  _buildDetailRow(
-                    'Phone',
-                    enquiryDetail.carpenterEnquiryData?.carpenterUser?.phone ??
+                  DetailRow(
+                    label: 'Phone',
+                    value: enquiryDetail
+                            .carpenterEnquiryData?.carpenterUser?.phone ??
                         'N/A',
                   ),
                   if (enquiryDetail.carpenterEnquiryData?.carpenterData !=
@@ -295,10 +624,10 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
                       enquiryDetail.carpenterEnquiryData?.carpenterData
                               ?.isNotEmpty ==
                           true)
-                    _buildDetailRow(
-                      'Status',
-                      enquiryDetail.carpenterEnquiryData?.carpenterData?.first
-                              .status ??
+                    DetailRow(
+                      label: 'Status',
+                      value: enquiryDetail.carpenterEnquiryData?.carpenterData
+                              ?.first.status ??
                           'N/A',
                     ),
                 ],
@@ -317,23 +646,24 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildDetailRow(
-                          'Material Name', data.material?.name ?? 'N/A'),
-                      _buildDetailRow('Material Name(Mal)',
-                          data.material?.nameMal ?? 'N/A'),
-                      // _buildDetailRow(
-                      //     'Material ID', '${data.materialId ?? 'N/A'}'),
-                      _buildDetailRow(
-                          'Material Length', '${data.materialLength ?? 'N/A'}'),
-                      _buildDetailRow(
-                          'Material Height', '${data.materialHeight ?? 'N/A'}'),
-                      _buildDetailRow(
-                          'Material Width', '${data.materialWidth ?? 'N/A'}'),
-                      // _buildDetailRow('Status', data.status ?? 'N/A'),
-                      // _buildDetailRow(
-                      //     'Carpenter ID', '${data.carpenterId ?? 'N/A'}'),
-                      _buildDetailRow(
-                          'Material Cost', '₹${data.material?.price ?? 'N/A'}'),
+                      DetailRow(
+                          label: 'Material Name',
+                          value: data.material?.name ?? 'N/A'),
+                      DetailRow(
+                          label: 'Material Name(Mal)',
+                          value: data.material?.nameMal ?? 'N/A'),
+                      DetailRow(
+                          label: 'Material Length',
+                          value: '${data.materialLength ?? 'N/A'}'),
+                      DetailRow(
+                          label: 'Material Height',
+                          value: '${data.materialHeight ?? 'N/A'}'),
+                      DetailRow(
+                          label: 'Material Width',
+                          value: '${data.materialWidth ?? 'N/A'}'),
+                      DetailRow(
+                          label: 'Material Cost',
+                          value: '₹${data.material?.price ?? 'N/A'}'),
                     ],
                   ),
                 ),
@@ -343,10 +673,19 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
       ],
     );
   }
+}
 
-  Widget _buildCompletedProcesses(
-      List<detail_model.CompletedProcessData>? completedProcesses) {
-    if (completedProcesses == null || completedProcesses.isEmpty) {
+class CompletedProcessesSection extends StatelessWidget {
+  final List<detail_model.CompletedProcessData>? completedProcesses;
+
+  const CompletedProcessesSection({
+    Key? key,
+    required this.completedProcesses,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    if (completedProcesses == null || completedProcesses!.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -362,7 +701,7 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
           ),
         ),
         const SizedBox(height: 16),
-        ...completedProcesses.map((process) {
+        ...completedProcesses!.map((process) {
           return Card(
             margin: const EdgeInsets.only(bottom: 8),
             child: Padding(
@@ -478,13 +817,9 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
                       ),
                     ),
                   if (process.materialsUsed != null)
-                    DetailCard(
-                      process: process,
-                    ),
+                    DetailCard(process: process),
                   if (process.workersData != null)
-                    WorkerList(
-                      workerData: process.workersData!,
-                    ),
+                    WorkerList(workerData: process.workersData!),
                 ],
               ),
             ),
@@ -494,9 +829,19 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
       ],
     );
   }
+}
 
-  Widget _buildCurrentProcess(detail_model.CurrentProcess? currentProcess) {
-    if (currentProcess == null || currentProcess.currentProcess == null) {
+class CurrentProcessSection extends StatelessWidget {
+  final detail_model.CurrentProcess? currentProcess;
+
+  const CurrentProcessSection({
+    Key? key,
+    required this.currentProcess,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    if (currentProcess == null || currentProcess!.currentProcess == null) {
       return const SizedBox.shrink();
     }
 
@@ -519,22 +864,43 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  currentProcess.currentProcess?.name ?? 'N/A',
+                  currentProcess!.currentProcess?.name ?? 'N/A',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(currentProcess.currentProcess?.description ?? 'N/A'),
+                Text(currentProcess!.currentProcess?.description ?? 'N/A'),
                 const SizedBox(height: 8),
                 Text(
-                    'Status: ${currentProcess.currentProcessDetails?.processStatus ?? 'N/A'}'),
+                  'Status: ${currentProcess!.currentProcessDetails?.processStatus?.replaceAll('_', ' ').capitalize ?? 'N/A'}',
+                ),
                 const SizedBox(height: 8),
-                if (currentProcess.currentProcessMaterialsUsed != null)
+                Text(
+                  'Expected Completion: ${DateFormat('dd MMM yyyy').format(currentProcess!.currentProcessDetails?.expectedCompletionDate ?? DateTime.now())}',
+                ),
+                const SizedBox(height: 16),
+                WorkerList(
+                    workerData: currentProcess!.currentProcessWorkers ?? []),
+                const SizedBox(height: 16),
+                if (currentProcess!.currentProcessMaterialsUsed != null)
+                  const Column(
+                    children: [
+                      Text(
+                        'Materials Used',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                    ],
+                  ),
+                if (currentProcess!.currentProcessMaterialsUsed != null)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: currentProcess.currentProcessMaterialsUsed!
+                    children: currentProcess!.currentProcessMaterialsUsed!
                         .map((material) {
                       final materialDetails = material.currentMaterialDetails;
                       final materialUsedInProcess =
@@ -623,181 +989,66 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
       ],
     );
   }
+}
 
-  Widget _buildContent(
-      BuildContext context, detail_model.EnquiryDetailResponse enquiryDetail) {
-    final orderData = enquiryDetail.orderData;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildImageCarousel(enquiryDetail),
-          Column(
-            children: [
-              for (ServerAudio audio in enquiryDetail.orderData?.audio ?? [])
-                AudioPlayer(audioUrl: audio.audio.toString().toUrl ?? ''),
-            ],
-          ),
-          _buildSection(
-            title: 'Product Details',
-            children: [
-              _buildDetailRow(
-                  'Name', enquiryDetail.orderData?.productName ?? 'N/A'),
-              _buildDetailRow('Description',
-                  enquiryDetail.orderData?.productDescription ?? 'N/A'),
-              _buildDetailRow('Name (Malayalam)',
-                  enquiryDetail.orderData?.productNameMal ?? 'N/A'),
-              _buildDetailRow('Description (Malayalam)',
-                  enquiryDetail.orderData?.productDescriptionMal ?? 'N/A'),
-              _buildDetailRow('Dimensions',
-                  '${enquiryDetail.orderData?.productLength ?? 'N/A'} x ${enquiryDetail.orderData?.productWidth ?? 'N/A'} x ${enquiryDetail.orderData?.productHeight ?? 'N/A'}'),
-              _buildDetailRow(
-                  'Finish', enquiryDetail.orderData?.finish ?? 'N/A'),
-              _buildDetailRow('Event', enquiryDetail.orderData?.event ?? 'N/A'),
-              _buildDetailRow('Price',
-                  '₹${enquiryDetail.orderData?.estimatedPrice ?? 'N/A'}'),
-              ProgressIndicatorWidget(
-                totalSteps: 100,
-                currentStep: (enquiryDetail.completionPercentage ?? 0).toInt(),
-                height: 10,
-              ),
-            ],
-          ),
-          _buildSection(
-            title: 'Customer Information',
-            children: [
-              _buildDetailRow('Name', orderData?.customerName ?? 'N/A'),
-              _buildDetailRow('Phone', orderData?.contactNumber ?? 'N/A'),
-              _buildDetailRow('WhatsApp', orderData?.whatsappNumber ?? 'N/A'),
-              _buildDetailRow('Email', orderData?.email ?? 'N/A'),
-              _buildDetailRow('Address', orderData?.address ?? 'N/A'),
-            ],
-          ),
-          _buildSection(
-            title: 'Order Status',
-            children: [
-              _buildDetailRow(
-                  'Priority', orderData?.priority?.toUpperCase() ?? 'N/A'),
-              _buildDetailRow('Status', orderData?.status ?? 'N/A'),
-              _buildDetailRow(
-                  'Enquiry Status', orderData?.enquiryStatus ?? 'N/A'),
-              _buildDetailRow('Completion',
-                  '${((enquiryDetail.completionPercentage ?? 0)).toStringAsFixed(1)}%'),
-              _buildDetailRow(
-                  'Estimated Delivery',
-                  orderData?.estimatedDeliveryDate
-                          ?.toLocal()
-                          .toString()
-                          .split(' ')[0] ??
-                      'N/A'),
-              _buildDetailRow(
-                  'Material Cost', '₹${orderData?.materialCost ?? 0}'),
-              _buildDetailRow(
-                  'Over Due', orderData?.overDue == true ? 'Yes' : 'No'),
-              if (orderData?.estimatedPrice != null)
-                _buildDetailRow(
-                    'Estimated Price', '₹${orderData?.estimatedPrice}'),
-              _buildDetailRow(
-                  'Ongoing Expense', '₹${orderData?.ongoingExpense ?? 0}'),
-            ],
-          ),
-          _buildMaterialsList(enquiryDetail),
-          const SizedBox(height: 24),
-          _buildTeamSection(enquiryDetail),
-          const SizedBox(height: 24),
-          _buildCompletedProcesses(enquiryDetail.completedProcessData),
-          _buildCurrentProcess(enquiryDetail.currentProcess),
-          const SizedBox(height: 24),
-          if (enquiryDetail.orderData?.enquiryStatus?.toLowerCase() ==
-                  'initiated' &&
-              !_isCarpenterRequested)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                onPressed: () => _requestCarpenter(context),
-                icon: const Icon(Icons.build),
-                label: const Text(
-                  'Send to Carpenter',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          const SizedBox(
-            height: 40,
-          )
-        ],
-      ),
-    );
-  }
+class RequestCarpenterButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const RequestCarpenterButton({
+    Key? key,
+    required this.onPressed,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: FutureBuilder<detail_model.EnquiryDetailResponse>(
-        future: Services().getEnquiryDetails(widget.enquiryId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+        onPressed: onPressed,
+        icon: const Icon(Icons.build),
+        label: const Text(
+          'Send to Carpenter',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+}
 
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    color: Colors.red,
-                    size: 48,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error: ${snapshot.error}',
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Go Back'),
-                  ),
-                ],
-              ),
-            );
-          }
+class EditEnquiryButton extends StatelessWidget {
+  final VoidCallback onPressed;
 
-          if (!snapshot.hasData) {
-            return const Center(
-              child: Text('No data available'),
-            );
-          }
+  const EditEnquiryButton({
+    Key? key,
+    required this.onPressed,
+  }) : super(key: key);
 
-          final enquiryDetail = snapshot.data!;
-          return Scaffold(
-            backgroundColor: AppColors.background,
-            appBar: AppBar(
-              title: Text(
-                enquiryDetail.orderData?.productName ?? 'Enquiry Details',
-                style: const TextStyle(color: AppColors.textPrimary),
-              ),
-              backgroundColor: AppColors.surface,
-            ),
-            body: _buildContent(context, enquiryDetail),
-          );
-        },
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+        onPressed: onPressed,
+        label: const Text(
+          'Edit Enquiry',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }
@@ -930,77 +1181,90 @@ class WorkerList extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: workerData.map((worker) {
-            return Container(
-              margin: const EdgeInsets.symmetric(vertical: 8.0),
-              padding: const EdgeInsets.all(12.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8.0),
-                border: Border.all(
-                  color: Colors.grey.withOpacity(0.2),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          worker.name ?? 'N/A',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.currency_rupee,
-                              size: 16,
-                              color: AppColors.textSecondary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Salary: ${worker.salaryPerHr ?? 'N/A'}',
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            const Icon(
-                              Icons.phone_outlined,
-                              size: 16,
-                              color: AppColors.textSecondary,
-                            ),
-                            Text(
-                              '${worker.phone}',
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
+            return WorkersDetailWidget(worker: worker);
           }).toList(),
         ),
       ],
+    );
+  }
+}
+
+class WorkersDetailWidget extends StatelessWidget {
+  final detail_model.User worker;
+  const WorkersDetailWidget({
+    super.key,
+    required this.worker,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8.0),
+        border: Border.all(
+          color: Colors.grey.withOpacity(0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  worker.name ?? 'N/A',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.currency_rupee,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Salary: ${worker.salaryPerHr ?? 'N/A'}',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Icon(
+                      Icons.phone_outlined,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                    Text(
+                      '${worker.phone}',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

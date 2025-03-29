@@ -404,9 +404,8 @@ class Services extends ServiceBase {
   }
 
   Future<List<ProcessCompletionRequest>> getProcessCompletionRequests() async {
-    final userId = await getUserId();
     final response = await get(
-      endpoint: 'orders/manager/$userId/verification/list/',
+      endpoint: 'orders/manager/verification/list/',
     );
 
     if (response is List) {

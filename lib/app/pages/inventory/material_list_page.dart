@@ -5,11 +5,13 @@ import '../../services/services.dart';
 import '../../app_essentials/colors.dart';
 
 class MaterialListPage extends StatefulWidget {
-  final int? categoryId;
+  final int categoryId;
+  final String categoryName;
 
   const MaterialListPage({
     Key? key,
-    this.categoryId,
+    required this.categoryId,
+    required this.categoryName,
   }) : super(key: key);
 
   @override
@@ -31,11 +33,9 @@ class _MaterialListPageState extends State<MaterialListPage> {
       final materialList = await Services().getMaterials();
       if (mounted) {
         setState(() {
-          materials = widget.categoryId != null
-              ? materialList
-                  .where((m) => m.category == widget.categoryId)
-                  .toList()
-              : materialList;
+          materials = materialList
+              .where((m) => m.category == widget.categoryId)
+              .toList();
           isLoading = false;
         });
       }
@@ -56,13 +56,12 @@ class _MaterialListPageState extends State<MaterialListPage> {
 
   @override
   Widget build(BuildContext context) {
-    print('materials: ${materials.length}');
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
-          'Materials',
-          style: TextStyle(color: AppColors.textPrimary),
+        title: Text(
+          widget.categoryName,
+          style: const TextStyle(color: AppColors.textPrimary),
         ),
         centerTitle: true,
         backgroundColor: AppColors.surface,

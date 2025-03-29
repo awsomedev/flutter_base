@@ -10,9 +10,12 @@ import '../../services/services.dart';
 import '../../app_essentials/colors.dart';
 import '../../widgets/searchable_picker.dart';
 import '../../widgets/audio_recorder.dart';
+import 'package:madeira/app/models/enquiry_detail_response_model.dart'
+    as enquiry;
 
 class CreateEnquiryPage extends StatefulWidget {
-  const CreateEnquiryPage({super.key});
+  const CreateEnquiryPage({super.key, this.orderData});
+  final enquiry.OrderData? orderData;
 
   @override
   State<CreateEnquiryPage> createState() => _CreateEnquiryPageState();
@@ -49,10 +52,41 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
   List<File> _selectedImages = [];
   List<File> _audioRecording = [];
 
+  Future<void> _loadOrderData() async {
+    _productNameController.text = widget.orderData?.productName ?? '';
+    _productNameMalController.text = widget.orderData?.productNameMal ?? '';
+    _productDescriptionController.text =
+        widget.orderData?.productDescription ?? '';
+    _productDescriptionMalController.text =
+        widget.orderData?.productDescriptionMal ?? '';
+    _productLengthController.text =
+        widget.orderData?.productLength?.toString() ?? '';
+    _productWidthController.text =
+        widget.orderData?.productWidth?.toString() ?? '';
+    _productHeightController.text =
+        widget.orderData?.productHeight?.toString() ?? '';
+    _finishController.text = widget.orderData?.finish ?? '';
+    _eventController.text = widget.orderData?.event ?? '';
+    _customerNameController.text = widget.orderData?.customerName ?? '';
+    _contactNumberController.text = widget.orderData?.contactNumber ?? '';
+    _whatsappNumberController.text = widget.orderData?.whatsappNumber ?? '';
+    _emailController.text = widget.orderData?.email ?? '';
+    _addressController.text = widget.orderData?.address ?? '';
+    _estimatedPriceController.text =
+        widget.orderData?.estimatedPrice?.toString() ?? '';
+    _selectedPriority = widget.orderData?.priority ?? 'medium';
+    _selectedDeliveryDate = widget.orderData?.estimatedDeliveryDate;
+    _estimatedPriceController.text =
+        widget.orderData?.estimatedPrice?.toString() ?? '';
+  }
+
   @override
   void initState() {
     super.initState();
     _loadCreationData();
+    if (widget.orderData != null) {
+      _loadOrderData();
+    }
   }
 
   Future<void> _loadCreationData() async {
@@ -302,9 +336,9 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
-          'Create Enquiry',
-          style: TextStyle(color: AppColors.textPrimary),
+        title: Text(
+          widget.orderData == null ? 'Create Enquiry' : 'Edit Enquiry',
+          style: const TextStyle(color: AppColors.textPrimary),
         ),
         backgroundColor: AppColors.surface,
       ),
@@ -553,7 +587,7 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
                     AudioRecorder(
                       onRecordingComplete: (audioFile) {
                         setState(() {
-                          _audioRecording.add(audioFile);
+                          _audioRecording = [audioFile];
                         });
                       },
                     ),

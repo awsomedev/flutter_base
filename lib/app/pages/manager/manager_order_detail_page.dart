@@ -18,8 +18,7 @@ import 'package:intl/intl.dart';
 class ManagerOrderDetailPage extends StatefulWidget {
   final int orderId;
 
-  const ManagerOrderDetailPage({Key? key, required this.orderId})
-      : super(key: key);
+  const ManagerOrderDetailPage({super.key, required this.orderId});
 
   @override
   State<ManagerOrderDetailPage> createState() => _ManagerOrderDetailPageState();

@@ -126,6 +126,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                                     onPressed: () {
                                       context.push(() => MaterialListPage(
                                             categoryId: category.id,
+                                            categoryName: category.name,
                                           ));
                                     },
                                     icon: const Icon(

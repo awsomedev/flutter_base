@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:madeira/app/models/enquiry_model.dart';
 import 'package:madeira/app/pages/manager/manager_order_detail_page.dart';
 import 'package:madeira/app/services/services.dart';
@@ -207,7 +208,7 @@ class _OrderListPageState extends State<OrderListPage>
                       size: 16, color: Colors.grey),
                   const SizedBox(width: 4),
                   Text(
-                    'Status: ${order.enquiryStatus ?? 'Not Set'}',
+                    'Status: ${order.status?.replaceAll('_', ' ').capitalize ?? 'Not Set'}',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],

@@ -6,6 +6,7 @@ import 'package:madeira/app/pages/home_page.dart';
 import 'package:madeira/app/pages/login_page.dart';
 import 'package:madeira/app/pages/splash_screen.dart';
 import 'package:madeira/app/services/services.dart';
+import 'package:madeira/app/services/firebase_messaging_service.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -13,6 +14,7 @@ class App extends StatelessWidget {
   static Future<void> init() async {
     WidgetsFlutterBinding.ensureInitialized();
     await Services.init();
+    await FirebaseMessagingService().initialize();
   }
 
   @override
