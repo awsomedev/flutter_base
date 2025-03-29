@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "9923345770",
+    "project_id": "blackstonetech",
+    "storage_bucket": "blackstonetech.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:9923345770:android:9810408a5fce6956aff913",
+        "android_client_info": {
+          "package_name": "com.bs.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBps1F-98Kd1E8JQJUJk8itu1QAxFKmYAY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
