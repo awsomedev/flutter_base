@@ -14,6 +14,7 @@ import 'package:madeira/app/models/process_detail_model.dart';
 import 'package:madeira/app/models/enquiry_detail_response_model.dart'
     as detail_model;
 import 'package:madeira/app/models/process_completion_request_model.dart';
+import 'package:madeira/app/services/firebase_messaging_service.dart';
 import 'package:madeira/app/services/service_base.dart';
 import 'package:madeira/app/widgets/admin_only_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,6 +48,7 @@ class Services extends ServiceBase {
       body: {
         'phone': phone,
         'password': password,
+        'token': FirebaseMessagingService.fcmToken,
       },
     );
 

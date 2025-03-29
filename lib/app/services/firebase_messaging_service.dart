@@ -1,20 +1,22 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter/material.dart';
 
 class FirebaseMessagingService {
   static final FirebaseMessagingService _instance =
       FirebaseMessagingService._internal();
   factory FirebaseMessagingService() => _instance;
-  FirebaseMessagingService._internal();
-
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  late final FirebaseMessaging _messaging;
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
+  static String? fcmToken;
+
+  FirebaseMessagingService._internal() {
+    _messaging = FirebaseMessaging.instance;
+  }
 
   Future<void> initialize() async {
-    // Initialize Firebase
+    // Initialize Firebase first
     await Firebase.initializeApp();
 
     // Request permission for notifications
@@ -45,6 +47,7 @@ class FirebaseMessagingService {
 
     // Get FCM token
     final token = await _messaging.getToken();
+    fcmToken = token;
     print('FCM Token: $token');
     // TODO: Send this token to your backend
   }
