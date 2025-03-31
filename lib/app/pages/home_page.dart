@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madeira/app/extensions/context_extensions.dart';
 import 'package:madeira/app/models/user_static.dart';
+import 'package:madeira/app/pages/app_drawer.dart';
 import 'package:madeira/app/pages/enquiry/enquiry_page.dart';
 import 'package:madeira/app/pages/inventory/category_list_page.dart';
 import 'package:madeira/app/pages/orders/order_list_page.dart';
@@ -9,6 +10,7 @@ import 'package:madeira/app/pages/process_completion/process_completion_request_
 import 'package:madeira/app/pages/process_manager/process_manager_order_list.dart';
 import 'package:madeira/app/pages/requests/request_list.dart';
 import 'package:madeira/app/pages/splash_screen.dart';
+import 'package:madeira/app/pages/users/change_password.dart';
 import 'package:madeira/app/pages/users/user_list_page.dart';
 import 'package:madeira/app/services/services.dart';
 import 'package:madeira/app/widgets/admin_only_widget.dart';
@@ -92,28 +94,13 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const AppDrawer(),
       appBar: AppBar(
         title: Text(
           'Welcome, ${UserStatic.getUser()?.username}',
           style: const TextStyle(fontSize: 18),
         ),
         centerTitle: false,
-        actions: [
-          IconButton(
-            onPressed: () async {
-              bool? res = await ConfirmationDialog.show(
-                title: 'Logout',
-                message: 'Are you sure you want to logout?',
-                context: context,
-              );
-              if (res == true) {
-                await Services().clearAuth();
-                context.pushAndRemoveAll(() => const SplashScreen());
-              }
-            },
-            icon: const Icon(Icons.logout),
-          ),
-        ],
       ),
       body: GridView.builder(
         padding: const EdgeInsets.all(16),

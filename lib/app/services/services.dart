@@ -447,4 +447,15 @@ class Services extends ServiceBase {
       body: {},
     );
   }
+
+  Future<void> changePassword(
+      String currentPassword, String newPassword) async {
+    await put(
+      endpoint: 'users/change_password/',
+      body: {
+        'current_password': currentPassword,
+        'new_password': newPassword,
+      },
+    );
+  }
 }
