@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:madeira/app/models/enquiry_model.dart';
 import 'package:madeira/app/models/login_model.dart';
 import 'package:madeira/app/models/category_model.dart';
@@ -43,12 +44,14 @@ class Services extends ServiceBase {
     required String phone,
     required String password,
   }) async {
+    final fcmToken = FirebaseMessagingService.fcmToken ??
+        await FirebaseMessaging.instance.getToken();
     final response = await post(
       endpoint: 'users/login/',
       body: {
         'phone': phone,
         'password': password,
-        'token': FirebaseMessagingService.fcmToken,
+        'token': fcmToken,
       },
     );
 

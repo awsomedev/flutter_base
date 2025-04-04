@@ -1,8 +1,11 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:madeira/app/extensions/context_extensions.dart';
 import 'package:madeira/app/pages/enquiry/create_enquiry_page.dart';
 import 'package:madeira/app/pages/splash_screen.dart';
 import 'package:madeira/app/pages/users/change_password.dart';
+import 'package:madeira/app/services/firebase_messaging_service.dart';
 import 'package:madeira/app/services/services.dart';
 import 'package:madeira/app/widgets/admin_only_widget.dart';
 import 'package:madeira/app/widgets/confirmation_dialog.dart';
@@ -59,6 +62,24 @@ class AppDrawer extends StatelessWidget {
                     tileColor: Colors.blue.shade100,
                     onTap: () {
                       context.push(() => const ChangePasswordPage());
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  ListTile(
+                    title: const Text('Copy FCM Token'),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    tileColor: Colors.blue.shade100,
+                    onTap: () async {
+                      Clipboard.setData(
+                        ClipboardData(
+                          text: FirebaseMessagingService.fcmToken ??
+                              await FirebaseMessaging.instance.getToken() ??
+                              '',
+                        ),
+                      );
+                      context.showSnackBar('FCM Token copied to clipboard');
                     },
                   ),
                   const SizedBox(height: 10),
