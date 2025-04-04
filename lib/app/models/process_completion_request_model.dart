@@ -313,7 +313,7 @@ class Material {
   final double price;
   final String? referenceImage;
   final double mrpInGst;
-  final int category;
+  final int? category;
 
   Material({
     required this.id,
@@ -353,7 +353,7 @@ class Material {
       price: (json['price'] as num).toDouble(),
       referenceImage: json['reference_image'] as String?,
       mrpInGst: (json['mrp_in_gst'] as num).toDouble(),
-      category: json['category'] as int,
+      category: json['category_id'] as int?,
     );
   }
 }
