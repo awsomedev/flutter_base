@@ -46,9 +46,14 @@ class FirebaseMessagingService {
     FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
 
     // Get FCM token
-    final token = await _messaging.getToken();
-    fcmToken = token;
-    print('FCM Token: $token');
+    try {
+      final token = await _messaging.getToken();
+      fcmToken = token;
+      print('FCM Token: $token');
+    } catch (e) {
+      print(e);
+    }
+
     // TODO: Send this token to your backend
   }
 

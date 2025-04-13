@@ -282,63 +282,69 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
       appBar: AppBar(
         title: Text(widget.processName),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showGeneralDialog(
-            context: context,
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                AlertDialog(
-              title: Text(_isPaused ? 'Resume Process' : 'Pause Process'),
-              content: Text(_isPaused
-                  ? 'Are you sure you want to resume the process?'
-                  : 'Are you sure you want to pause the process?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Close'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    if (_isPaused) {
-                      try {
-                        await Services().resumeProcess(_orderId);
-                        context.showSnackBar(
-                          'Process resumed successfully',
-                          backgroundColor: Colors.green,
-                        );
-                        _loadDetails();
-                      } catch (e) {
-                        context.showSnackBar(
-                          'Failed to resume process: $e',
-                          backgroundColor: Colors.red,
-                        );
+      floatingActionButton: Builder(builder: (context) {
+        if (_detailFuture?.data.processDetails.processStatus.toLowerCase() ==
+            'completed') {
+          return const SizedBox.shrink();
+        }
+        return FloatingActionButton(
+          onPressed: () {
+            showGeneralDialog(
+              context: context,
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  AlertDialog(
+                title: Text(_isPaused ? 'Resume Process' : 'Pause Process'),
+                content: Text(_isPaused
+                    ? 'Are you sure you want to resume the process?'
+                    : 'Are you sure you want to pause the process?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Close'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      if (_isPaused) {
+                        try {
+                          await Services().resumeProcess(_orderId);
+                          context.showSnackBar(
+                            'Process resumed successfully',
+                            backgroundColor: Colors.green,
+                          );
+                          _loadDetails();
+                        } catch (e) {
+                          context.showSnackBar(
+                            'Failed to resume process: $e',
+                            backgroundColor: Colors.red,
+                          );
+                        }
+                      } else {
+                        try {
+                          await Services().pauseProcess(_orderId);
+                          context.showSnackBar(
+                            'Process paused successfully',
+                            backgroundColor: Colors.green,
+                          );
+                          _loadDetails();
+                        } catch (e) {
+                          context.showSnackBar(
+                            'Failed to pause process: $e',
+                            backgroundColor: Colors.red,
+                          );
+                        }
                       }
-                    } else {
-                      try {
-                        await Services().pauseProcess(_orderId);
-                        context.showSnackBar(
-                          'Process paused successfully',
-                          backgroundColor: Colors.green,
-                        );
-                        _loadDetails();
-                      } catch (e) {
-                        context.showSnackBar(
-                          'Failed to pause process: $e',
-                          backgroundColor: Colors.red,
-                        );
-                      }
-                    }
-                    Navigator.pop(context);
-                  },
-                  child: Text(_isPaused ? 'Resume' : 'Pause'),
-                ),
-              ],
-            ),
-          );
-        },
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.play_arrow, color: Colors.white),
-      ),
+                      Navigator.pop(context);
+                    },
+                    child: Text(_isPaused ? 'Resume' : 'Pause'),
+                  ),
+                ],
+              ),
+            );
+          },
+          backgroundColor: AppColors.primary,
+          child: const Icon(Icons.play_arrow, color: Colors.white),
+        );
+      }),
       body: Builder(
         builder: (context) {
           if (_isLoading) {

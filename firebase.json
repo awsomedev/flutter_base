@@ -1,1 +1,30 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"blackstonetech","appId":"1:9923345770:android:9810408a5fce6956aff913","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"blackstonetech","appId":"1:9923345770:ios:6bdcb8148cd71a38aff913","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"blackstonetech","configurations":{"android":"1:9923345770:android:9810408a5fce6956aff913","ios":"1:9923345770:ios:6bdcb8148cd71a38aff913"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "blackstonetech",
+          "appId": "1:9923345770:android:9810408a5fce6956aff913",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "blackstonetech",
+          "appId": "1:9923345770:ios:a70c8b0d011969a2aff913",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "blackstonetech",
+          "configurations": {
+            "android": "1:9923345770:android:9810408a5fce6956aff913",
+            "ios": "1:9923345770:ios:a70c8b0d011969a2aff913"
+          }
+        }
+      }
+    }
+  }
+}

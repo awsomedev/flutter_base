@@ -1,0 +1,26 @@
+{
+    "version" : 1,
+    "name" : "Runner",
+    "actions" : [
+        {
+            "name" : "Build",
+            "actionType" : "xcodebuild",
+            "destination" : "generic/platform=iOS",
+            "scheme" : "Runner",
+            "buildConfiguration" : "Release",
+            "preActions" : [
+                {
+                    "name" : "Run Post Clone Script",
+                    "script" : "bash ./ci_scripts/post_clone.sh",
+                    "actionType" : "script"
+                }
+            ]
+        }
+    ],
+    "triggers" : [
+        {
+            "type" : "git",
+            "pattern" : "main"
+        }
+    ]
+} 
