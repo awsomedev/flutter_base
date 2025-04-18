@@ -230,7 +230,7 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(5),
                                       child: Image.network(
-                                        'https://picsum.photos/250?image=9',
+                                        e,
                                         height: 100,
                                         width: 100,
                                       ),
