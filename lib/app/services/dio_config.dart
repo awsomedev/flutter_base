@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class DioConfig {
   static Dio? _instance;
-  static const String baseUrl = 'http://43.204.196.183:8000/api/';
+  static const String baseUrl = 'http://159.89.166.142:8000/api/';
   static const Duration timeout = Duration(seconds: 30);
 
   static Future<Dio> getInstance() async {

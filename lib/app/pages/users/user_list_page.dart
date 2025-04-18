@@ -46,6 +46,8 @@ class _UserListPageState extends State<UserListPage> {
   }
 
   Widget _buildUserCard(User user) {
+    final showUI = (user.isEnqTaker ?? false) || (user.isAdmin ?? false);
+
     return Card(
       margin: const EdgeInsets.symmetric(
         horizontal: 16,
@@ -83,7 +85,7 @@ class _UserListPageState extends State<UserListPage> {
                         ],
                       ),
                     ),
-                    if (user.isAdmin ?? false)
+                    if (showUI)
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -93,9 +95,9 @@ class _UserListPageState extends State<UserListPage> {
                           color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Text(
-                          'Admin',
-                          style: TextStyle(
+                        child: Text(
+                          user.isAdmin ?? false ? 'Admin' : 'Enquiry Taker',
+                          style: const TextStyle(
                             color: AppColors.primary,
                             fontSize: 12,
                             fontWeight: FontWeight.w500,

@@ -23,12 +23,14 @@ class UserModel {
   final String username;
   final String phone;
   final bool isAdmin;
+  final bool isEnqTaker;
 
   UserModel({
     required this.id,
     required this.username,
     required this.phone,
     required this.isAdmin,
+    required this.isEnqTaker,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +39,7 @@ class UserModel {
       username: json['username'],
       phone: json['phone'],
       isAdmin: json['isAdmin'],
+      isEnqTaker: json['enq_taker'] ?? false,
     );
   }
 

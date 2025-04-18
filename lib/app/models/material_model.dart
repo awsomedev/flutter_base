@@ -9,6 +9,7 @@ class MaterialModel {
   final int? category;
   final double price;
   final int? quantity;
+  final List<MaterialImage> images;
 
   MaterialModel({
     required this.id,
@@ -21,6 +22,7 @@ class MaterialModel {
     required this.category,
     required this.price,
     required this.quantity,
+    required this.images,
   });
 
   factory MaterialModel.fromJson(Map<String, dynamic> json) {
@@ -35,6 +37,27 @@ class MaterialModel {
       category: json['category_id'] as int?,
       price: (json['price'] as num).toDouble(),
       quantity: json['quantity'] as int?,
+      images: (json['material_images'] as List?)
+              ?.map((image) => MaterialImage.fromJson(image))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+class MaterialImage {
+  final int id;
+  final String image;
+
+  MaterialImage({
+    required this.id,
+    required this.image,
+  });
+
+  factory MaterialImage.fromJson(Map<String, dynamic> json) {
+    return MaterialImage(
+      id: json['id'] as int,
+      image: json['image'] as String,
     );
   }
 }

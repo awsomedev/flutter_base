@@ -6,6 +6,7 @@ class User {
   final int? age;
   final bool? isAdmin;
   final double? salaryPerHr;
+  final bool? isEnqTaker;
 
   User({
     required this.id,
@@ -15,6 +16,7 @@ class User {
     required this.age,
     required this.isAdmin,
     this.salaryPerHr,
+    this.isEnqTaker,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -28,6 +30,7 @@ class User {
       salaryPerHr: json['salary_per_hr'] != null
           ? (json['salary_per_hr'] as num).toDouble()
           : null,
+      isEnqTaker: json['enq_taker'] as bool?,
     );
   }
 }

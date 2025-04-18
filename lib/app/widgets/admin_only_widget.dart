@@ -22,6 +22,7 @@ class AdminOnlyWidget extends StatelessWidget {
 
 class AdminTracker {
   static bool isAdmin = false;
+  static bool isEnqTaker = false;
 
   static Future<void> saveAdmin(bool isAdmin) async {
     final prefs = await SharedPreferences.getInstance();
@@ -29,9 +30,17 @@ class AdminTracker {
     prefs.setBool('isAdmin', isAdmin);
   }
 
+  static Future<void> saveEnqTaker(bool isEnqTaker) async {
+    final prefs = await SharedPreferences.getInstance();
+    AdminTracker.isEnqTaker = isEnqTaker;
+    prefs.setBool('isEnqTaker', isEnqTaker);
+  }
+
   static Future<bool> getAdmin() async {
     final prefs = await SharedPreferences.getInstance();
     AdminTracker.isAdmin = prefs.getBool('isAdmin') ?? false;
+    AdminTracker.isEnqTaker = prefs.getBool('isEnqTaker') ?? false;
+
     return AdminTracker.isAdmin;
   }
 

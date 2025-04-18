@@ -30,12 +30,14 @@ class _CreateUserPageState extends State<CreateUserPage> {
   @override
   void initState() {
     super.initState();
+    print(widget.user?.isEnqTaker);
     if (widget.user != null) {
       _nameController.text = widget.user!.name ?? '';
       _emailController.text = widget.user!.email ?? '';
       _phoneController.text = widget.user!.phone ?? '';
       _ageController.text = widget.user!.age.toString();
       _isAdmin = widget.user!.isAdmin ?? false;
+      _isEnqTaker = widget.user!.isEnqTaker ?? false;
       if (widget.user!.salaryPerHr != null) {
         _salaryController.text = widget.user!.salaryPerHr.toString();
       }

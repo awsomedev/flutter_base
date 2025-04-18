@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:madeira/app/extensions/string_extension.dart';
 import 'package:madeira/app/widgets/image_list_picker.dart';
 import '../../models/material_model.dart';
 import '../../services/services.dart';
@@ -32,6 +33,7 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
   final _quantityController = TextEditingController();
   final _codeController = TextEditingController();
   List<File> _images = [];
+  List<String> _existingImages = [];
   bool _isLoading = false;
 
   @override
@@ -45,6 +47,9 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
       _durabilityController.text = widget.material!.durability;
       _priceController.text = widget.material!.price.toString();
       _quantityController.text = widget.material!.quantity?.toString() ?? '';
+      _existingImages =
+          widget.material?.images?.map((e) => e.image.toImageUrl).toList() ??
+              [];
     }
   }
 
@@ -213,17 +218,66 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
                 },
               ),
               const SizedBox(height: 10),
-              ImageListPicker(
-                onAdd: (images, _) {
-                  setState(() {
-                    _images = images.map((e) => e.file!).toList();
-                  });
-                },
-                onRemove: (images, _) {
-                  setState(() {
-                    _images = images.map((e) => e.file!).toList();
-                  });
-                },
+              Row(
+                children: [
+                  Row(
+                    children: [
+                      ..._existingImages
+                          .map((e) => Padding(
+                                padding: const EdgeInsets.all(5.0),
+                                child: Stack(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(5),
+                                      child: Image.network(
+                                        'https://picsum.photos/250?image=9',
+                                        height: 100,
+                                        width: 100,
+                                      ),
+                                    ),
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            _existingImages.remove(e);
+                                          });
+                                        },
+                                        child: Container(
+                                          decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.close,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ))
+                          .toList(),
+                    ],
+                  ),
+                  Expanded(
+                    child: ImageListPicker(
+                      onAdd: (images, _) {
+                        setState(() {
+                          _images = images.map((e) => e.file!).toList();
+                        });
+                      },
+                      onRemove: (images, _) {
+                        setState(() {
+                          _images = images.map((e) => e.file!).toList();
+                        });
+                      },
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 24),
               SizedBox(

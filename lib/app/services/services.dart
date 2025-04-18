@@ -60,6 +60,7 @@ class Services extends ServiceBase {
       saveAuthToken(result.access!);
       saveUserId(result.user.id.toString());
       AdminTracker.saveAdmin(result.user.isAdmin);
+      AdminTracker.saveEnqTaker(result.user.isEnqTaker);
     }
     return result;
   }

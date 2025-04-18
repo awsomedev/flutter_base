@@ -80,6 +80,16 @@ class _HomePageState extends State<HomePage> {
         {'title': 'Process Managers Orders', 'icon': Icons.request_quote},
         {'title': 'Process Completion Requests', 'icon': Icons.request_quote},
       ];
+    } else if (AdminTracker.isEnqTaker) {
+      sections = [
+        {'title': 'Enquiry', 'icon': Icons.question_answer},
+        {'title': 'Inventory', 'icon': Icons.inventory},
+        {'title': 'Process', 'icon': Icons.production_quantity_limits},
+        {'title': 'Carpenter Requests', 'icon': Icons.request_quote},
+        {'title': 'Managers Orders', 'icon': Icons.request_quote},
+        {'title': 'Process Managers Orders', 'icon': Icons.request_quote},
+        {'title': 'Process Completion Requests', 'icon': Icons.request_quote}
+      ];
     } else {
       sections = [
         {'title': 'Carpenter Requests', 'icon': Icons.request_quote},

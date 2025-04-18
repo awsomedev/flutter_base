@@ -65,24 +65,24 @@ class AppDrawer extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 10),
-                  ListTile(
-                    title: const Text('Copy FCM Token'),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    tileColor: Colors.blue.shade100,
-                    onTap: () async {
-                      Clipboard.setData(
-                        ClipboardData(
-                          text: FirebaseMessagingService.fcmToken ??
-                              await FirebaseMessaging.instance.getToken() ??
-                              '',
-                        ),
-                      );
-                      context.showSnackBar('FCM Token copied to clipboard');
-                    },
-                  ),
-                  const SizedBox(height: 10),
+                  // ListTile(
+                  //   title: const Text('Copy FCM Token'),
+                  //   shape: RoundedRectangleBorder(
+                  //     borderRadius: BorderRadius.circular(10),
+                  //   ),
+                  //   tileColor: Colors.blue.shade100,
+                  //   onTap: () async {
+                  //     Clipboard.setData(
+                  //       ClipboardData(
+                  //         text: FirebaseMessagingService.fcmToken ??
+                  //             await FirebaseMessaging.instance.getToken() ??
+                  //             '',
+                  //       ),
+                  //     );
+                  //     context.showSnackBar('FCM Token copied to clipboard');
+                  //   },
+                  // ),
+                  // const SizedBox(height: 10),
                 ],
               ),
               Column(
