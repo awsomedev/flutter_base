@@ -29,7 +29,7 @@ class App extends StatelessWidget {
     }
 
     return MaterialApp(
-      title: 'Madeira',
+      title: 'TimberRoot',
       theme: _buildTheme(Brightness.light),
       darkTheme: _buildTheme(Brightness.light),
       themeMode: ThemeMode.system,

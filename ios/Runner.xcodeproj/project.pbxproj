@@ -500,7 +500,8 @@
 				DEVELOPMENT_TEAM = D3B978QH76;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Madeira;
+				INFOPLIST_KEY_CFBundleDisplayName = TimberRoot;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -691,7 +692,8 @@
 				DEVELOPMENT_TEAM = D3B978QH76;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Madeira;
+				INFOPLIST_KEY_CFBundleDisplayName = TimberRoot;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -722,7 +724,8 @@
 				DEVELOPMENT_TEAM = D3B978QH76;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Madeira;
+				INFOPLIST_KEY_CFBundleDisplayName = TimberRoot;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

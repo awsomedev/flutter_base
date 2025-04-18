@@ -88,7 +88,7 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
         'durability': _durabilityController.text,
         'price': double.parse(_priceController.text),
         'quantity': int.tryParse(_quantityController.text),
-        'category': widget.categoryId,
+        'category_id': widget.categoryId,
         'name_mal': _nameMalayalamController.text,
         'code': _codeController.text,
       };

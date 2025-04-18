@@ -41,19 +41,10 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Stack(
         children: [
           Image.asset(
-            'assets/images/bg.webp',
+            'assets/images/splash.jpg',
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,
-          ),
-          const Center(
-            child: Text(
-              'Madeira',
-              style: TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
           ),
         ],
       ),
