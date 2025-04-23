@@ -473,8 +473,8 @@ class _ManagerOrderDetailPageState extends State<ManagerOrderDetailPage> {
               itemBuilder: (context, index) {
                 final material = materials[index];
                 return ListTile(
-                  title: Text(material.name),
-                  subtitle: Text(material.description),
+                  title: Text(material.name ?? ''),
+                  subtitle: Text(material.description ?? ''),
                   trailing: Text('₹${material.price}'),
                 );
               },

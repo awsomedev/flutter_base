@@ -123,10 +123,10 @@ class Services extends ServiceBase {
 
   Future<MaterialModel> updateMaterial(
       int id, Map<String, dynamic> data, List<File> images) async {
-    print(data);
     final response = await uploadFormData(
       endpoint: 'materials/$id/update/',
       fields: data,
+      method: 'PUT',
       files: {'material_image': images},
     );
 
@@ -454,7 +454,7 @@ class Services extends ServiceBase {
 
   Future<void> changePassword(
       String currentPassword, String newPassword) async {
-    await put(
+    await post(
       endpoint: 'users/change_password/',
       body: {
         'current_password': currentPassword,

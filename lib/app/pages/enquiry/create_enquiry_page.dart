@@ -164,8 +164,8 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
       builder: (context) => SearchablePicker<MaterialModel>(
         title: 'Select Materials',
         items: _creationData!.materials,
-        getLabel: (material) => material.name,
-        getSubtitle: (material) => material.description,
+        getLabel: (material) => material.name ?? '',
+        getSubtitle: (material) => material.description ?? '',
         allowMultiple: true,
         selectedItems: _selectedMaterials,
       ),

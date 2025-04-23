@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class FirebaseMessagingService {
@@ -51,6 +52,9 @@ class FirebaseMessagingService {
       fcmToken = token;
       print('FCM Token: $token');
     } catch (e) {
+      if (kDebugMode) {
+        fcmToken = 'mock_fcm_ww1234';
+      }
       print(e);
     }
 

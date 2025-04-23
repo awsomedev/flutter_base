@@ -87,7 +87,7 @@ class _MaterialListPageState extends State<MaterialListPage> {
                     children: [
                       ExpansionTile(
                         title: Text(
-                          material.name,
+                          material.name ?? '',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: AppColors.textPrimary,
@@ -197,11 +197,12 @@ class _MaterialListPageState extends State<MaterialListPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 _buildDetailRow(
-                                    'Description', material.description),
-                                _buildDetailRow('Color', material.colour),
-                                _buildDetailRow('Quality', material.quality),
+                                    'Description', material.description ?? ''),
+                                _buildDetailRow('Color', material.colour ?? ''),
                                 _buildDetailRow(
-                                    'Durability', material.durability),
+                                    'Quality', material.quality ?? ''),
+                                _buildDetailRow(
+                                    'Durability', material.durability ?? ''),
                                 if (material.quantity != null)
                                   _buildDetailRow(
                                       'Quantity', material.quantity.toString()),

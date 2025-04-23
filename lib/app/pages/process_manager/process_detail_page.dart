@@ -101,7 +101,7 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
       builder: (context) => SearchablePicker<MaterialModel>(
         title: 'Select Materials',
         items: _materials,
-        getLabel: (material) => material.name,
+        getLabel: (material) => material.name ?? '',
         getSubtitle: (material) =>
             '${material.description} - ₹${material.price}',
         allowMultiple: false,

@@ -32,6 +32,7 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
   final _priceController = TextEditingController();
   final _quantityController = TextEditingController();
   final _codeController = TextEditingController();
+  final _descriptionMalayalamController = TextEditingController();
   List<File> _images = [];
   List<String> _existingImages = [];
   bool _isLoading = false;
@@ -40,16 +41,19 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
   void initState() {
     super.initState();
     if (widget.material != null) {
-      _nameController.text = widget.material!.name;
-      _descriptionController.text = widget.material!.description;
-      _colourController.text = widget.material!.colour;
-      _qualityController.text = widget.material!.quality;
-      _durabilityController.text = widget.material!.durability;
+      _nameController.text = widget.material!.name ?? '';
+      _nameMalayalamController.text = widget.material!.nameMal ?? '';
+      _descriptionController.text = widget.material!.description ?? '';
+      _colourController.text = widget.material!.colour ?? '';
+      _qualityController.text = widget.material!.quality ?? '';
+      _durabilityController.text = widget.material!.durability ?? '';
       _priceController.text = widget.material!.price.toString();
       _quantityController.text = widget.material!.quantity?.toString() ?? '';
+      _codeController.text = widget.material!.code ?? '';
+      _descriptionMalayalamController.text =
+          widget.material!.descriptionMal ?? '';
       _existingImages =
-          widget.material?.images?.map((e) => e.image.toImageUrl).toList() ??
-              [];
+          widget.material?.images.map((e) => e.image.toImageUrl).toList() ?? [];
     }
   }
 
@@ -91,6 +95,7 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
         'category_id': widget.categoryId,
         'name_mal': _nameMalayalamController.text,
         'code': _codeController.text,
+        'description_mal': _descriptionMalayalamController.text,
       };
 
       if (widget.material != null) {
@@ -177,6 +182,10 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
               _buildTextField(
                 controller: _descriptionController,
                 label: 'Description',
+              ),
+              _buildTextField(
+                controller: _descriptionMalayalamController,
+                label: 'Description(Mal)',
               ),
               _buildTextField(
                 controller: _colourController,
