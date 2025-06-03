@@ -274,6 +274,7 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
                   ),
                   Expanded(
                     child: ImageListPicker(
+                      isSingle: true,
                       onAdd: (images, _) {
                         setState(() {
                           _images = images.map((e) => e.file!).toList();

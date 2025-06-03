@@ -31,6 +31,7 @@ class ImageListPicker extends StatefulWidget {
       onRemove;
   final double imageSize;
   final double spacing;
+  final bool isSingle;
 
   const ImageListPicker({
     super.key,
@@ -39,6 +40,7 @@ class ImageListPicker extends StatefulWidget {
     required this.onRemove,
     this.imageSize = 100,
     this.spacing = 8,
+    this.isSingle = false,
   });
 
   @override
@@ -61,7 +63,11 @@ class _ImageListPickerState extends State<ImageListPicker> {
       if (image != null) {
         final imageItem = ImageItem(file: File(image.path));
         setState(() {
-          _images.add(imageItem);
+          if (widget.isSingle) {
+            _images = [imageItem];
+          } else {
+            _images.add(imageItem);
+          }
         });
         widget.onAdd(_images, imageItem);
       }

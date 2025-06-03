@@ -34,7 +34,7 @@
 	<key>NSAppleMusicUsageDescription</key>
 	<string>This app needs access to your notifications to receive updates</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>This app needs access to your microphone to record audio</string>
+	<string>This app needs access to your microphone to record voice attachments for enquiries to better explain your order details</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>
