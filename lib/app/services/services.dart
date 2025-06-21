@@ -1,6 +1,10 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:madeira/app/models/decoration_enquiry_detail_response.dart';
+import 'package:madeira/app/models/decoration_enquiry_response.dart';
+import 'package:madeira/app/models/decorations_response_model.dart';
 import 'package:madeira/app/models/enquiry_model.dart';
 import 'package:madeira/app/models/login_model.dart';
 import 'package:madeira/app/models/category_model.dart';
@@ -460,6 +464,60 @@ class Services extends ServiceBase {
         'current_password': currentPassword,
         'new_password': newPassword,
       },
+    );
+  }
+
+  //Decoration APIs
+  Future<void> createDecoration(String enquiryName) async {
+    await post(
+      endpoint: 'enquiry_types/create/',
+      body: {'enquiry_name': enquiryName},
+    );
+  }
+
+  Future<List<DecorationResponse>> fetchDecorations() async {
+    final response = await get(
+      endpoint: 'enquiry_types',
+    );
+    if (response is List) {
+      return response.map((json) => DecorationResponse.fromJson(json)).toList();
+    } else {
+      return [];
+    }
+  }
+
+  Future<void> updateDecoration(int decorationId, String enquiryName) async {
+    await put(
+      endpoint: 'enquiry_types/${decorationId}/update/',
+      body: {'enquiry_name': enquiryName},
+    );
+  }
+
+  Future<DecorationEnquiryResponse> fetchDecorationsEnquiries() async {
+    final response = await get(
+      endpoint: 'enquiries',
+    );
+    return DecorationEnquiryResponse.fromJson(response);
+  }
+
+  Future<void> acceptDecorationEnquiryRequest(int enquiryId) async {
+    await put(
+      endpoint: 'enquiries/$enquiryId/accept/',
+      body: {},
+    );
+  }
+
+  Future<DecorationEnquiryDetailResponse> getDecorEnquiryDetail(
+      int enquiryId) async {
+    final response = await get(endpoint: 'enquiries/$enquiryId/');
+    return DecorationEnquiryDetailResponse.fromJson(response);
+  }
+
+  Future<void> updateEnquiryDetails(
+      int enquiryId, Map<String, dynamic> data) async {
+    await put(
+      endpoint: 'enquiries/$enquiryId/update/',
+      body: data,
     );
   }
 }

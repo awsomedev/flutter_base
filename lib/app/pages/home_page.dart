@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:madeira/app/extensions/context_extensions.dart';
 import 'package:madeira/app/models/user_static.dart';
 import 'package:madeira/app/pages/app_drawer.dart';
+import 'package:madeira/app/pages/decorations/decorations.dart';
+import 'package:madeira/app/pages/decorations/enquiries.dart';
 import 'package:madeira/app/pages/enquiry/enquiry_page.dart';
 import 'package:madeira/app/pages/inventory/category_list_page.dart';
 import 'package:madeira/app/pages/orders/order_list_page.dart';
@@ -40,6 +42,12 @@ class _HomePageState extends State<HomePage> {
       case 'Enquiry':
         context.push(() => const EnquiryPage());
         break;
+      case 'Decorations':
+        context.push(() => const DecorationsPage());
+        break;
+      case 'Decoration Enquiry':
+        context.push(() => const DecorationEnquiriesPage());
+        break;
       case 'Orders':
         context.push(() => const OrderListPage());
         break;
@@ -73,6 +81,8 @@ class _HomePageState extends State<HomePage> {
         {'title': 'Enquiry', 'icon': Icons.question_answer},
         {'title': 'Orders', 'icon': Icons.shopping_cart},
         {'title': 'Inventory', 'icon': Icons.inventory},
+        {'title': 'Decorations', 'icon': Icons.access_alarm},
+        {'title': 'Decoration Enquiry', 'icon': Icons.request_quote},
         {'title': 'Users', 'icon': Icons.people},
         {'title': 'Process', 'icon': Icons.production_quantity_limits},
         {'title': 'Carpenter Requests', 'icon': Icons.request_quote},
@@ -84,6 +94,8 @@ class _HomePageState extends State<HomePage> {
       sections = [
         {'title': 'Enquiry', 'icon': Icons.question_answer},
         {'title': 'Inventory', 'icon': Icons.inventory},
+        {'title': 'Decorations', 'icon': Icons.access_alarm},
+        {'title': 'Decoration Enquiry', 'icon': Icons.request_quote},
         {'title': 'Process', 'icon': Icons.production_quantity_limits},
         {'title': 'Carpenter Requests', 'icon': Icons.request_quote},
         {'title': 'Managers Orders', 'icon': Icons.request_quote},
@@ -93,6 +105,7 @@ class _HomePageState extends State<HomePage> {
     } else {
       sections = [
         {'title': 'Carpenter Requests', 'icon': Icons.request_quote},
+        {'title': 'Decoration Enquiry', 'icon': Icons.request_quote},
         {'title': 'Managers Orders', 'icon': Icons.request_quote},
         {'title': 'Process Managers Orders', 'icon': Icons.request_quote},
         {'title': 'Process Completion Requests', 'icon': Icons.request_quote}

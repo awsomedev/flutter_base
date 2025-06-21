@@ -1,3 +1,5 @@
+import 'package:madeira/app/models/decoration_enquiry_response.dart';
+
 class EnquiryDetailMaterial {
   final int id;
   final List<String> materialImages;
@@ -497,17 +499,18 @@ class EnquiryDetailResponse {
   final List<CompletedProcessData>? completedProcessData;
   final CurrentProcess? currentProcess;
   final double? completionPercentage;
+  final List<DecorEnquiry>? enquiryList;
 
-  EnquiryDetailResponse({
-    required this.product,
-    required this.orderData,
-    required this.mainManager,
-    required this.materials,
-    required this.carpenterEnquiryData,
-    required this.completedProcessData,
-    required this.currentProcess,
-    required this.completionPercentage,
-  });
+  EnquiryDetailResponse(
+      {required this.product,
+      required this.orderData,
+      required this.mainManager,
+      required this.materials,
+      required this.carpenterEnquiryData,
+      required this.completedProcessData,
+      required this.currentProcess,
+      required this.completionPercentage,
+      required this.enquiryList});
 
   factory EnquiryDetailResponse.fromJson(Map<String, dynamic> json) {
     return EnquiryDetailResponse(
@@ -532,6 +535,9 @@ class EnquiryDetailResponse {
           ? CurrentProcess.fromJson(json['current_process'])
           : null,
       completionPercentage: (json['completion_percentage'] as num?)?.toDouble(),
+      enquiryList: (json['enquiry_list'] as List<dynamic>?)
+          ?.map((process) => DecorEnquiry.fromJson(process))
+          .toList(),
     );
   }
 }

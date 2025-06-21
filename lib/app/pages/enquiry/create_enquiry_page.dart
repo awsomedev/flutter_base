@@ -1,6 +1,9 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:madeira/app/models/decoration_enquiry.dart';
+import 'package:madeira/app/models/decorations_response_model.dart';
 import 'package:madeira/app/widgets/audio_player.dart';
 import 'package:madeira/app/widgets/image_list_picker.dart';
 import '../../models/enquiry_creation_data.dart';
@@ -25,6 +28,7 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
   EnquiryCreationData? _creationData;
+  List<DecorationResponse> _decorationEnquiry = [];
 
   // Form controllers
   final _productNameController = TextEditingController();
@@ -42,6 +46,7 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
   final _emailController = TextEditingController();
   final _addressController = TextEditingController();
   final _estimatedPriceController = TextEditingController();
+  List<DecorationEnquiry> items = [];
 
   // Selected values
   String _selectedPriority = 'medium';
@@ -51,6 +56,192 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
   List<MaterialModel> _selectedMaterials = [];
   List<File> _selectedImages = [];
   List<File> _audioRecording = [];
+
+  void _addNewItem(DecorationResponse enquiryType, User user, String note) {
+    setState(() {
+      items.add(DecorationEnquiry(
+        enquiry: enquiryType,
+        enquiryUser: user,
+        note: note,
+      ));
+    });
+  }
+
+  void _removeItem(int id) {
+    setState(() {
+      items.removeWhere((item) => item.enquiry.id == id);
+    });
+  }
+
+  Future<void> _addNewItemWithDialog() async {
+    final textController = TextEditingController();
+    User? selectedUser;
+    DecorationResponse? selectedEnquiry;
+
+    Future<void> selectUser(BuildContext dialogContext) async {
+      if (!mounted) return;
+
+      if (_creationData == null || _creationData!.managers.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No users available')),
+        );
+        return;
+      }
+
+      final result = await showModalBottomSheet<User?>(
+        context: dialogContext, // Use dialogContext here
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => SearchablePicker<User>(
+          title: 'Select User',
+          items: _creationData!.managers,
+          getLabel: (user) => user.name ?? 'Unnamed User',
+          getSubtitle: (user) => user.phone ?? 'No phone number',
+        ),
+      );
+
+      if (result != null && mounted) {
+        // No need for setState here, we'll handle it differently
+        selectedUser = result;
+        // This will trigger a rebuild of the StatefulBuilder content
+        (dialogContext as Element).markNeedsBuild();
+      }
+    }
+
+    Future<void> selectDecoration(BuildContext dialogContext) async {
+      if (!mounted) return;
+
+      if (_decorationEnquiry.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No decoration enquiries available')),
+        );
+        return;
+      }
+
+      final result = await showModalBottomSheet<DecorationResponse?>(
+        context: dialogContext, // Use dialogContext here
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => SearchablePicker<DecorationResponse>(
+          title: 'Select Decoration',
+          items: _decorationEnquiry,
+          getLabel: (enq) => enq.enquiryName,
+        ),
+      );
+
+      if (result != null && mounted) {
+        // No need for setState here, we'll handle it differently
+        selectedEnquiry = result;
+        // This will trigger a rebuild of the StatefulBuilder content
+        (dialogContext as Element).markNeedsBuild();
+      }
+    }
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          return AlertDialog(
+            title: const Text("Add New Item"),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    title: Text(
+                      selectedEnquiry?.enquiryName ??
+                          'Select decoration enquiry',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    subtitle: selectedUser != null
+                        ? Text(selectedUser!.phone ?? '')
+                        : null,
+                    trailing: const Icon(Icons.arrow_drop_down),
+                    onTap: () => selectDecoration(dialogContext),
+                    tileColor: AppColors.surface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: const BorderSide(color: AppColors.divider),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    title: Text(
+                      selectedUser?.name ?? 'Select User',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    subtitle: selectedUser != null
+                        ? Text(selectedUser!.phone ?? '')
+                        : null,
+                    trailing: const Icon(Icons.arrow_drop_down),
+                    onTap: () => selectUser(dialogContext),
+                    tileColor: AppColors.surface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: const BorderSide(color: AppColors.divider),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: textController,
+                    decoration: const InputDecoration(
+                      hintText: "Enter note",
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () {
+                  if (selectedUser == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please select a user')),
+                    );
+                    return;
+                  }
+                  if (textController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter a note')),
+                    );
+                    return;
+                  }
+                  Navigator.pop(context, true);
+                },
+                child: const Text("Add"),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (result == true && mounted) {
+      if (selectedUser == null || selectedEnquiry == null) {
+        // This should theoretically never happen because of your validation
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Missing required selections')),
+        );
+        return;
+      }
+
+      setState(() {
+        items.add(DecorationEnquiry(
+          enquiry: selectedEnquiry!,
+          enquiryUser: selectedUser!,
+          note: textController.text.trim(),
+        ));
+      });
+    }
+
+    // textController.dispose();
+  }
 
   Future<void> _loadOrderData() async {
     _productNameController.text = widget.orderData?.productName ?? '';
@@ -84,8 +275,28 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
   void initState() {
     super.initState();
     _loadCreationData();
+    _loadDecorationData();
     if (widget.orderData != null) {
       _loadOrderData();
+    }
+  }
+
+  Future<void> _loadDecorationData() async {
+    try {
+      final decorations = await Services().fetchDecorations();
+      setState(() {
+        _decorationEnquiry = decorations;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading data: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 
@@ -295,7 +506,15 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
         'carpenter_id': _selectedCarpenter!.id,
         'material_ids': _selectedMaterials.map((m) => m.id).toList(),
         'estimated_price': double.parse(_estimatedPriceController.text),
+        'enquiries': items
+            .map((e) => {
+                  'enquiry_type_id': e.enquiry.id,
+                  'enquiry_user_id': e.enquiryUser.id,
+                  'about_enquiry': e.note
+                })
+            .toList()
       };
+      log("qwerty ${data}");
 
       final files = {
         'reference_image': _selectedImages,
@@ -549,6 +768,55 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
                         side: const BorderSide(color: AppColors.divider),
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Decoration Enquiries',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        IconButton(
+                            onPressed: _addNewItemWithDialog,
+                            icon: const Icon(
+                                Icons.add)), // Your button widget here
+                      ],
+                    ),
+                    items.isEmpty
+                        ? const Center(child: Text("No items added yet"))
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            physics: const ClampingScrollPhysics(),
+                            itemCount: items.length,
+                            itemBuilder: (context, index) {
+                              final item = items[index];
+                              return Card(
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                child: ListTile(
+                                  title:
+                                      Text("ID: ${item.enquiry.enquiryName}"),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text("User: ${item.enquiryUser.name}"),
+                                      Text("Note: ${item.note}"),
+                                    ],
+                                  ),
+                                  trailing: IconButton(
+                                    icon: Icon(Icons.delete),
+                                    onPressed: () =>
+                                        _removeItem(item.enquiry.id),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                     const SizedBox(height: 12),
                     const Text(
                       'Voice Note',
