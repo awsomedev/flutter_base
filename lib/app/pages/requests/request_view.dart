@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:madeira/app/app_essentials/colors.dart';
@@ -21,6 +23,7 @@ class RequestViewPage extends StatefulWidget {
 class _RequestViewPageState extends State<RequestViewPage> {
   late Future<RequestDetail> _requestDetailFuture;
   final Map<int, Map<String, TextEditingController>> _dimensionControllers = {};
+  final Map<int, String> _dimentionType = {};
   int _currentImageIndex = 0;
 
   @override
@@ -47,10 +50,21 @@ class _RequestViewPageState extends State<RequestViewPage> {
     for (var material in materials) {
       final controllers = _dimensionControllers[material.id];
       if (controllers == null) continue;
+      final type = _dimentionType[material.id];
 
-      if (controllers['length']!.text.isEmpty ||
-          controllers['width']!.text.isEmpty ||
-          controllers['height']!.text.isEmpty) {
+      if (type == 'round_log' &&
+          (controllers['length']!.text.isEmpty ||
+              controllers['gridth']!.text.isEmpty)) {
+        hasEmptyFields = true;
+        emptyFieldMaterial = material.name;
+        break;
+      }
+
+      if (type == 'rectangular_wood' &&
+          (controllers['length']!.text.isEmpty ||
+              controllers['width']!.text.isEmpty ||
+              controllers['thickness']!.text.isEmpty ||
+              controllers['no_of_pieces']!.text.isEmpty)) {
         hasEmptyFields = true;
         emptyFieldMaterial = material.name;
         break;
@@ -82,14 +96,22 @@ class _RequestViewPageState extends State<RequestViewPage> {
     // Prepare data for API
     final List<Map<String, dynamic>> updateData = materials.map((material) {
       final controllers = _dimensionControllers[material.id]!;
+
       return {
         'order_id': widget.orderId,
         'material_id': material.id,
+        'type': _dimentionType[material.id],
         'material_length': double.parse(controllers['length']!.text),
-        'material_height': double.parse(controllers['height']!.text),
-        'material_width': double.parse(controllers['width']!.text),
+        'material_width': double.tryParse(controllers['width']!.text) ?? 0,
+        'material_gridth': double.tryParse(controllers['gridth']!.text) ?? 0,
+        'material_no_of_pieces':
+            double.tryParse(controllers['no_of_pieces']!.text) ?? 0,
+        'material_thickness':
+            double.tryParse(controllers['thickness']!.text) ?? 0,
       };
     }).toList();
+
+    log('$updateData');
 
     try {
       await Services().updateRequestDimensions(updateData);
@@ -418,10 +440,19 @@ class _RequestViewPageState extends State<RequestViewPage> {
         'width': TextEditingController(
           text: material.enquiryData.materialWidth?.toString() ?? '',
         ),
-        'height': TextEditingController(
-          text: material.enquiryData.materialHeight?.toString() ?? '',
+        'thickness': TextEditingController(
+          text: '',
+        ),
+        'no_of_pieces': TextEditingController(
+          text: '',
+        ),
+        'gridth': TextEditingController(
+          text: '',
         ),
       };
+    }
+    if (!_dimentionType.containsKey(material.id)) {
+      _dimentionType[material.id] = 'round_log';
     }
 
     final controllers = _dimensionControllers[material.id]!;
@@ -478,28 +509,82 @@ class _RequestViewPageState extends State<RequestViewPage> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDimensionTextField(
-                      'Length', controllers['length']!,
-                      isDisabled: isCompleted),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildDimensionTextField(
-                      'Width', controllers['width']!,
-                      isDisabled: isCompleted),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildDimensionTextField(
-                      'Height', controllers['height']!,
-                      isDisabled: isCompleted),
-                ),
-              ],
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              value: _dimentionType[material.id],
+              decoration: const InputDecoration(
+                labelText: 'Select Dimentions',
+                border: OutlineInputBorder(),
+              ),
+              items: ['round_log', 'rectangular_wood']
+                  .map((priority) => DropdownMenuItem(
+                        value: priority,
+                        child: Text(
+                          priority.replaceAll('_', ' ').toUpperCase(),
+                        ),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _dimentionType[material.id] = value;
+                  });
+                }
+              },
             ),
+            const SizedBox(height: 12),
+            if (_dimentionType[material.id] == 'round_log')
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildDimensionTextField(
+                        'Length', controllers['length']!,
+                        isDisabled: isCompleted),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildDimensionTextField(
+                        'Gridth', controllers['gridth']!,
+                        isDisabled: isCompleted, suffixText: 'inch'),
+                  ),
+                ],
+              ),
+            if (_dimentionType[material.id] == 'rectangular_wood')
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDimensionTextField(
+                            'Length', controllers['length']!,
+                            isDisabled: isCompleted),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildDimensionTextField(
+                            'Width', controllers['width']!,
+                            isDisabled: isCompleted, suffixText: 'inch'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDimensionTextField(
+                            'Thickness', controllers['thickness']!,
+                            isDisabled: isCompleted, suffixText: 'inch'),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildDimensionTextField(
+                            'Number of pieces', controllers['no_of_pieces']!,
+                            isDisabled: isCompleted, suffixText: ''),
+                      ),
+                    ],
+                  ),
+                ],
+              )
           ],
         ),
       ),
@@ -507,11 +592,10 @@ class _RequestViewPageState extends State<RequestViewPage> {
   }
 
   Widget _buildDimensionTextField(
-    String label,
-    TextEditingController controller, {
-    Function(String)? onChanged,
-    bool isDisabled = false,
-  }) {
+      String label, TextEditingController controller,
+      {Function(String)? onChanged,
+      bool isDisabled = false,
+      String suffixText = 'ft'}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -548,7 +632,7 @@ class _RequestViewPageState extends State<RequestViewPage> {
                     border: InputBorder.none,
                     isDense: true,
                     hintText: '0.0',
-                    suffixText: 'ft',
+                    suffixText: suffixText,
                     suffixStyle: TextStyle(
                       fontSize: 12,
                       color: Colors.grey.shade600,

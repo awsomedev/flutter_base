@@ -1,3 +1,5 @@
+import 'package:flutter/cupertino.dart';
+
 class RequestDetail {
   final int orderId;
   final String priority;
@@ -146,4 +148,14 @@ class EnquiryImage {
       image: json['image'] as String,
     );
   }
+}
+
+class DimensionData {
+  final TextEditingController controller;
+  String dropdownValue; // or whatever type your dropdown uses
+
+  DimensionData({
+    required this.controller,
+    this.dropdownValue = 'defaultValue',
+  });
 }

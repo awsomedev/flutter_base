@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -103,6 +105,7 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
           }
 
           final enquiryDetail = snapshot.data!;
+          log('${enquiryDetail}');
           return Scaffold(
             backgroundColor: AppColors.background,
             appBar: AppBar(
@@ -295,6 +298,8 @@ class EnquiryDetailContent extends StatelessWidget {
           ),
           MaterialsList(materials: enquiryDetail.materials ?? []),
           const SizedBox(height: 24),
+          CustomEnquiries(enquiryDetail: enquiryDetail),
+          const SizedBox(height: 24),
           TeamSection(enquiryDetail: enquiryDetail),
           const SizedBox(height: 24),
           CompletedProcessesSection(
@@ -326,6 +331,89 @@ class EnquiryDetailContent extends StatelessWidget {
           const SizedBox(height: 40),
         ],
       ),
+    );
+  }
+}
+
+class CustomEnquiries extends StatelessWidget {
+  const CustomEnquiries({
+    super.key,
+    required this.enquiryDetail,
+  });
+
+  final EnquiryDetailResponse enquiryDetail;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Custom Enquiries',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemBuilder: (context, index) => Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        DetailRow(
+                          label: 'Name',
+                          value: enquiryDetail.enquiryList![index].userName ??
+                              'N/A',
+                        ),
+                        DetailRow(
+                          label: 'Phone',
+                          value:
+                              enquiryDetail.enquiryList![index].phone ?? 'N/A',
+                        ),
+                        DetailRow(
+                          label: 'Status',
+                          value: enquiryDetail.enquiryList![index].status
+                              .toUpperCase(),
+                        ),
+                        DetailRow(
+                          label: 'About Enquiry',
+                          value: enquiryDetail.enquiryList![index].aboutEnquiry,
+                        ),
+                        DetailRow(
+                          label: 'Description',
+                          value: enquiryDetail
+                                  .enquiryList![index].enquiryDescription ??
+                              'N/A',
+                        ),
+                        DetailRow(
+                          label: 'Cost',
+                          value:
+                              enquiryDetail.enquiryList![index].cost ?? 'N/A',
+                        ),
+                        DetailRow(
+                          label: 'Days Required',
+                          value: enquiryDetail
+                                      .enquiryList![index].completionTime !=
+                                  null
+                              ? enquiryDetail.enquiryList![index].completionTime
+                                  .toString()
+                              : 'N/A',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            separatorBuilder: (context, index) => const SizedBox(
+                  height: 16,
+                ),
+            itemCount: enquiryDetail.enquiryList!.length),
+      ],
     );
   }
 }
