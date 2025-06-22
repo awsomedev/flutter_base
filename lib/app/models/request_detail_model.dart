@@ -96,14 +96,14 @@ class MaterialWithEnquiry {
 }
 
 class EnquiryData {
-  final int id;
-  final int orderId;
-  final int materialId;
+  final int? id;
+  final int? orderId;
+  final int? materialId;
   final double? materialLength;
   final double? materialHeight;
   final double? materialWidth;
-  final String status;
-  final int carpenterId;
+  final String? status;
+  final int? carpenterId;
   final double? materialCost;
 
   EnquiryData({
@@ -120,14 +120,14 @@ class EnquiryData {
 
   factory EnquiryData.fromJson(Map<String, dynamic> json) {
     return EnquiryData(
-      id: json['id'] as int,
-      orderId: json['order_id'] as int,
-      materialId: json['material_id'] as int,
+      id: json['id'] as int?,
+      orderId: json['order_id'] as int?,
+      materialId: json['material_id'] as int?,
       materialLength: json['material_length'] as double?,
       materialHeight: json['material_height'] as double?,
       materialWidth: json['material_width'] as double?,
-      status: json['status'] as String,
-      carpenterId: json['carpenter_id'] as int,
+      status: json['status'] as String?,
+      carpenterId: json['carpenter_id'] as int?,
       materialCost: json['material_cost'] as double?,
     );
   }
