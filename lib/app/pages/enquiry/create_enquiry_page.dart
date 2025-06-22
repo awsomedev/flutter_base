@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:madeira/app/models/category_model.dart';
+import 'package:madeira/app/models/product_model.dart';
 import 'package:madeira/app/widgets/audio_player.dart';
 import 'package:madeira/app/widgets/image_list_picker.dart';
 import '../../models/enquiry_creation_data.dart';
@@ -14,8 +16,9 @@ import 'package:madeira/app/models/enquiry_detail_response_model.dart'
     as enquiry;
 
 class CreateEnquiryPage extends StatefulWidget {
-  const CreateEnquiryPage({super.key, this.orderData});
+  const CreateEnquiryPage({super.key, this.orderData, this.withProduct});
   final enquiry.OrderData? orderData;
+  final ProductModel? withProduct;
 
   @override
   State<CreateEnquiryPage> createState() => _CreateEnquiryPageState();
@@ -80,10 +83,23 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
         widget.orderData?.estimatedPrice?.toString() ?? '';
   }
 
+  Future<void> _loadProductData() async {
+    _productNameController.text = widget.withProduct?.name ?? '';
+    _productNameMalController.text = widget.withProduct?.nameMal ?? '';
+    _productDescriptionController.text = widget.withProduct?.description ?? '';
+    _productDescriptionMalController.text =
+        widget.withProduct?.descriptionMal ?? '';
+    _estimatedPriceController.text = widget.withProduct?.price.toString() ?? '';
+  }
+
   @override
   void initState() {
     super.initState();
+
     _loadCreationData();
+    if (widget.withProduct != null) {
+      _loadProductData();
+    }
     if (widget.orderData != null) {
       _loadOrderData();
     }
@@ -157,13 +173,31 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
   Future<void> _selectMaterials() async {
     if (_creationData == null) return;
 
+    final categoryResult = await showModalBottomSheet<Category>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SearchablePicker<Category>(
+        title: 'Select Category',
+        items: _creationData!.categories,
+        getLabel: (category) => category.name,
+        getSubtitle: (category) => category.description,
+        allowMultiple: false,
+        selectedItems: const [],
+      ),
+    );
+
     final result = await showModalBottomSheet<List<MaterialModel>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => SearchablePicker<MaterialModel>(
         title: 'Select Materials',
-        items: _creationData!.materials,
+        items: categoryResult?.id == 0
+            ? _creationData!.materials
+            : _creationData!.materials
+                .where((material) => material.category == categoryResult?.id)
+                .toList(),
         getLabel: (material) => material.name ?? '',
         getSubtitle: (material) => material.description ?? '',
         allowMultiple: true,

@@ -1,7 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:madeira/app/extensions/context_extensions.dart';
 import 'package:madeira/app/extensions/string_extension.dart';
+import 'package:madeira/app/models/enquiry_detail_response_model.dart';
+import 'package:madeira/app/pages/enquiry/create_enquiry_page.dart';
 import 'package:madeira/app/widgets/image_list_picker.dart';
 import 'package:madeira/app/widgets/searchable_picker.dart';
 import '../../models/product_model.dart';
@@ -38,6 +41,7 @@ class _CreateProductPageState extends State<CreateProductPage> {
   List<File> _images = [];
   List<String> _existingImages = [];
   bool _isLoading = false;
+  bool _isOrderLoading = false;
   StockAvailability _selectedStockAvailability = StockAvailability.inStock;
 
   @override
@@ -107,6 +111,14 @@ class _CreateProductPageState extends State<CreateProductPage> {
         _selectedStockAvailability = result;
       });
     }
+  }
+
+  Future<void> createOrder() async {
+    context.push(
+      () => CreateEnquiryPage(
+        withProduct: widget.product,
+      ),
+    );
   }
 
   Future<void> _saveProduct() async {
@@ -347,6 +359,40 @@ class _CreateProductPageState extends State<CreateProductPage> {
                   ),
                 ],
               ),
+              if (widget.product != null)
+                Column(
+                  children: [
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.background,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        onPressed: _isOrderLoading ? null : createOrder,
+                        child: _isOrderLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppColors.background,
+                                  ),
+                                ),
+                              )
+                            : Text(
+                                _selectedStockAvailability ==
+                                        StockAvailability.outOfStock
+                                    ? 'Create Enquiry'
+                                    : 'Create Order',
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,

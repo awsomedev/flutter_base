@@ -18,9 +18,16 @@ class EnquiryCreationData {
 
   factory EnquiryCreationData.fromJson(Map<String, dynamic> json) {
     return EnquiryCreationData(
-      categories: (json['categories'] as List)
-          .map((e) => Category.fromJson(e))
-          .toList(),
+      categories: [
+        Category(
+          id: 0,
+          name: 'All',
+          description: 'All',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+        ...(json['categories'] as List).map((e) => Category.fromJson(e))
+      ],
       materials: (json['materials'] as List)
           .map((e) => MaterialModel.fromJson(e))
           .toList(),

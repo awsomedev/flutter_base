@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madeira/app/app_essentials/colors.dart';
 import 'package:madeira/app/extensions/string_extension.dart';
+import 'package:madeira/app/models/category_model.dart';
 import 'package:madeira/app/models/process_detail_model.dart';
 import 'package:madeira/app/models/material_model.dart';
 import 'package:madeira/app/models/user_model.dart';
@@ -34,6 +35,7 @@ class ProcessDetailPage extends StatefulWidget {
 class _ProcessDetailPageState extends State<ProcessDetailPage> {
   ProcessDetailResponse? _detailFuture;
   List<MaterialModel> _materials = [];
+  List<Category> _categories = [];
   bool _isLoading = false;
 
   @override
@@ -70,6 +72,16 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
 
   Future<void> _loadMaterials() async {
     try {
+      _categories = [
+        Category(
+          id: 0,
+          name: 'All',
+          description: 'All',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+        ...(await Services().getCategories())
+      ];
       _materials = await Services().getMaterials();
     } catch (e) {
       if (mounted) {
@@ -94,13 +106,30 @@ class _ProcessDetailPageState extends State<ProcessDetailPage> {
       return;
     }
 
+    final categoryResult = await showModalBottomSheet<Category>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SearchablePicker<Category>(
+        title: 'Select Category',
+        items: _categories,
+        getLabel: (category) => category.name,
+        getSubtitle: (category) => category.description,
+        allowMultiple: false,
+        selectedItems: const [],
+      ),
+    );
     final result = await showModalBottomSheet<MaterialModel>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => SearchablePicker<MaterialModel>(
         title: 'Select Materials',
-        items: _materials,
+        items: categoryResult?.id == 0
+            ? _materials
+            : _materials
+                .where((material) => material.category == categoryResult?.id)
+                .toList(),
         getLabel: (material) => material.name ?? '',
         getSubtitle: (material) =>
             '${material.description} - ₹${material.price}',
