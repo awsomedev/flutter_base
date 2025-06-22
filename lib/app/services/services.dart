@@ -4,7 +4,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:madeira/app/models/enquiry_model.dart';
 import 'package:madeira/app/models/login_model.dart';
 import 'package:madeira/app/models/category_model.dart';
+import 'package:madeira/app/models/product_category_model.dart';
 import 'package:madeira/app/models/material_model.dart';
+import 'package:madeira/app/models/product_model.dart';
 import 'package:madeira/app/models/process_model.dart';
 import 'package:madeira/app/models/user_model.dart' as user_model;
 import 'package:madeira/app/models/carpenter_request_model.dart';
@@ -92,6 +94,42 @@ class Services extends ServiceBase {
     return Category.fromJson(response);
   }
 
+  // Product Category APIs
+  Future<List<ProductCategory>> getProductCategories() async {
+    final response = await get(
+      endpoint: 'product_categories/',
+    );
+
+    if (response is List) {
+      return response.map((json) => ProductCategory.fromJson(json)).toList();
+    }
+    throw Exception('Invalid response format');
+  }
+
+  Future<ProductCategory> createProductCategory(
+      Map<String, dynamic> data) async {
+    final response = await post(
+      endpoint: 'product_categories/create/',
+      body: data,
+    );
+    return ProductCategory.fromJson(response);
+  }
+
+  Future<ProductCategory> updateProductCategory(
+      int id, Map<String, dynamic> data) async {
+    final response = await put(
+      endpoint: 'product_categories/$id/update/',
+      body: data,
+    );
+    return ProductCategory.fromJson(response);
+  }
+
+  Future<void> deleteProductCategory(int id) async {
+    await delete(
+      endpoint: 'product_categories/$id/delete/',
+    );
+  }
+
   Future<List<MaterialModel>> getMaterials() async {
     final response = await get(
       endpoint: 'materials/',
@@ -131,6 +169,45 @@ class Services extends ServiceBase {
     );
 
     return MaterialModel.fromJson(response);
+  }
+
+  // Product APIs
+  Future<List<ProductModel>> getProducts() async {
+    final response = await get(
+      endpoint: 'products/',
+    );
+
+    if (response is List) {
+      return response.map((json) => ProductModel.fromJson(json)).toList();
+    }
+    throw Exception('Invalid response format');
+  }
+
+  Future<ProductModel> createProduct(
+      Map<String, dynamic> data, List<File> images) async {
+    final response = await uploadFormData(
+      endpoint: 'products/create/',
+      fields: data,
+      files: {'product_images': images},
+    );
+    return ProductModel.fromJson(response);
+  }
+
+  Future<ProductModel> updateProduct(
+      int id, Map<String, dynamic> data, List<File> images) async {
+    final response = await uploadFormData(
+      endpoint: 'products/$id/update/',
+      fields: data,
+      method: 'PUT',
+      files: {'product_images': images},
+    );
+    return ProductModel.fromJson(response);
+  }
+
+  Future<void> deleteProduct(int id) async {
+    await delete(
+      endpoint: 'products/$id/delete/',
+    );
   }
 
   Future<List<user_model.User>> getUsers() async {

@@ -4,17 +4,15 @@ import 'package:madeira/app/models/user_static.dart';
 import 'package:madeira/app/pages/app_drawer.dart';
 import 'package:madeira/app/pages/enquiry/enquiry_page.dart';
 import 'package:madeira/app/pages/inventory/category_list_page.dart';
+import 'package:madeira/app/pages/inventory/product_category_list_page.dart';
 import 'package:madeira/app/pages/orders/order_list_page.dart';
 import 'package:madeira/app/pages/process/process_list_page.dart';
 import 'package:madeira/app/pages/process_completion/process_completion_request_list.dart';
 import 'package:madeira/app/pages/process_manager/process_manager_order_list.dart';
 import 'package:madeira/app/pages/requests/request_list.dart';
-import 'package:madeira/app/pages/splash_screen.dart';
-import 'package:madeira/app/pages/users/change_password.dart';
 import 'package:madeira/app/pages/users/user_list_page.dart';
 import 'package:madeira/app/services/services.dart';
 import 'package:madeira/app/widgets/admin_only_widget.dart';
-import 'package:madeira/app/widgets/confirmation_dialog.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -30,6 +28,9 @@ class _HomePageState extends State<HomePage> {
     switch (page) {
       case 'Inventory':
         context.push(() => const CategoryListPage());
+        break;
+      case 'Products':
+        context.push(() => const ProductCategoryListPage());
         break;
       case 'Users':
         context.push(() => const UserListPage());
@@ -73,6 +74,7 @@ class _HomePageState extends State<HomePage> {
         {'title': 'Enquiry', 'icon': Icons.question_answer},
         {'title': 'Orders', 'icon': Icons.shopping_cart},
         {'title': 'Inventory', 'icon': Icons.inventory},
+        {'title': 'Products', 'icon': Icons.inventory_2},
         {'title': 'Users', 'icon': Icons.people},
         {'title': 'Process', 'icon': Icons.production_quantity_limits},
         {'title': 'Carpenter Requests', 'icon': Icons.request_quote},
@@ -84,6 +86,7 @@ class _HomePageState extends State<HomePage> {
       sections = [
         {'title': 'Enquiry', 'icon': Icons.question_answer},
         {'title': 'Inventory', 'icon': Icons.inventory},
+        {'title': 'Products', 'icon': Icons.inventory_2},
         {'title': 'Process', 'icon': Icons.production_quantity_limits},
         {'title': 'Carpenter Requests', 'icon': Icons.request_quote},
         {'title': 'Managers Orders', 'icon': Icons.request_quote},

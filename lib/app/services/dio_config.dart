@@ -33,6 +33,7 @@ class DioConfig {
           final token = prefs.getString('auth_token');
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
+            print('Token: $token');
           }
           options.headers['Accept'] = 'application/json';
           return handler.next(options);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'category_list_page.dart';
+import 'product_category_list_page.dart';
 
 class InventoryDashboardPage extends StatelessWidget {
   const InventoryDashboardPage({super.key});
@@ -7,6 +8,7 @@ class InventoryDashboardPage extends StatelessWidget {
   final List<Map<String, dynamic>> inventoryOptions = const [
     {'title': 'Materials', 'icon': Icons.inventory_2},
     {'title': 'Category', 'icon': Icons.category},
+    {'title': 'Product Categories', 'icon': Icons.category_outlined},
   ];
 
   @override
@@ -42,6 +44,14 @@ class InventoryDashboardPage extends StatelessWidget {
                       ),
                     );
                     break;
+                  case 'Product Categories':
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProductCategoryListPage(),
+                      ),
+                    );
+                    break;
                   case 'Materials':
                     // Navigate to materials page
                     break;
@@ -62,6 +72,7 @@ class InventoryDashboardPage extends StatelessWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),

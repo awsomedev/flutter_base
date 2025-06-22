@@ -52,6 +52,8 @@ class ServiceBase {
     try {
       final dio = await DioConfig.getInstance();
       Response response;
+      final token = _prefs.getString('auth_token');
+      print('Token: $token');
 
       switch (method) {
         case HttpMethod.get:
