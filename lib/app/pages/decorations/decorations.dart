@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:madeira/app/extensions/context_extensions.dart';
 import 'package:madeira/app/models/decorations_response_model.dart';
 import 'package:madeira/app/pages/decorations/create_deacoration_enquiry.dart';
-import 'package:madeira/app/pages/inventory/create_category_page.dart';
-import '../../models/category_model.dart';
 import '../../services/services.dart';
 import '../../app_essentials/colors.dart';
 

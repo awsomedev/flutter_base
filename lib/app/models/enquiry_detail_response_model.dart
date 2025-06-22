@@ -125,7 +125,9 @@ class CarpenterData {
       materialWidth: (json['material_width'] as num?)?.toDouble(),
       status: json['status'] as String?,
       carpenterId: json['carpenter_id'] as int?,
-      materialCost: (json['material_cost'] as num?)?.toDouble(),
+      materialCost: json['material_cost'] != null
+          ? double.parse(json['material_cost'].toString())
+          : null,
       material:
           json['material'] != null ? Material.fromJson(json['material']) : null,
     );

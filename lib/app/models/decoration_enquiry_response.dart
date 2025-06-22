@@ -23,9 +23,9 @@ class DecorEnquiry {
   final String status;
   final String aboutEnquiry;
   final String? enquiryDescription;
-  final int? completionTime;
+  final String? completionTime;
   final String? cost;
-  final DateTime createdAt;
+  final DateTime? createdAt;
   final int organizationId;
   final int orderId;
   final int enquiryTypeId;
@@ -54,9 +54,11 @@ class DecorEnquiry {
         status: json['status'] as String,
         aboutEnquiry: json['about_enquiry'] as String,
         enquiryDescription: json['enquiry_description'] as String?,
-        completionTime: json['completion_time'] as int?,
+        completionTime: json['completion_time']?.toString(),
         cost: json['cost'] as String?,
-        createdAt: DateTime.parse(json['created_at'] as String),
+        createdAt: json['created_at'] != null
+            ? DateTime.parse(json['created_at'] as String)
+            : null,
         organizationId: json['organization_id'] as int,
         orderId: json['order_id'] as int,
         enquiryTypeId: json['enquiry_type_id'] as int,
@@ -73,7 +75,7 @@ class DecorEnquiry {
       'enquiry_description': enquiryDescription,
       'completion_time': completionTime,
       'cost': cost,
-      'created_at': createdAt.toIso8601String(),
+      'created_at': createdAt?.toIso8601String(),
       'organization_id': organizationId,
       'order_id': orderId,
       'enquiry_type_id': enquiryTypeId,

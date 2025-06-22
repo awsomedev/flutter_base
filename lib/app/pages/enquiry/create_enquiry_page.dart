@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:madeira/app/models/category_model.dart';
 import 'package:madeira/app/models/product_model.dart';
 import 'package:madeira/app/models/decoration_enquiry.dart';
@@ -147,53 +149,56 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
           return AlertDialog(
             title: const Text("Add New Item"),
             content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    title: Text(
-                      selectedEnquiry?.enquiryName ??
-                          'Select decoration enquiry',
-                      style: Theme.of(context).textTheme.bodyLarge,
+              child: Container(
+                width: context.width * 0.9,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      title: Text(
+                        selectedEnquiry?.enquiryName ??
+                            'Select decoration enquiry',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      subtitle: selectedUser != null
+                          ? Text(selectedUser!.phone ?? '')
+                          : null,
+                      trailing: const Icon(Icons.arrow_drop_down),
+                      onTap: () => selectDecoration(dialogContext),
+                      tileColor: AppColors.surface,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: const BorderSide(color: AppColors.divider),
+                      ),
                     ),
-                    subtitle: selectedUser != null
-                        ? Text(selectedUser!.phone ?? '')
-                        : null,
-                    trailing: const Icon(Icons.arrow_drop_down),
-                    onTap: () => selectDecoration(dialogContext),
-                    tileColor: AppColors.surface,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: const BorderSide(color: AppColors.divider),
+                    const SizedBox(height: 16),
+                    ListTile(
+                      title: Text(
+                        selectedUser?.name ?? 'Select User',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      subtitle: selectedUser != null
+                          ? Text(selectedUser!.phone ?? '')
+                          : null,
+                      trailing: const Icon(Icons.arrow_drop_down),
+                      onTap: () => selectUser(dialogContext),
+                      tileColor: AppColors.surface,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: const BorderSide(color: AppColors.divider),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  ListTile(
-                    title: Text(
-                      selectedUser?.name ?? 'Select User',
-                      style: Theme.of(context).textTheme.bodyLarge,
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: textController,
+                      decoration: const InputDecoration(
+                        hintText: "Enter note",
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 3,
                     ),
-                    subtitle: selectedUser != null
-                        ? Text(selectedUser!.phone ?? '')
-                        : null,
-                    trailing: const Icon(Icons.arrow_drop_down),
-                    onTap: () => selectUser(dialogContext),
-                    tileColor: AppColors.surface,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: const BorderSide(color: AppColors.divider),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: textController,
-                    decoration: const InputDecoration(
-                      hintText: "Enter note",
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: 3,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             actions: [
@@ -541,13 +546,13 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
         'carpenter_id': _selectedCarpenter!.id,
         'material_ids': _selectedMaterials.map((m) => m.id).toList(),
         'estimated_price': double.parse(_estimatedPriceController.text),
-        'enquiries': items
+        'enquiries': jsonEncode(items
             .map((e) => {
                   'enquiry_type_id': e.enquiry.id,
                   'enquiry_user_id': e.enquiryUser.id,
                   'about_enquiry': e.note
                 })
-            .toList()
+            .toList())
       };
       log("qwerty ${data}");
 

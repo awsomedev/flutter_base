@@ -1,8 +1,5 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:madeira/app/models/decorations_response_model.dart';
-import '../../models/category_model.dart';
 import '../../services/services.dart';
 import '../../app_essentials/colors.dart';
 

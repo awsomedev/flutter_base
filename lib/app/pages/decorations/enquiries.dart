@@ -113,8 +113,15 @@ class _RequestCard extends StatelessWidget {
               behavior: SnackBarBehavior.floating,
             ),
           );
+          await Future.delayed(const Duration(seconds: 1));
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EnquiryViewPage(enquiryId: request.id),
+            ),
+          );
+          onRequestAccepted?.call();
         }
-        onRequestAccepted?.call();
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -142,17 +149,18 @@ class _RequestCard extends StatelessWidget {
         ),
       ),
       child: InkWell(
-        onTap: () {
+        onTap: () async {
           if (request.status == 'requested') {
             _handleAccept(context);
             return;
           }
-          Navigator.push(
+          await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => EnquiryViewPage(enquiryId: request.id),
             ),
           );
+          onRequestAccepted?.call();
         },
         borderRadius: BorderRadius.circular(12),
         child: Column(
