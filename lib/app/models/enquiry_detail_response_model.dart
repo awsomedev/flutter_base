@@ -100,6 +100,10 @@ class CarpenterData {
   final String? status;
   final int? carpenterId;
   final double? materialCost;
+  final String? type;
+  final int? noOfPieces;
+  final double? materialGirth;
+  final double? materialThickness;
   final Material? material;
 
   CarpenterData({
@@ -112,10 +116,15 @@ class CarpenterData {
     this.status,
     this.carpenterId,
     this.materialCost,
+    this.type,
+    this.noOfPieces,
+    this.materialGirth,
+    this.materialThickness,
     this.material,
   });
 
   factory CarpenterData.fromJson(Map<String, dynamic> json) {
+    print(json);
     return CarpenterData(
       id: json['id'] as int?,
       orderId: json['order_id'] as int?,
@@ -128,6 +137,10 @@ class CarpenterData {
       materialCost: json['material_cost'] != null
           ? double.parse(json['material_cost'].toString())
           : null,
+      type: json['type'] as String?,
+      noOfPieces: json['no_of_pieces'] as int?,
+      materialGirth: (json['material_girth'] as num?)?.toDouble(),
+      materialThickness: (json['material_thickness'] as num?)?.toDouble(),
       material:
           json['material'] != null ? Material.fromJson(json['material']) : null,
     );

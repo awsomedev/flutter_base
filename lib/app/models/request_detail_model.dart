@@ -128,7 +128,9 @@ class EnquiryData {
       materialWidth: json['material_width'] as double?,
       status: json['status'] as String?,
       carpenterId: json['carpenter_id'] as int?,
-      materialCost: json['material_cost'] as double?,
+      materialCost: json['material_cost'] != null
+          ? double.parse(json['material_cost'].toString())
+          : null,
     );
   }
 }

@@ -34,6 +34,19 @@ class App extends StatelessWidget {
       darkTheme: _buildTheme(Brightness.light),
       themeMode: ThemeMode.system,
       home: const SplashScreen(),
+      builder: (context, child) {
+        final mediaQueryData = MediaQuery.of(context);
+
+        final scale = mediaQueryData.textScaler.clamp(
+          minScaleFactor: 1.0,
+          maxScaleFactor: 1.2,
+        );
+
+        return MediaQuery(
+          data: mediaQueryData.copyWith(textScaler: scale),
+          child: child!,
+        );
+      },
     );
   }
 }

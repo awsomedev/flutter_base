@@ -740,18 +740,41 @@ class TeamSection extends StatelessWidget {
                       DetailRow(
                           label: 'Material Name(Mal)',
                           value: data.material?.nameMal ?? 'N/A'),
-                      DetailRow(
-                          label: 'Material Length',
-                          value: '${data.materialLength ?? 'N/A'}'),
-                      DetailRow(
-                          label: 'Material Height',
-                          value: '${data.materialHeight ?? 'N/A'}'),
-                      DetailRow(
-                          label: 'Material Width',
-                          value: '${data.materialWidth ?? 'N/A'}'),
-                      DetailRow(
-                          label: 'Material Cost',
-                          value: '₹${data.material?.price ?? 'N/A'}'),
+                      if (data.type != null)
+                        DetailRow(
+                            label: 'Material Type',
+                            value:
+                                '${data.type?.replaceAll('_', ' ').capitalize}'),
+                      if (data.materialLength != null &&
+                          data.materialLength! > 0)
+                        DetailRow(
+                            label: 'Material Length',
+                            value: '${data.materialLength}'),
+                      if (data.materialHeight != null &&
+                          data.materialHeight! > 0)
+                        DetailRow(
+                            label: 'Material Height',
+                            value: '${data.materialHeight}'),
+                      if (data.materialGirth != null && data.materialGirth! > 0)
+                        DetailRow(
+                            label: 'Material Girth',
+                            value: '${data.materialGirth}'),
+                      if (data.materialWidth != null && data.materialWidth! > 0)
+                        DetailRow(
+                            label: 'Material Width',
+                            value: '${data.materialWidth}'),
+                      if (data.materialThickness != null &&
+                          data.materialThickness! > 0)
+                        DetailRow(
+                            label: 'Material Thickness',
+                            value: '${data.materialThickness}'),
+                      if (data.noOfPieces != null && data.noOfPieces! > 0)
+                        DetailRow(
+                            label: 'No of Pieces', value: '${data.noOfPieces}'),
+                      if (data.materialCost != null)
+                        DetailRow(
+                            label: 'Material Cost',
+                            value: '₹${data.materialCost}'),
                     ],
                   ),
                 ),
