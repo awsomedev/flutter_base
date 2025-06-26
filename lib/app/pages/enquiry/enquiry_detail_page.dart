@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:madeira/app/extensions/string_extension.dart';
 import 'package:madeira/app/models/enquiry_detail_response_model.dart';
-import 'package:madeira/app/models/manager_order_detail_model.dart';
 import 'package:madeira/app/pages/enquiry/create_enquiry_page.dart';
 import 'package:madeira/app/widgets/audio_player.dart';
 import 'package:madeira/app/widgets/progress_indicator_widget.dart';
@@ -16,7 +15,6 @@ import '../../services/services.dart';
 import '../../extensions/context_extensions.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../models/process_detail_model.dart';
 
 class EnquiryDetailPage extends StatefulWidget {
   final int enquiryId;
@@ -160,11 +158,11 @@ class EnquiryDetailContent extends StatelessWidget {
   final Function(bool) onCarpenterRequested;
 
   const EnquiryDetailContent({
-    Key? key,
+    super.key,
     required this.enquiryDetail,
     required this.isCarpenterRequested,
     required this.onCarpenterRequested,
-  }) : super(key: key);
+  });
 
   Future<void> _requestCarpenter(BuildContext context) async {
     try {
@@ -205,7 +203,7 @@ class EnquiryDetailContent extends StatelessWidget {
           Column(
             children: [
               for (ServerAudio audio in enquiryDetail.orderData?.audio ?? [])
-                AudioPlayer(audioUrl: audio.audio.toString().toUrl ?? ''),
+                AudioPlayer(audioUrl: audio.audio.toString().toUrl),
             ],
           ),
           const SizedBox(height: 24),
