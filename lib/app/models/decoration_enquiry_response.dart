@@ -32,6 +32,7 @@ class DecorEnquiry {
   final int enquiryUserId;
   final String? userName;
   final String? phone;
+  final String? enquiryType;
 
   DecorEnquiry(
       {required this.id,
@@ -46,6 +47,7 @@ class DecorEnquiry {
       required this.enquiryTypeId,
       required this.enquiryUserId,
       this.userName,
+      this.enquiryType,
       this.phone});
 
   factory DecorEnquiry.fromJson(Map<String, dynamic> json) {
@@ -64,6 +66,7 @@ class DecorEnquiry {
         enquiryTypeId: json['enquiry_type_id'] as int,
         enquiryUserId: json['enquiry_user_id'] as int,
         userName: json['user_name'] as String?,
+        enquiryType: json['enquiry_type'] as String?,
         phone: json['Phone'] as String?);
   }
 

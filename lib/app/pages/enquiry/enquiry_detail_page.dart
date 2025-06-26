@@ -345,6 +345,10 @@ class CustomEnquiries extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (enquiryDetail.enquiryList == null ||
+        enquiryDetail.enquiryList?.isEmpty == true) {
+      return const SizedBox.shrink();
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -366,6 +370,15 @@ class CustomEnquiries extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text(
+                          enquiryDetail.enquiryList![index].enquiryType ??
+                              'N/A',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
                         DetailRow(
                           label: 'Name',
                           value: enquiryDetail.enquiryList![index].userName ??

@@ -515,17 +515,17 @@ class EnquiryDetailResponse {
   final CurrentProcess? currentProcess;
   final double? completionPercentage;
   final List<DecorEnquiry>? enquiryList;
-
-  EnquiryDetailResponse(
-      {required this.product,
-      required this.orderData,
-      required this.mainManager,
-      required this.materials,
-      required this.carpenterEnquiryData,
-      required this.completedProcessData,
-      required this.currentProcess,
-      required this.completionPercentage,
-      required this.enquiryList});
+  EnquiryDetailResponse({
+    required this.product,
+    required this.orderData,
+    required this.mainManager,
+    required this.materials,
+    required this.carpenterEnquiryData,
+    required this.completedProcessData,
+    required this.currentProcess,
+    required this.completionPercentage,
+    required this.enquiryList,
+  });
 
   factory EnquiryDetailResponse.fromJson(Map<String, dynamic> json) {
     return EnquiryDetailResponse(
