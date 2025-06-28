@@ -9,11 +9,32 @@ import 'package:madeira/app/services/firebase_messaging_service.dart';
 import 'package:madeira/app/services/services.dart';
 import 'package:madeira/app/widgets/admin_only_widget.dart';
 import 'package:madeira/app/widgets/confirmation_dialog.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
-class AppDrawer extends StatelessWidget {
+class AppDrawer extends StatefulWidget {
   const AppDrawer({
     super.key,
   });
+
+  @override
+  State<AppDrawer> createState() => _AppDrawerState();
+}
+
+class _AppDrawerState extends State<AppDrawer> {
+  String _version = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _version = '${packageInfo.version}+${packageInfo.buildNumber}';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,6 +108,17 @@ class AppDrawer extends StatelessWidget {
               ),
               Column(
                 children: [
+                  if (_version.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Text(
+                        'Version $_version',
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
                   ListTile(
                     title: const Text(
                       'Logout',

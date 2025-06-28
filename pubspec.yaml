@@ -33,6 +33,7 @@ dependencies:
   permission_handler: ^10.0.0
   path_provider: ^2.0.11
   get: ^4.6.6
+  package_info_plus: ^8.3.0
 
   # Firebase
   firebase_core: ^2.27.1
