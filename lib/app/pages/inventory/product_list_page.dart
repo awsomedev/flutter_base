@@ -3,6 +3,7 @@ import 'package:madeira/app/pages/inventory/create_product_page.dart';
 import '../../models/product_model.dart';
 import '../../services/services.dart';
 import '../../app_essentials/colors.dart';
+import '../../widgets/create_sale_modal.dart';
 
 class ProductListPage extends StatefulWidget {
   final int categoryId;
@@ -223,7 +224,7 @@ class _ProductListPageState extends State<ProductListPage> {
                                   ),
                                   const SizedBox(height: 8),
                                   SizedBox(
-                                    height: 100,
+                                    height: 300,
                                     child: ListView.builder(
                                       scrollDirection: Axis.horizontal,
                                       itemCount: product.images.length,
@@ -236,8 +237,8 @@ class _ProductListPageState extends State<ProductListPage> {
                                                 BorderRadius.circular(8),
                                             child: Image.network(
                                               product.images[imageIndex].image,
-                                              height: 100,
-                                              width: 100,
+                                              height: 650,
+                                              width: 335,
                                               fit: BoxFit.cover,
                                             ),
                                           ),
@@ -246,6 +247,33 @@ class _ProductListPageState extends State<ProductListPage> {
                                     ),
                                   ),
                                 ],
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 16),
+                                  child: ElevatedButton.icon(
+                                    icon: const Icon(Icons.add_shopping_cart),
+                                    label: const Text('Create Sale'),
+                                    onPressed: () {
+                                      ProductSaleModal.show(
+                                        context: context,
+                                        productName:
+                                            product.name ?? 'Unknown Product',
+                                        productId: product.id,
+                                        productPrice: product.price,
+                                        onSubmit: (saleData) async {
+                                          try {
+                                            await Services()
+                                                .CreateSaleOrder(saleData);
+                                          } catch (e) {
+                                            print("API ERROR: $e");
+                                          }
+                                        },
+                                      );
+                                      if (mounted) {
+                                        fetchProducts();
+                                      }
+                                    },
+                                  ),
+                                ),
                               ],
                             ),
                           ),

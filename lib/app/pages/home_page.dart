@@ -12,6 +12,7 @@ import 'package:madeira/app/pages/process/process_list_page.dart';
 import 'package:madeira/app/pages/process_completion/process_completion_request_list.dart';
 import 'package:madeira/app/pages/process_manager/process_manager_order_list.dart';
 import 'package:madeira/app/pages/requests/request_list.dart';
+import 'package:madeira/app/pages/sale/sale_list_page.dart';
 import 'package:madeira/app/pages/users/user_list_page.dart';
 import 'package:madeira/app/services/services.dart';
 import 'package:madeira/app/widgets/admin_only_widget.dart';
@@ -72,6 +73,9 @@ class _HomePageState extends State<HomePage> {
       case 'Process Completion Requests':
         context.push(() => const ProcessCompletionRequestList());
         break;
+      case 'Sale':
+        context.push(() => SaleListPage());
+        break;
     }
   }
 
@@ -91,6 +95,7 @@ class _HomePageState extends State<HomePage> {
         {'title': 'Managers Orders', 'icon': Icons.request_quote},
         {'title': 'Process Managers Orders', 'icon': Icons.request_quote},
         {'title': 'Process Completion Requests', 'icon': Icons.request_quote},
+        {'title': 'Sale', 'icon': Icons.money},
       ];
     } else if (AdminTracker.isEnqTaker) {
       sections = [
@@ -103,7 +108,8 @@ class _HomePageState extends State<HomePage> {
         {'title': 'Carpenter Requests', 'icon': Icons.request_quote},
         {'title': 'Managers Orders', 'icon': Icons.request_quote},
         {'title': 'Process Managers Orders', 'icon': Icons.request_quote},
-        {'title': 'Process Completion Requests', 'icon': Icons.request_quote}
+        {'title': 'Process Completion Requests', 'icon': Icons.request_quote},
+        {'title': 'Sale', 'icon': Icons.money},
       ];
     } else {
       sections = [

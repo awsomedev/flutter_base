@@ -21,6 +21,7 @@ import 'package:madeira/app/models/process_detail_model.dart';
 import 'package:madeira/app/models/enquiry_detail_response_model.dart'
     as detail_model;
 import 'package:madeira/app/models/process_completion_request_model.dart';
+import 'package:madeira/app/pages/sale/sale_order.dart';
 import 'package:madeira/app/services/firebase_messaging_service.dart';
 import 'package:madeira/app/services/service_base.dart';
 import 'package:madeira/app/widgets/admin_only_widget.dart';
@@ -595,6 +596,39 @@ class Services extends ServiceBase {
     await put(
       endpoint: 'enquiries/$enquiryId/update/',
       body: data,
+    );
+  }
+
+  Future<void> CreateSaleOrder(Map<String, dynamic> data) async {
+    await post(
+      endpoint: 'sale/create/',
+      body: data,
+    );
+  }
+
+  Future<List<Sale>> fetchSales() async {
+    final response = await get(
+      endpoint: 'sale/',
+    );
+
+    if (response is List) {
+      return response.map((json) => Sale.fromJson(json)).toList();
+    } else {
+      return [];
+    }
+  }
+
+  Future<void> updateSaleStatusAndRating({
+    required int id,
+    required String status,
+    required int rating,
+  }) async {
+    await put(
+      endpoint: 'sale/$id/update/',
+      body: {
+        'delivery_status': status,
+        'rating': rating,
+      },
     );
   }
 }
