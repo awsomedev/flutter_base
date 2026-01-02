@@ -30,6 +30,8 @@ class Enquiry {
   final int? carpenterId;
   final List<int>? materialIds;
   final List<int>? completedProcesses;
+  final double? completionPercentage;
+  final String? loacation;
 
   Enquiry({
     this.id,
@@ -63,6 +65,8 @@ class Enquiry {
     this.carpenterId,
     this.materialIds,
     this.completedProcesses,
+    this.completionPercentage,
+    this.loacation,
   });
 
   factory Enquiry.fromJson(Map<String, dynamic> json) {
@@ -108,6 +112,8 @@ class Enquiry {
       completedProcesses: (json['completed_processes'] as List<dynamic>?)
           ?.map((id) => id as int)
           .toList(),
+      completionPercentage: (json['completion_percentage'] as num?)?.toDouble(),
+      loacation: json['location'] as String?,
     );
   }
 
@@ -144,6 +150,7 @@ class Enquiry {
       'carpenter_id': carpenterId,
       'material_ids': materialIds,
       'completed_processes': completedProcesses,
+      'completion_percentage': completionPercentage,
     };
   }
 }

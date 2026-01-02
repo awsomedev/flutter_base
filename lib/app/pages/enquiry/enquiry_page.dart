@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import '../../models/enquiry_model.dart';
 import '../../services/services.dart';
-import '../../app_essentials/colors.dart';
 import 'enquiry_detail_page.dart';
 import 'create_enquiry_page.dart';
 
@@ -37,36 +37,60 @@ class _EnquiryPageState extends State<EnquiryPage> {
           isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppColors.error,
+          const SnackBar(
+            content: Text('Failed to load enquiries'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
           ),
         );
       }
     }
   }
 
+  Color _getPriorityColor(String? priority) {
+    switch (priority?.toLowerCase()) {
+      case 'high':
+      case 'urgent':
+        return Colors.red[500]!;
+      case 'medium':
+        return Colors.orange[500]!;
+      case 'low':
+        return Colors.green[500]!;
+      default:
+        return Colors.grey[500]!;
+    }
+  }
+
   Widget _buildEnquiryCard(Enquiry enquiry) {
+    final priorityColor = _getPriorityColor(enquiry.priority);
+
     return Card(
-      margin: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 8,
+      elevation: 0,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade300),
       ),
-      color: AppColors.surface,
       child: InkWell(
+        borderRadius: BorderRadius.circular(12),
         onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => EnquiryDetailPage(enquiryId: enquiry.id!),
             ),
-          );
+          ).then((value) {
+            if (value == true) {
+              fetchEnquiries();
+            }
+          });
         },
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header row with product name and priority
               Row(
                 children: [
                   Expanded(
@@ -74,62 +98,103 @@ class _EnquiryPageState extends State<EnquiryPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          enquiry.productName ?? '',
+                          enquiry.productName ?? 'Unnamed Product',
                           style: const TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          enquiry.customerName ?? '',
-                          style: const TextStyle(
+                          enquiry.customerName ?? 'Unknown Customer',
+                          style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[600],
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
                   ),
+                  // Priority badge
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: _getPriorityColor(enquiry.priority),
-                      borderRadius: BorderRadius.circular(4),
+                      color: priorityColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: priorityColor.withOpacity(0.3),
+                        width: 1,
+                      ),
                     ),
                     child: Text(
-                      enquiry.priority?.toUpperCase() ?? 'N/A',
-                      style: const TextStyle(
-                        color: AppColors.background,
+                      enquiry.priority?.toUpperCase() ?? 'NORMAL',
+                      style: TextStyle(
                         fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
+                        color: priorityColor,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+
+              const SizedBox(height: 20),
+
+              // Info row
               Row(
                 children: [
-                  _buildInfoItem(
-                    icon: Icons.phone,
-                    label: enquiry.contactNumber ?? 'N/A',
+                  Expanded(
+                    child: _buildInfoItem(
+                      Icons.phone_outlined,
+                      enquiry.contactNumber ?? 'No Contact',
+                      Colors.blue[600]!,
+                    ),
                   ),
                   const SizedBox(width: 16),
-                  _buildInfoItem(
-                    icon: Icons.calendar_today,
-                    label: enquiry.estimatedDeliveryDate
-                            ?.toLocal()
-                            .toString()
-                            .split(' ')[0] ??
-                        'N/A',
+                  Expanded(
+                    child: _buildInfoItem(
+                      Icons.calendar_today_outlined,
+                      enquiry.estimatedDeliveryDate
+                              ?.toLocal()
+                              .toString()
+                              .split(' ')[0] ??
+                          'Not Set',
+                      Colors.green[600]!,
+                    ),
                   ),
                 ],
               ),
+
+              // Additional info if description exists
+              if (enquiry.productDescription != null &&
+                  enquiry.productDescription!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Text(
+                    enquiry.productDescription!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -137,83 +202,194 @@ class _EnquiryPageState extends State<EnquiryPage> {
     );
   }
 
-  Widget _buildInfoItem({
-    required IconData icon,
-    required String label,
-  }) {
+  Widget _buildInfoItem(IconData icon, String value, Color color) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 16,
-          color: AppColors.textSecondary,
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            size: 16,
+            color: color,
+          ),
         ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
     );
   }
 
-  Color _getPriorityColor(String? priority) {
-    switch (priority?.toLowerCase()) {
-      case 'high':
-        return Colors.red;
-      case 'medium':
-        return Colors.orange;
-      case 'low':
-        return Colors.green;
-      case 'urgent':
-        return Colors.red.shade700;
-      default:
-        return AppColors.textSecondary;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text(
           'Enquiries',
-          style: TextStyle(color: AppColors.textPrimary),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        centerTitle: true,
-        backgroundColor: AppColors.surface,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+        centerTitle: false,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(
+            color: Colors.grey.shade300,
+            height: 1.0,
+          ),
+        ),
       ),
       body: isLoading
           ? const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primary,
-              ),
+              child: CupertinoActivityIndicator(radius: 16),
             )
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              itemCount: enquiries.length,
-              itemBuilder: (context, index) =>
-                  _buildEnquiryCard(enquiries[index]),
+          : enquiries.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          child: Icon(
+                            Icons.help_outline,
+                            size: 48,
+                            color: Colors.blue[600],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'No enquiries found',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Create your first enquiry to get started',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blue.withOpacity(0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const CreateEnquiryPage(),
+                                ),
+                              );
+                              if (result == true) {
+                                fetchEnquiries();
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue[500],
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 16,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              elevation: 0,
+                            ),
+                            icon: const Icon(Icons.add),
+                            label: const Text(
+                              'Create Enquiry',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: fetchEnquiries,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    itemCount: enquiries.length,
+                    itemBuilder: (context, index) =>
+                        _buildEnquiryCard(enquiries[index]),
+                  ),
+                ),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const CreateEnquiryPage(),
-            ),
-          );
-          if (result == true) {
-            fetchEnquiries();
-          }
-        },
-        backgroundColor: AppColors.primary,
-        child: const Icon(
-          Icons.add,
-          color: AppColors.background,
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CreateEnquiryPage(),
+              ),
+            );
+            if (result == true) {
+              fetchEnquiries();
+            }
+          },
+          backgroundColor: Colors.blue[500],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0,
+          child: const Icon(
+            Icons.add,
+            color: Colors.white,
+            size: 28,
+          ),
         ),
       ),
     );

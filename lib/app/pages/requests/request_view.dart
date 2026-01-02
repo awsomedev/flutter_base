@@ -387,8 +387,8 @@ class _RequestViewPageState extends State<RequestViewPage> {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child:
-                          _buildDimensionField('Height', request.productHeight),
+                      child: _buildDimensionField(
+                          'Thickness', request.productHeight),
                     ),
                   ],
                 ),
