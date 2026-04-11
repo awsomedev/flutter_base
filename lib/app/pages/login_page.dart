@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:madeira/app/app_essentials/colors.dart';
 import 'package:madeira/app/extensions/context_extensions.dart';
 import 'package:madeira/app/models/user_static.dart';
@@ -246,6 +247,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   label: 'Phone Number',
                                   icon: Icons.phone,
                                   keyboardType: TextInputType.phone,
+                                  maxLength: 10,
                                 ),
                                 const SizedBox(height: 24),
                                 _buildPasswordField(),
@@ -367,11 +369,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       child: TextFormField(
         controller: _passwordController,
         obscureText: !_isPasswordVisible,
+        maxLength: 50,
+        inputFormatters: [LengthLimitingTextInputFormatter(50)],
         style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
+          counterText: '',
           labelText: 'Password',
           labelStyle: TextStyle(
             color: Colors.grey[600],
@@ -430,6 +435,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     required IconData icon,
     bool isPassword = false,
     TextInputType? keyboardType,
+    int? maxLength,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -445,11 +451,16 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         controller: controller,
         obscureText: isPassword,
         keyboardType: keyboardType,
+        maxLength: maxLength,
+        inputFormatters: maxLength != null
+            ? [LengthLimitingTextInputFormatter(maxLength)]
+            : null,
         style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
+          counterText: '',
           labelText: label,
           labelStyle: TextStyle(
             color: Colors.grey[600],

@@ -47,132 +47,215 @@ class _CategoryListPageState extends State<CategoryListPage> {
     }
   }
 
+  Widget _buildCategoryCard(Category category, int index) {
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 300 + (index * 100)),
+      tween: Tween(begin: 0.0, end: 1.0),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value.clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(0, 30 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withOpacity(0.04),
+              offset: const Offset(0, 10),
+              blurRadius: 20,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6366F1).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(Icons.category_rounded, color: Color(0xFF6366F1), size: 24),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            category.name,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF1E293B),
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            category.description,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF64748B),
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.edit_note_rounded, color: Color(0xFF6366F1), size: 20),
+                      ),
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CreateCategoryPage(category: category),
+                          ),
+                        );
+                        if (result == true) fetchCategories();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+              InkWell(
+                onTap: () {
+                  context.push(() => MaterialListPage(
+                        categoryId: category.id,
+                        categoryName: category.name,
+                      ));
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  color: const Color(0xFFF8FAFC).withOpacity(0.5),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.inventory_2_outlined, color: Color(0xFF6366F1), size: 18),
+                      SizedBox(width: 8),
+                      Text(
+                        'Browse Materials',
+                        style: TextStyle(
+                          color: Color(0xFF4338CA),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(Icons.chevron_right_rounded, color: Color(0xFF6366F1), size: 18),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text(
-          'Categories',
-          style: TextStyle(color: AppColors.textPrimary),
-        ),
-        centerTitle: true,
-        backgroundColor: AppColors.surface,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.primary,
-                    ),
-                  )
-                : ListView.builder(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 20),
-                    itemCount: categories.length,
-                    itemBuilder: (context, index) {
-                      final category = categories[index];
-                      return Column(
-                        children: [
-                          Card(
-                            margin: const EdgeInsets.symmetric(
-                              vertical: 4,
-                              horizontal: 8,
-                            ),
-                            color: AppColors.surface,
-                            child: Column(
-                              children: [
-                                ListTile(
-                                  title: Text(
-                                    category.name,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    category.description,
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                  trailing: IconButton(
-                                    icon: const Icon(
-                                      Icons.edit,
-                                      color: AppColors.primary,
-                                    ),
-                                    onPressed: () async {
-                                      final result = await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              CreateCategoryPage(
-                                            category: category,
-                                          ),
-                                        ),
-                                      );
-                                      if (result == true) {
-                                        fetchCategories();
-                                      }
-                                    },
-                                  ),
-                                ),
-                                const Divider(height: 1),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: TextButton.icon(
-                                    onPressed: () {
-                                      context.push(() => MaterialListPage(
-                                            categoryId: category.id,
-                                            categoryName: category.name,
-                                          ));
-                                    },
-                                    icon: const Icon(
-                                      Icons.add_circle_outline,
-                                      size: 18,
-                                      color: AppColors.primary,
-                                    ),
-                                    label: const Text(
-                                      'Material',
-                                      style: TextStyle(
-                                        color: AppColors.primary,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    style: TextButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 8),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(
-                              height: 8), // Add spacing between cards
-                        ],
-                      );
-                    },
+      backgroundColor: const Color(0xFFF1F5F9),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 140.0,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: const Color(0xFF6366F1),
+            iconTheme: const IconThemeData(color: Colors.white),
+            flexibleSpace: FlexibleSpaceBar(
+              title: const Text(
+                'Material Categories',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              centerTitle: false,
+              titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                   ),
+                ),
+              ),
+            ),
           ),
+          if (isLoading)
+            const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator(color: Color(0xFF6366F1))),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.only(top: 10, bottom: 100),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => _buildCategoryCard(categories[index], index),
+                  childCount: categories.length,
+                ),
+              ),
+            ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const CreateCategoryPage(),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6366F1).withOpacity(0.3),
+              offset: const Offset(0, 8),
+              blurRadius: 15,
             ),
-          );
-          if (result == true) {
-            fetchCategories(); // Refresh the list
-          }
-        },
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: AppColors.background),
+          ],
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CreateCategoryPage()),
+            );
+            if (result == true) fetchCategories();
+          },
+          label: const Text('New Category', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+          icon: const Icon(Icons.add_circle_outline_rounded, size: 24),
+          backgroundColor: const Color(0xFF6366F1),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        ),
       ),
     );
   }

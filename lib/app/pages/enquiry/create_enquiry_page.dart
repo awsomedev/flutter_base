@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:madeira/app/models/category_model.dart';
 import 'package:madeira/app/models/product_model.dart';
@@ -51,6 +52,8 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
   final _emailController = TextEditingController();
   final _addressController = TextEditingController();
   final _estimatedPriceController = TextEditingController();
+  final _materialCostController = TextEditingController();
+  final _ongoingExpenseController = TextEditingController();
   List<DecorationEnquiry> items = [];
 
   // Selected values
@@ -326,6 +329,10 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
     _selectedDeliveryDate = widget.orderData?.estimatedDeliveryDate;
     _estimatedPriceController.text =
         widget.orderData?.estimatedPrice?.toString() ?? '';
+    _materialCostController.text =
+        widget.orderData?.materialCost?.toString() ?? '';
+    _ongoingExpenseController.text =
+        widget.orderData?.ongoingExpense?.toString() ?? '';
   }
 
   Future<void> _loadProductData() async {
@@ -484,6 +491,8 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
     bool isRequired = true,
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
+    int? maxLength,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -506,9 +515,15 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
           ),
           filled: true,
           fillColor: Colors.white,
+          counterText: '',
         ),
         keyboardType: keyboardType,
         maxLines: maxLines,
+        maxLength: maxLength,
+        inputFormatters: inputFormatters ??
+            (maxLength != null
+                ? [LengthLimitingTextInputFormatter(maxLength)]
+                : null),
         validator: isRequired
             ? (value) {
                 if (value == null || value.isEmpty) {
@@ -618,7 +633,9 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
         'main_manager_id': _selectedManager!.id,
         'carpenter_id': _selectedCarpenter!.id,
         'material_ids': _selectedMaterials.map((m) => m.id).toList(),
-        'estimated_price': double.parse(_estimatedPriceController.text),
+        'estimated_price': double.tryParse(_estimatedPriceController.text) ?? 0,
+        'material_cost': double.tryParse(_materialCostController.text) ?? 0,
+        'ongoing_expense': double.tryParse(_ongoingExpenseController.text) ?? 0,
         'enquiries': jsonEncode(items
             .map((e) => {
                   'enquiry_type_id': e.enquiry.id,
@@ -698,6 +715,7 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
     required IconData icon,
     required VoidCallback onTap,
     bool isSelected = false,
+    VoidCallback? onClear,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -728,10 +746,17 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
                 isSelected ? const Color(0xFF667eea) : const Color(0xFF2D3748),
           ),
         ),
-        trailing: Icon(
-          icon,
-          color: isSelected ? const Color(0xFF667eea) : const Color(0xFF6B7280),
-        ),
+        trailing: isSelected && onClear != null
+            ? IconButton(
+                icon: const Icon(Icons.close, color: Colors.red),
+                onPressed: onClear,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              )
+            : Icon(
+                icon,
+                color: isSelected ? const Color(0xFF667eea) : const Color(0xFF6B7280),
+              ),
         onTap: onTap,
       ),
     );
@@ -784,22 +809,26 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
                     _buildTextField(
                       controller: _productNameController,
                       label: 'Product Name',
+                      maxLength: 100,
                     ),
                     _buildTextField(
                       controller: _productNameMalController,
                       label: 'Product Name (Malayalam)',
                       isRequired: false,
+                      maxLength: 100,
                     ),
                     _buildTextField(
                       controller: _productDescriptionController,
                       label: 'Description',
                       maxLines: 3,
+                      maxLength: 200,
                     ),
                     _buildTextField(
                       controller: _productDescriptionMalController,
                       label: 'Description (Malayalam)',
                       maxLines: 3,
                       isRequired: false,
+                      maxLength: 200,
                     ),
                     Row(
                       children: [
@@ -808,6 +837,7 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
                             controller: _productLengthController,
                             label: 'Length',
                             keyboardType: TextInputType.number,
+                            maxLength: 4,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -816,14 +846,16 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
                             controller: _productWidthController,
                             label: 'Width',
                             keyboardType: TextInputType.number,
+                            maxLength: 4,
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: _buildTextField(
                             controller: _productHeightController,
-                            label: 'Height',
+                            label: 'Thickness',
                             keyboardType: TextInputType.number,
+                            maxLength: 4,
                           ),
                         ),
                       ],
@@ -831,42 +863,50 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
                     _buildTextField(
                       controller: _finishController,
                       label: 'Finish',
+                      maxLength: 100,
                     ),
                     _buildTextField(
                       controller: _eventController,
                       label: 'Event',
+                      maxLength: 99,
                     ),
                     _buildTextField(
                       controller: _estimatedPriceController,
                       label: 'Estimated Price',
                       keyboardType: TextInputType.number,
+                      maxLength: 10,
                     ),
                     const SizedBox(height: 24),
                     _buildSectionHeader('Customer Details', Icons.person),
                     _buildTextField(
                       controller: _customerNameController,
                       label: 'Customer Name',
+                      maxLength: 100,
                     ),
                     _buildTextField(
                       controller: _contactNumberController,
                       label: 'Contact Number',
                       keyboardType: TextInputType.phone,
+                      maxLength: 10,
                     ),
                     _buildTextField(
                       controller: _whatsappNumberController,
                       label: 'WhatsApp Number',
                       keyboardType: TextInputType.phone,
+                      maxLength: 10,
                     ),
                     _buildTextField(
                       controller: _emailController,
                       label: 'Email',
                       keyboardType: TextInputType.emailAddress,
                       isRequired: false,
+                      maxLength: 50,
                     ),
                     _buildTextField(
                       controller: _addressController,
                       label: 'Address',
                       maxLines: 3,
+                      maxLength: 200,
                     ),
                     const SizedBox(height: 24),
                     _buildSectionHeader('Order Details', Icons.shopping_cart),
@@ -921,6 +961,11 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
                       icon: Icons.person,
                       onTap: _selectManager,
                       isSelected: _selectedManager != null,
+                      onClear: () {
+                        setState(() {
+                          _selectedManager = null;
+                        });
+                      },
                     ),
                     _buildSelectableTile(
                       title: _selectedCarpenter == null
@@ -929,6 +974,11 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
                       icon: Icons.handyman,
                       onTap: _selectCarpenter,
                       isSelected: _selectedCarpenter != null,
+                      onClear: () {
+                        setState(() {
+                          _selectedCarpenter = null;
+                        });
+                      },
                     ),
                     _buildSelectableTile(
                       title: _selectedMaterials.isEmpty
@@ -938,6 +988,37 @@ class _CreateEnquiryPageState extends State<CreateEnquiryPage> {
                       onTap: _selectMaterials,
                       isSelected: _selectedMaterials.isNotEmpty,
                     ),
+                    if (_selectedMaterials.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _selectedMaterials.map((material) {
+                            return Chip(
+                              label: Text(material.name ?? ''),
+                              backgroundColor: const Color(0xFF667eea).withOpacity(0.1),
+                              labelStyle: const TextStyle(
+                                color: Color(0xFF667eea),
+                                fontWeight: FontWeight.w600,
+                              ),
+                              deleteIcon: const Icon(Icons.close, size: 16),
+                              deleteIconColor: const Color(0xFF667eea),
+                              onDeleted: () {
+                                setState(() {
+                                  _selectedMaterials.remove(material);
+                                });
+                              },
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                side: BorderSide(
+                                  color: const Color(0xFF667eea).withOpacity(0.2),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     const SizedBox(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,

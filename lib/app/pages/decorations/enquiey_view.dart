@@ -97,31 +97,12 @@ class _EnquiryViewPageState extends State<EnquiryViewPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text(
-          'Request Details',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1.0),
-          child: Container(
-            color: Colors.grey.shade300,
-            height: 1.0,
-          ),
-        ),
-      ),
+      backgroundColor: const Color(0xFFF1F5F9),
       body: FutureBuilder<DecorationEnquiryDetailResponse>(
         future: _requestDetailFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingWidget();
+            return const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)));
           }
 
           if (snapshot.hasError) {
@@ -129,587 +110,408 @@ class _EnquiryViewPageState extends State<EnquiryViewPage> {
               error: snapshot.error.toString(),
               onRetry: () {
                 setState(() {
-                  _requestDetailFuture =
-                      Services().getDecorEnquiryDetail(widget.enquiryId);
+                  _requestDetailFuture = Services().getDecorEnquiryDetail(widget.enquiryId);
                 });
               },
             );
           }
 
           final request = snapshot.data!;
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildProductSection(request.orderData),
-                const SizedBox(height: 24),
-                _buildEnquirySection(request.enquiryData),
-                const SizedBox(height: 24),
-                if (request.enquiryData.status == 'checking')
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.green.withOpacity(0.2),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+          return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 120.0,
+                floating: false,
+                pinned: true,
+                elevation: 0,
+                backgroundColor: const Color(0xFF6366F1),
+                iconTheme: const IconThemeData(color: Colors.white),
+                flexibleSpace: FlexibleSpaceBar(
+                  title: const Text(
+                    'Enquiry Details',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 18,
+                      letterSpacing: -0.5,
                     ),
-                    child: ElevatedButton(
-                      onPressed: () => _updateEnquiryDetails(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[500],
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'Update Enquiry',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
+                  ),
+                  centerTitle: false,
+                  titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
+                  background: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                       ),
                     ),
                   ),
-                const SizedBox(height: 24),
-              ],
-            ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildModernProductSection(request.orderData),
+                      const SizedBox(height: 24),
+                      _buildModernEnquirySection(request.enquiryData),
+                      const SizedBox(height: 32),
+                      if (request.enquiryData.status == 'checking')
+                        _buildUpdateButton(),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           );
         },
       ),
     );
   }
 
-  Widget _buildProductSection(DecorationOrderData orderData) {
-    return Column(
-      children: [
-        if (orderData.referenceImage.isNotEmpty) ...[
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Stack(
-              alignment: Alignment.bottomCenter,
-              children: [
-                CarouselSlider(
-                  options: CarouselOptions(
-                    height: 200,
-                    viewportFraction: 1.0,
-                    enlargeCenterPage: false,
-                    autoPlay: orderData.referenceImage.length > 1,
-                    autoPlayInterval: const Duration(seconds: 3),
-                    onPageChanged: (index, reason) {
-                      setState(() {
-                        _currentImageIndex = index;
-                      });
-                    },
-                  ),
-                  items: orderData.referenceImage.map((image) {
-                    return Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          image.image.toImageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.grey[200],
-                              child: const Center(
-                                child: Icon(
-                                  Icons.error_outline,
-                                  color: Colors.grey,
-                                  size: 32,
-                                ),
-                              ),
-                            );
-                          },
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Container(
-                              color: Colors.grey[200],
-                              child: const Center(
-                                child: CupertinoActivityIndicator(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                if (orderData.referenceImage.length > 1)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children:
-                          orderData.referenceImage.asMap().entries.map((entry) {
-                        return Container(
-                          width: 8,
-                          height: 8,
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(
-                              _currentImageIndex == entry.key ? 0.9 : 0.4,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-              ],
-            ),
+  Widget _buildUpdateButton() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF10B981).withOpacity(0.3),
+            offset: const Offset(0, 8),
+            blurRadius: 16,
           ),
-          const SizedBox(height: 16),
         ],
-        Card(
+      ),
+      child: ElevatedButton.icon(
+        onPressed: () => _updateEnquiryDetails(context),
+        icon: const Icon(Icons.check_circle_outline_rounded, size: 20),
+        label: const Text(
+          'SUBMIT QUOTATION',
+          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.5),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF10B981),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.grey.shade300),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernProductSection(DecorationOrderData orderData) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withOpacity(0.05),
+            offset: const Offset(0, 10),
+            blurRadius: 20,
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (orderData.referenceImage.isNotEmpty)
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              child: Stack(
+                alignment: Alignment.bottomCenter,
+                children: [
+                  CarouselSlider(
+                    options: CarouselOptions(
+                      height: 250,
+                      viewportFraction: 1.0,
+                      autoPlay: orderData.referenceImage.length > 1,
+                      onPageChanged: (index, reason) => setState(() => _currentImageIndex = index),
+                    ),
+                    items: orderData.referenceImage.map((image) {
+                      return Image.network(
+                        image.image.toImageUrl,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: const Color(0xFFF1F5F9),
+                          child: const Icon(Icons.broken_image_outlined, size: 48, color: Color(0xFFCBD5E1)),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  if (orderData.referenceImage.length > 1)
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: orderData.referenceImage.asMap().entries.map((entry) {
+                          return Container(
+                            width: 8,
+                            height: 8,
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withOpacity(_currentImageIndex == entry.key ? 0.9 : 0.4),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                const Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.inventory_2_outlined,
-                        color: Colors.blue[600],
-                        size: 20,
-                      ),
-                    ),
+                    Icon(Icons.inventory_2_rounded, color: Color(0xFF6366F1), size: 20),
                     const SizedBox(width: 12),
-                    const Text(
-                      'Product Details',
+                    Text(
+                      'PRODUCT DETAILS',
                       style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF6366F1),
+                        letterSpacing: 1.0,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
-                _buildDetailRow('Name', orderData.productName),
+                Text(
+                  orderData.productName,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF1E293B)),
+                ),
                 if (orderData.productNameMal != null)
-                  _buildDetailRow(
-                      'Name (Malayalam)', orderData.productNameMal!),
-                if (orderData.productDescription != null)
-                  _buildDetailRow('Description', orderData.productDescription!),
-                if (orderData.productDescriptionMal != null)
-                  _buildDetailRow('Description (Malayalam)',
-                      orderData.productDescriptionMal!),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      orderData.productNameMal!,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+                    ),
+                  ),
                 const SizedBox(height: 16),
-                _buildDetailRow('Finish', orderData.finish),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Icon(
-                        Icons.straighten,
-                        color: Colors.orange[600],
-                        size: 16,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Product Dimensions',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                _buildInfoRow(Icons.auto_awesome_rounded, 'Finish', orderData.finish),
+                const SizedBox(height: 24),
+                const Text(
+                  'Dimensions',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF334155)),
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(
-                      child: _buildDimensionField(
-                          'Length', orderData.productLength),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child:
-                          _buildDimensionField('Width', orderData.productWidth),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildDimensionField(
-                          'Height', orderData.productHeight),
-                    ),
+                    Expanded(child: _buildModernDimensionBadge('L', orderData.productLength)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildModernDimensionBadge('W', orderData.productWidth)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildModernDimensionBadge('H', orderData.productHeight)),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.purple.shade50,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Icon(
-                        Icons.category_outlined,
-                        color: Colors.purple[600],
-                        size: 16,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Materials',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 24),
+                const Text(
+                  'Materials',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF334155)),
                 ),
                 const SizedBox(height: 12),
-                ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: orderData.materials.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 8),
-                    itemBuilder: (context, index) => Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.grey.shade200),
-                          ),
-                          child: Text(
-                            orderData.materials[index].name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        )),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: orderData.materials.map((m) => Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Text(
+                      m.name,
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF475569)),
+                    ),
+                  )).toList(),
+                ),
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildMaterialsSection(List<DecorMaterial> materials) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Materials',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
+  Widget _buildModernEnquirySection(DecorEnquiryData enquiryData) {
+    if (_descriptionController.text.isEmpty) _descriptionController.text = enquiryData.enquiryDescription ?? '';
+    // Note: Cost and completion time are double/int in model, but controllers need strings
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withOpacity(0.05),
+            offset: const Offset(0, 10),
+            blurRadius: 20,
           ),
-        ),
-        const SizedBox(height: 16),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: materials.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 16),
-          itemBuilder: (context, index) => _buildMaterialCard(materials[index]),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMaterialCard(DecorMaterial material) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade300),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              material.name,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.help_center_rounded, color: Color(0xFF8B5CF6), size: 20),
+              const SizedBox(width: 12),
+              Text(
+                'ENQUIRY QUOTATION',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF8B5CF6),
+                  letterSpacing: 1.0,
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _buildDetailRow('Client Request', enquiryData.aboutEnquiry),
+          const SizedBox(height: 24),
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          const SizedBox(height: 24),
+          _buildModernInputField(
+            controller: _descriptionController,
+            label: 'Quotation Description',
+            icon: Icons.notes_rounded,
+            maxLines: 3,
+            hint: 'Details about the proposed work...',
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: _buildModernInputField(
+                  controller: _daysController,
+                  label: 'Days Required',
+                  icon: Icons.timer_rounded,
+                  hint: '7',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildModernInputField(
+                  controller: _constController,
+                  label: 'Estimated Cost',
+                  icon: Icons.payments_rounded,
+                  hint: '5000',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildDimensionTextField(
-    String label,
-    TextEditingController controller, {
-    Function(String)? onChanged,
-    bool isDisabled = false,
+  Widget _buildModernInputField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required String hint,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF64748B)),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(color: Color(0xFFCBD5E1), fontWeight: FontWeight.w400),
+            prefixIcon: Icon(icon, color: const Color(0xFF6366F1), size: 18),
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+            contentPadding: const EdgeInsets.all(16),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Widget _buildModernDimensionBadge(String label, double? value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: [
+          Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF94A3B8))),
+          const SizedBox(height: 4),
+          Text(
+            '${value ?? 0} ft',
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Color(0xFF475569)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
         Container(
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: Colors.grey.shade300,
-            ),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: controller,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  onChanged: onChanged,
-                  readOnly: isDisabled,
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    border: InputBorder.none,
-                    isDense: true,
-                    hintText: '0.0',
-                    suffixText: 'ft',
-                    suffixStyle: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(8)),
+          child: Icon(icon, size: 16, color: const Color(0xFF64748B)),
+        ),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8))),
+            Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF334155))),
+          ],
         ),
       ],
     );
   }
 
   Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDimensionField(String label, double? value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[600],
-          ),
+          label.toUpperCase(),
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF94A3B8), letterSpacing: 0.5),
         ),
         const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 10,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                value?.toString() ?? '0',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                'ft',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[500],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF334155), height: 1.5),
         ),
       ],
-    );
-  }
-
-  Widget _buildEnquirySection(DecorEnquiryData enquiryData) {
-    return Column(
-      children: [
-        Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.grey.shade300),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.help_outline,
-                        color: Colors.green[600],
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'Enquiry Details',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                _buildDetailRow('Name', enquiryData.enquiryType),
-                _buildDetailRow('Description', enquiryData.aboutEnquiry),
-                _buildDetailRow('Status', enquiryData.status),
-                const SizedBox(height: 20),
-                _buildTextField(
-                    controller: _descriptionController,
-                    label: 'Enquiry Description',
-                    maxLines: 3),
-                _buildTextField(
-                    controller: _daysController,
-                    label: 'Days required',
-                    keyboardType: TextInputType.number,
-                    maxLines: 1),
-                _buildTextField(
-                    controller: _constController,
-                    keyboardType: TextInputType.number,
-                    label: 'Cost',
-                    maxLines: 1),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    bool isRequired = true,
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          filled: true,
-          fillColor: Colors.grey.shade50,
-        ),
-        keyboardType: keyboardType,
-        maxLines: maxLines,
-        validator: isRequired
-            ? (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter $label';
-                }
-                return null;
-              }
-            : null,
-      ),
     );
   }
 }

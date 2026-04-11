@@ -74,62 +74,173 @@ class _CreateDecorationEnquiryPageState
     }
   }
 
+  Widget _buildModernTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required String hint,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF64748B)),
+        ),
+        const SizedBox(height: 10),
+        TextFormField(
+          controller: controller,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(color: Color(0xFFCBD5E1), fontWeight: FontWeight.w400),
+            prefixIcon: Icon(icon, color: const Color(0xFF6366F1), size: 22),
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(20),
+              borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(20),
+              borderSide: const BorderSide(color: Colors.red, width: 1),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) return 'Please enter a decoration name';
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final title = widget.decoration != null ? 'Edit Decoration' : 'Create Decoration';
+    
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.decoration != null ? 'Edit Decoration' : 'Create Decoration',
-          style: const TextStyle(color: AppColors.textPrimary),
-        ),
-        backgroundColor: AppColors.surface,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _enquiryNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Enquiry Name',
-                  border: OutlineInputBorder(),
-                  labelStyle: TextStyle(color: AppColors.textPrimary),
+      backgroundColor: const Color(0xFFF1F5F9),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 120.0,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: const Color(0xFF6366F1),
+            iconTheme: const IconThemeData(color: Colors.white),
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                  letterSpacing: -0.5,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a decoration name';
-                  }
-                  return null;
-                },
               ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.background,
+              centerTitle: false,
+              titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                   ),
-                  onPressed: _isLoading ? null : _saveDecoration,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              AppColors.background,
+                ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Container(
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0F172A).withOpacity(0.05),
+                      offset: const Offset(0, 10),
+                      blurRadius: 20,
+                    ),
+                  ],
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.auto_awesome_mosaic_rounded, color: Color(0xFF6366F1), size: 24),
+                          const SizedBox(width: 12),
+                          Text(
+                            'DECORATION INFO',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF6366F1),
+                              letterSpacing: 1.0,
                             ),
                           ),
-                        )
-                      : Text(widget.decoration != null ? 'Update' : 'Create'),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      _buildModernTextField(
+                        controller: _enquiryNameController,
+                        label: 'Enquiry Name',
+                        icon: Icons.edit_note_rounded,
+                        hint: 'e.g. Wedding Hall Decoration',
+                      ),
+                      const SizedBox(height: 40),
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF6366F1).withOpacity(0.3),
+                              offset: const Offset(0, 8),
+                              blurRadius: 16,
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _saveDecoration,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6366F1),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            elevation: 0,
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white),
+                                )
+                              : Text(
+                                  widget.decoration != null ? 'UPDATE CHANGES' : 'CREATE DECORATION',
+                                  style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

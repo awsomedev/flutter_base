@@ -7,6 +7,8 @@ import 'package:madeira/app/services/services.dart';
 import 'package:madeira/app/services/firebase_messaging_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+final GlobalKey<NavigatorState> globalNavigatorKey = GlobalKey<NavigatorState>();
+
 class App extends StatelessWidget {
   const App({super.key});
 
@@ -29,6 +31,7 @@ class App extends StatelessWidget {
     }
 
     return MaterialApp(
+      navigatorKey: globalNavigatorKey,
       title: 'TimberRoot',
       theme: _buildTheme(Brightness.light),
       darkTheme: _buildTheme(Brightness.light),

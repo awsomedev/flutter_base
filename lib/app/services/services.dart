@@ -51,8 +51,15 @@ class Services extends ServiceBase {
     required String phone,
     required String password,
   }) async {
-    final fcmToken = FirebaseMessagingService.fcmToken ??
-        await FirebaseMessaging.instance.getToken();
+    String? fcmToken = FirebaseMessagingService.fcmToken;
+    try {
+      fcmToken ??= await FirebaseMessaging.instance
+          .getToken()
+          .timeout(const Duration(seconds: 5));
+    } catch (e) {
+      print('FCM token generation timeout/error: $e');
+    }
+
     final response = await post(
       endpoint: 'users/login/',
       body: {

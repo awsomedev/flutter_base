@@ -114,92 +114,218 @@ class _CreateProcessPageState extends State<CreateProcessPage> {
     );
   }
 
+  Widget _buildModernTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? Function(String?)? validator,
+    int maxLines = 1,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF475569),
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: controller,
+            maxLines: maxLines,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1E293B),
+            ),
+            decoration: InputDecoration(
+              hintText: 'Enter $label',
+              hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontWeight: FontWeight.w400),
+              prefixIcon: Icon(icon, color: const Color(0xFF6366F1), size: 20),
+              filled: true,
+              fillColor: const Color(0xFFF8FAFC),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            ),
+            validator: validator ?? (value) {
+              if (value == null || value.isEmpty) return 'Please enter $label';
+              return null;
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          widget.process != null ? 'Edit Process' : 'Create Process',
-          style: const TextStyle(color: AppColors.textPrimary),
-        ),
-        backgroundColor: AppColors.surface,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'English',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+      backgroundColor: const Color(0xFFF1F5F9),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 120.0,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: const Color(0xFF6366F1),
+            iconTheme: const IconThemeData(color: Colors.white),
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                widget.process != null ? 'Edit Process' : 'New Process',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                  letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _nameController,
-                label: 'Name',
-              ),
-              _buildTextField(
-                controller: _descriptionController,
-                label: 'Description',
-                maxLines: 3,
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Malayalam',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _nameMalController,
-                label: 'Name in Malayalam',
-              ),
-              _buildTextField(
-                controller: _descriptionMalController,
-                label: 'Description in Malayalam',
-                maxLines: 3,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.background,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+              centerTitle: false,
+              titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                   ),
-                  onPressed: _isLoading ? null : _saveProcess,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              AppColors.background,
+                ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0F172A).withOpacity(0.05),
+                            offset: const Offset(0, 10),
+                            blurRadius: 20,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Process Details (English)',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF1E293B),
+                              letterSpacing: -0.5,
                             ),
                           ),
-                        )
-                      : Text(
-                          widget.process != null
-                              ? 'Update Process'
-                              : 'Create Process',
+                          const SizedBox(height: 24),
+                          _buildModernTextField(
+                            controller: _nameController,
+                            label: 'Process Name',
+                            icon: Icons.assignment_rounded,
+                          ),
+                          _buildModernTextField(
+                            controller: _descriptionController,
+                            label: 'Description',
+                            icon: Icons.description_rounded,
+                            maxLines: 3,
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 24),
+                            child: Divider(height: 1, color: Color(0xFFF1F5F9)),
+                          ),
+                          const Text(
+                            'Process Details (Malayalam)',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF1E293B),
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          _buildModernTextField(
+                            controller: _nameMalController,
+                            label: 'Name in Malayalam',
+                            icon: Icons.translate_rounded,
+                          ),
+                          _buildModernTextField(
+                            controller: _descriptionMalController,
+                            label: 'Description in Malayalam',
+                            icon: Icons.sticky_note_2_rounded,
+                            maxLines: 3,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF6366F1).withOpacity(0.3),
+                              offset: const Offset(0, 8),
+                              blurRadius: 16,
+                            ),
+                          ],
                         ),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6366F1),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            elevation: 0,
+                          ),
+                          onPressed: _isLoading ? null : _saveProcess,
+                          child: _isLoading
+                              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : Text(
+                                  widget.process != null ? 'UPDATE PROCESS' : 'CREATE PROCESS',
+                                  style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                                ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

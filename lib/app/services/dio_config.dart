@@ -1,11 +1,16 @@
 import 'dart:developer';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:madeira/app/app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:madeira/app/widgets/network_error_dialog.dart';
 
 class DioConfig {
   static Dio? _instance;
-  static const String baseUrl = 'http://159.89.166.142:8000/api/';
+  static bool _isShowingNetworkError = false;
+  static const String baseUrl = 'http://localhost:8000/api/';
   static const Duration timeout = Duration(seconds: 30);
 
   static Future<Dio> getInstance() async {
@@ -48,6 +53,29 @@ class DioConfig {
             await prefs.remove('auth_token');
             // You can add navigation to login or token refresh logic here
           }
+
+          if (error.type == DioExceptionType.connectionTimeout ||
+              error.type == DioExceptionType.sendTimeout ||
+              error.type == DioExceptionType.receiveTimeout ||
+              error.type == DioExceptionType.connectionError ||
+              error.type == DioExceptionType.unknown) {
+            if (!_isShowingNetworkError &&
+                globalNavigatorKey.currentContext != null) {
+              _isShowingNetworkError = true;
+              showDialog(
+                context: globalNavigatorKey.currentContext!,
+                builder: (context) => NetworkErrorDialog(
+                  onClose: () {
+                    Navigator.of(context).pop(); // close dialog
+                  },
+                ),
+                barrierDismissible: false,
+              ).then((_) {
+                _isShowingNetworkError = false;
+              });
+            }
+          }
+
           return handler.next(error);
         },
       ));

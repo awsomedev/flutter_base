@@ -1,12 +1,15 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:madeira/app/extensions/string_extension.dart';
 import 'package:madeira/app/models/enquiry_detail_response_model.dart';
 import 'package:madeira/app/pages/enquiry/create_enquiry_page.dart';
 import 'package:madeira/app/widgets/audio_player.dart';
+import 'package:madeira/app/widgets/downloadable_media_section.dart';
 import 'package:madeira/app/widgets/progress_indicator_widget.dart';
 
 import '../../models/enquiry_detail_response_model.dart' as detail_model;
@@ -106,74 +109,62 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
           log('${enquiryDetail}');
           return Scaffold(
             backgroundColor: const Color(0xFFF8FAFC),
-            appBar: AppBar(
-              title: Text(
-                enquiryDetail.orderData?.productName ?? 'Enquiry Details',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              centerTitle: false,
-              backgroundColor: const Color(0xFF667eea),
-              elevation: 0,
-              iconTheme: const IconThemeData(color: Colors.white),
-              flexibleSpace: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF667eea),
-                      Color(0xFF764ba2),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            body: Stack(
-              children: [
-                EnquiryDetailContent(
-                  enquiryDetail: enquiryDetail,
-                  isCarpenterRequested: _isCarpenterRequested,
-                  onCarpenterRequested: (value) {
-                    setState(() {
-                      _isCarpenterRequested = value;
-                    });
-                  },
-                ),
-                if (enquiryDetail.orderData?.overDue == true)
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFF6B6B), Color(0xFFEE5A6F)],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.red.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+            body: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverAppBar(
+                  expandedHeight: 110.0,
+                  pinned: true,
+                  elevation: 0,
+                  backgroundColor: const Color(0xFF6366F1),
+                  iconTheme: const IconThemeData(color: Colors.white),
+                  flexibleSpace: FlexibleSpaceBar(
+                    title: Text(
+                      enquiryDetail.orderData?.productName ?? 'Enquiry Details',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 18,
+                        letterSpacing: -0.5,
                       ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: const Text(
-                        'Over Due',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
+                    ),
+                    centerTitle: false,
+                    titlePadding: const EdgeInsets.only(left: 56, bottom: 14),
+                    background: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
                         ),
                       ),
                     ),
                   ),
+                  actions: [
+                    if (enquiryDetail.orderData?.overDue == true)
+                      Container(
+                        margin: const EdgeInsets.only(right: 16, top: 12, bottom: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF6B6B),
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: const Text('Over Due', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                      ),
+                  ],
+                ),
+                SliverToBoxAdapter(
+                  child: EnquiryDetailContent(
+                    enquiryDetail: enquiryDetail,
+                    isCarpenterRequested: _isCarpenterRequested,
+                    onCarpenterRequested: (value) {
+                      setState(() {
+                        _isCarpenterRequested = value;
+                      });
+                    },
+                  ),
+                ),
               ],
             ),
           );
@@ -226,11 +217,6 @@ class EnquiryDetailContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ImageCarousel(
-            images: enquiryDetail.product?.materialImages ??
-                enquiryDetail.orderData?.images ??
-                [],
-          ),
           Column(
             children: [
               for (ServerAudio audio in enquiryDetail.orderData?.audio ?? [])
@@ -279,6 +265,19 @@ class EnquiryDetailContent extends StatelessWidget {
               ),
             ],
           ),
+          // Media section with download
+          if ((enquiryDetail.product?.materialImages ?? enquiryDetail.orderData?.images ?? []).isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 0),
+              child: DownloadableMediaSection(
+                imageUrls: (enquiryDetail.product?.materialImages ?? enquiryDetail.orderData?.images ?? [])
+                    .map((img) => img is String ? img as String : img.image.toImageUrl)
+                    .toList(),
+                title: 'Product Media',
+              ),
+            ),
+          ],
           Section(
             title: 'Customer Information',
             icon: Icons.person,
@@ -286,9 +285,23 @@ class EnquiryDetailContent extends StatelessWidget {
             children: [
               DetailRow(label: 'Name', value: orderData?.customerName ?? 'N/A'),
               DetailRow(
-                  label: 'Phone', value: orderData?.contactNumber ?? 'N/A'),
+                  label: 'Phone',
+                  value: orderData?.contactNumber ?? 'N/A',
+                  onTap: orderData?.contactNumber != null
+                      ? () async {
+                          final uri = Uri.parse('tel:${orderData!.contactNumber}');
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      : null),
               DetailRow(
-                  label: 'WhatsApp', value: orderData?.whatsappNumber ?? 'N/A'),
+                  label: 'WhatsApp',
+                  value: orderData?.whatsappNumber ?? 'N/A',
+                  onTap: orderData?.whatsappNumber != null
+                      ? () async {
+                          final uri = Uri.parse('tel:${orderData!.whatsappNumber}');
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      : null),
               DetailRow(label: 'Email', value: orderData?.email ?? 'N/A'),
               DetailRow(label: 'Address', value: orderData?.address ?? 'N/A'),
             ],
@@ -575,42 +588,52 @@ class Section extends StatelessWidget {
 class DetailRow extends StatelessWidget {
   final String label;
   final String value;
+  final VoidCallback? onTap;
 
   const DetailRow({
     Key? key,
     required this.label,
     required this.value,
+    this.onTap,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final bool isPhone = onTap != null;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 130,
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: Color(0xFF718096),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 130,
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Color(0xFF718096),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                color: Color(0xFF2D3748),
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            Expanded(
+              child: Text(
+                value,
+                style: TextStyle(
+                  color: isPhone ? const Color(0xFF667eea) : const Color(0xFF2D3748),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  decoration: isPhone ? TextDecoration.underline : TextDecoration.none,
+                ),
               ),
             ),
-          ),
-        ],
+            if (isPhone)
+              const Icon(Icons.call_rounded, size: 18, color: Color(0xFF667eea)),
+          ],
+        ),
       ),
     );
   }
@@ -640,61 +663,57 @@ class ImageCarousel extends StatelessWidget {
           options: CarouselOptions(
             height: 280,
             viewportFraction: 1,
-            enableInfiniteScroll: false,
+            enableInfiniteScroll: images.length > 1,
             enlargeCenterPage: true,
-            autoPlay: false,
+            autoPlay: images.length > 1,
           ),
           items: images.map((image) {
-            return Builder(
-              builder: (BuildContext context) {
-                return Container(
-                  width: MediaQuery.of(context).size.width,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
-                        spreadRadius: 2,
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+            return Container(
+              width: MediaQuery.of(context).size.width,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    spreadRadius: 2,
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: CachedNetworkImage(
-                      imageUrl: image.image?.toString().toUrl ?? '',
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              const Color(0xFFFFB6B9).withOpacity(0.1),
-                              const Color(0xFFFFB6B9).withOpacity(0.05),
-                            ],
-                          ),
-                        ),
-                        child: const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              const Color(0xFFFFB6B9).withOpacity(0.1),
-                              const Color(0xFFFFB6B9).withOpacity(0.05),
-                            ],
-                          ),
-                        ),
-                        child: const Center(
-                          child: Icon(Icons.error, size: 48),
-                        ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: CachedNetworkImage(
+                  imageUrl: image.image?.toString().toUrl ?? '',
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFFFFB6B9).withOpacity(0.1),
+                          const Color(0xFFFFB6B9).withOpacity(0.05),
+                        ],
                       ),
                     ),
+                    child: const Center(
+                      child: CupertinoActivityIndicator(),
+                    ),
                   ),
-                );
-              },
+                  errorWidget: (context, url, error) => Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFFFFB6B9).withOpacity(0.1),
+                          const Color(0xFFFFB6B9).withOpacity(0.05),
+                        ],
+                      ),
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                    ),
+                  ),
+                ),
+              ),
             );
           }).toList(),
         ),
@@ -1455,6 +1474,71 @@ class CurrentProcessSection extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
+                if (currentProcess!.currentProcessDetails?.images != null &&
+                    currentProcess!.currentProcessDetails!.images!.isNotEmpty) ...[
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Process Images',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2D3748),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      CarouselSlider(
+                        options: CarouselOptions(
+                          height: 220,
+                          viewportFraction: 1,
+                          enableInfiniteScroll: false,
+                          enlargeCenterPage: true,
+                          autoPlay: true,
+                        ),
+                        items: currentProcess!.currentProcessDetails!.images!
+                            .map((image) {
+                          return Builder(
+                            builder: (BuildContext context) {
+                              return Container(
+                                width: MediaQuery.of(context).size.width,
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 5.0),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.15),
+                                      spreadRadius: 1,
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: CachedNetworkImage(
+                                    imageUrl: image.image.toImageUrl,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) =>
+                                        const Center(
+                                      child: CupertinoActivityIndicator(),
+                                    ),
+                                    errorWidget: (context, url, error) =>
+                                        const Center(
+                                      child: Icon(Icons.error_outline),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 WorkerList(
                     workerData: currentProcess!.currentProcessWorkers ?? []),
                 const SizedBox(height: 16),
@@ -1951,7 +2035,9 @@ class WorkersDetailWidget extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -1961,6 +2047,7 @@ class WorkersDetailWidget extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
                             Icons.currency_rupee,
@@ -1979,7 +2066,6 @@ class WorkersDetailWidget extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
@@ -1988,6 +2074,7 @@ class WorkersDetailWidget extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
                             Icons.phone_outlined,

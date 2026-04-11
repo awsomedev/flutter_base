@@ -1,10 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:madeira/app/app_essentials/colors.dart';
 import 'package:madeira/app/models/carpenter_request_model.dart';
 import 'package:madeira/app/services/services.dart';
 import 'package:madeira/app/widgets/error_widget.dart';
-import 'package:madeira/app/widgets/loading_widget.dart';
 import 'package:madeira/app/widgets/confirmation_dialog.dart';
 import 'package:madeira/app/pages/requests/request_view.dart';
 
@@ -30,113 +28,154 @@ class _RequestListPageState extends State<RequestListPage> {
     });
   }
 
+  Color _getStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+        return const Color(0xFF10B981);
+      case 'requested':
+        return const Color(0xFFF59E0B);
+      case 'accepted':
+        return const Color(0xFF3B82F6);
+      case 'in_progress':
+        return const Color(0xFF8B5CF6);
+      default:
+        return const Color(0xFF64748B);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text(
-          'Carpenter Requests',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: false,
-        backgroundColor: const Color(0xFF667eea),
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF667eea),
-                Color(0xFF764ba2),
-              ],
+      backgroundColor: const Color(0xFFF1F5F9),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 110.0,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: const Color(0xFF6366F1),
+            iconTheme: const IconThemeData(color: Colors.white),
+            flexibleSpace: FlexibleSpaceBar(
+              title: const Text(
+                'Work Requests',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 22,
+                  letterSpacing: -1,
+                ),
+              ),
+              centerTitle: false,
+              titlePadding: const EdgeInsets.only(left: 56, bottom: 14),
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: -30,
+                    right: -30,
+                    child: CircleAvatar(
+                      radius: 80,
+                      backgroundColor: Colors.white.withOpacity(0.05),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ),
-      body: SafeArea(
-        child: FutureBuilder<CarpenterRequestResponse>(
-          future: _requestsFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const LoadingWidget();
-            }
+          FutureBuilder<CarpenterRequestResponse>(
+            future: _requestsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SliverFillRemaining(
+                  child: Center(child: CupertinoActivityIndicator(radius: 16)),
+                );
+              }
 
-            if (snapshot.hasError) {
-              return CustomErrorWidget(
-                error: snapshot.error.toString(),
-                onRetry: _refreshRequests,
-              );
-            }
+              if (snapshot.hasError) {
+                return SliverFillRemaining(
+                  child: CustomErrorWidget(
+                    error: snapshot.error.toString(),
+                    onRetry: _refreshRequests,
+                  ),
+                );
+              }
 
-            if (!snapshot.hasData || snapshot.data!.orderData.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.inbox_outlined,
-                        size: 64,
-                        color: Colors.grey[400],
+              final allRequests = snapshot.data?.orderData ?? [];
+
+              if (allRequests.isEmpty) {
+                return SliverFillRemaining(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF6366F1).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: const Icon(
+                              Icons.inbox_rounded,
+                              size: 64,
+                              color: Color(0xFF6366F1),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          const Text(
+                            'No Work Requests',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF1E293B),
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Pull down to refresh.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Color(0xFF64748B),
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'No requests found',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  ),
+                );
+              }
+
+              return SliverPadding(
+                padding: const EdgeInsets.only(top: 0, bottom: 100),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _RequestCard(
+                      request: allRequests[index],
+                      index: index,
+                      onRequestAccepted: _refreshRequests,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'New requests will appear here',
-                      style: TextStyle(
-                        color: Colors.grey[500],
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
+                    childCount: allRequests.length,
+                  ),
                 ),
               );
-            }
-
-            final requests = snapshot.data!.orderData;
-            return RefreshIndicator(
-              color: const Color(0xFF667eea),
-              onRefresh: () async {
-                _refreshRequests();
-                await _requestsFuture;
-              },
-              child: ListView.separated(
-                padding: const EdgeInsets.all(20),
-                itemCount: requests.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 16),
-                itemBuilder: (context, index) {
-                  final request = requests[index];
-                  return _RequestCard(
-                    request: request,
-                    onRequestAccepted: _refreshRequests,
-                  );
-                },
-              ),
-            );
-          },
-        ),
+            },
+          ),
+        ],
       ),
     );
   }
@@ -144,11 +183,13 @@ class _RequestListPageState extends State<RequestListPage> {
 
 class _RequestCard extends StatelessWidget {
   final CarpenterRequest request;
+  final int index;
   final VoidCallback? onRequestAccepted;
 
   const _RequestCard({
     Key? key,
     required this.request,
+    required this.index,
     this.onRequestAccepted,
   }) : super(key: key);
 
@@ -208,223 +249,6 @@ class _RequestCard extends StatelessWidget {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: _getStatusColor(request.status).withOpacity(0.15),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
-          ),
-        ],
-        border: Border.all(
-          color: _getStatusColor(request.status).withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    RequestViewPage(orderId: request.orderId!),
-              ),
-            );
-          },
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            request.productName ?? '',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF2D3748),
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                          if (request.productNameMal != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              request.productNameMal!,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            _getStatusColor(request.status),
-                            _getStatusColor(request.status).withOpacity(0.8),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: _getStatusColor(request.status)
-                                .withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _getStatusIcon(request.status),
-                            color: Colors.white,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _getStatusText(request.status),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.grey.withOpacity(0.1),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        request.productDescription ?? '',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF4A5568),
-                          height: 1.5,
-                        ),
-                      ),
-                      if (request.productDescriptionMal != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          request.productDescriptionMal!,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[600],
-                            height: 1.5,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                if (request.status == 'requested') ...[
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Container(
-                        height: 44,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF10B981), Color(0xFF059669)],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF10B981).withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () => _handleAccept(context),
-                            borderRadius: BorderRadius.circular(12),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 10,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: const [
-                                  Icon(
-                                    Icons.check_circle,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Accept Request',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Color _getStatusColor(String? status) {
     switch (status?.toLowerCase()) {
       case 'completed':
@@ -436,22 +260,7 @@ class _RequestCard extends StatelessWidget {
       case 'in_progress':
         return const Color(0xFF8B5CF6);
       default:
-        return const Color(0xFF6B7280);
-    }
-  }
-
-  IconData _getStatusIcon(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'completed':
-        return Icons.check_circle;
-      case 'requested':
-        return Icons.pending;
-      case 'accepted':
-        return Icons.thumb_up;
-      case 'in_progress':
-        return Icons.sync;
-      default:
-        return Icons.info;
+        return const Color(0xFF64748B);
     }
   }
 
@@ -468,5 +277,174 @@ class _RequestCard extends StatelessWidget {
       default:
         return status?.toUpperCase() ?? 'UNKNOWN';
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final statusColor = _getStatusColor(request.status);
+
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 300 + (index * 100)),
+      tween: Tween(begin: 0.0, end: 1.0),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value.clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(0, 30 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withOpacity(0.04),
+              offset: const Offset(0, 10),
+              blurRadius: 20,
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(28),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      RequestViewPage(orderId: request.orderId!),
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              request.productName ?? 'Unnamed Product',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF1E293B),
+                                letterSpacing: -0.5,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (request.productNameMal != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  request.productNameMal!,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey[600],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: Text(
+                          _getStatusText(request.status),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: statusColor,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFF1F5F9)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          request.productDescription ?? 'No description',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF475569),
+                            height: 1.5,
+                          ),
+                        ),
+                        if (request.productDescriptionMal != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            request.productDescriptionMal!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[500],
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (request.status?.toLowerCase() == 'requested') ...[
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () => _handleAccept(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      icon: const Icon(Icons.check_circle_rounded, size: 20),
+                      label: const Text(
+                        'Accept Request',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

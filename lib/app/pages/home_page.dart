@@ -300,52 +300,38 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF1F5F9), // Lighter, cleaner background
       drawer: const AppDrawer(),
-      appBar: AppBar(
-        title: Text(
-          'Welcome, ${UserStatic.getUser()?.username}',
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: false,
-        backgroundColor: const Color(0xFF667eea),
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF667eea),
-                Color(0xFF764ba2),
-              ],
-            ),
-          ),
-        ),
-      ),
       body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
         slivers: [
+          _buildAppBar(context),
           SliverPadding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 30),
             sliver: SliverGrid(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: 0.85,
+                childAspectRatio: 0.88,
               ),
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
                   final section = sections[index];
-                  return AnimatedContainer(
-                    duration: Duration(milliseconds: 300 + (index * 100)),
-                    curve: Curves.easeOutBack,
-                    child: _buildModernCard(section, context),
+                  // Staggered animation entry effect
+                  return TweenAnimationBuilder<double>(
+                    duration: Duration(milliseconds: 400 + (index * 50)),
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: value.clamp(0.0, 1.0),
+                        child: Transform.translate(
+                          offset: Offset(0, 20 * (1 - value)),
+                          child: _buildModernCard(section, context),
+                        ),
+                      );
+                    },
                   );
                 },
                 childCount: sections.length,
@@ -353,192 +339,232 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SliverToBoxAdapter(
-            child: SizedBox(height: 30),
+            child: SizedBox(height: 20),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildModernCard(Map<String, dynamic> section, BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        navigateToPage(section['title']);
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFFFFFF),
-              Color(0xFFF8FAFC),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: section['color'].withOpacity(0.25),
-              spreadRadius: 0,
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+  Widget _buildAppBar(BuildContext context) {
+    final user = UserStatic.getUser();
+    return SliverAppBar(
+      expandedHeight: 180.0,
+      floating: false,
+      pinned: true,
+      elevation: 0,
+      backgroundColor: const Color(0xFF6366F1),
+      iconTheme: const IconThemeData(color: Colors.white, size: 24),
+      stretch: true,
+      flexibleSpace: FlexibleSpaceBar(
+        stretchModes: const [StretchMode.zoomBackground, StretchMode.blurBackground],
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Modern gradient background
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF6366F1), // Indigo
+                    Color(0xFF8B5CF6), // Violet
+                  ],
+                ),
+              ),
             ),
-            const BoxShadow(
-              color: Color(0x0F000000),
-              spreadRadius: 0,
-              blurRadius: 15,
-              offset: Offset(0, 4),
+            // Decorative circles for extra "premium" feel
+            Positioned(
+              top: -50,
+              right: -50,
+              child: CircleAvatar(
+                radius: 100,
+                backgroundColor: Colors.white.withOpacity(0.05),
+              ),
+            ),
+            Positioned(
+              bottom: 20,
+              left: -30,
+              child: CircleAvatar(
+                radius: 60,
+                backgroundColor: Colors.white.withOpacity(0.03),
+              ),
+            ),
+            // Header content
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 50, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Hello,',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      user?.username ?? 'Guest User',
+                      style: const TextStyle(
+                        fontSize: 28,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.calendar_today_outlined, color: Colors.white, size: 14),
+                          const SizedBox(width: 6),
+                          Text(
+                            _getFormattedDate(),
+                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(24),
-            onTap: () {
-              navigateToPage(section['title']);
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: section['color'].withOpacity(0.1),
-                  width: 1,
+      ),
+    );
+  }
+
+  String _getFormattedDate() {
+    final now = DateTime.now();
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${now.day} ${months[now.month - 1]}, ${now.year}';
+  }
+
+
+  Widget _buildModernCard(Map<String, dynamic> section, BuildContext context) {
+    final Color color = section['color'] ?? const Color(0xFF6366F1);
+    return GestureDetector(
+      onTap: () => navigateToPage(section['title']),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withOpacity(0.04),
+              offset: const Offset(0, 12),
+              blurRadius: 24,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: Stack(
+            children: [
+              // Subtle background element
+              Positioned(
+                top: -20,
+                right: -20,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.04),
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Enhanced image/emoji container with beautiful gradients
-                  Container(
-                    width: 75,
-                    height: 75,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          section['color'].withOpacity(0.15),
-                          section['color'].withOpacity(0.08),
-                        ],
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Icon/Emoji Container
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            color.withOpacity(0.12),
+                            color.withOpacity(0.05),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(
-                        color: section['color'].withOpacity(0.25),
-                        width: 1.5,
+                      child: Center(
+                        child: Text(
+                          section['image'] ?? '📱',
+                          style: const TextStyle(fontSize: 28),
+                        ),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: section['color'].withOpacity(0.2),
-                          spreadRadius: 0,
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
                     ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Inner glow effect
-                        Container(
-                          width: 65,
-                          height: 65,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(18),
-                            gradient: RadialGradient(
-                              center: Alignment.topLeft,
-                              radius: 1.2,
-                              colors: [
-                                section['color'].withOpacity(0.12),
-                                section['color'].withOpacity(0.05),
-                              ],
-                            ),
-                          ),
-                        ),
-                        // Emoji/Image with subtle shadow
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                spreadRadius: 0,
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            section['image'] ?? '📱',
-                            style: const TextStyle(
-                              fontSize: 32,
-                              height: 1.0,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  // Enhanced title with gradient text effect
-                  Text(
-                    section['title'],
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
-                      letterSpacing: 0.3,
-                      height: 1.2,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  // Enhanced description
-                  if (section['description'] != null)
+                    const SizedBox(height: 12),
                     Text(
-                      section['description'],
+                      section['title'],
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1E293B),
+                        height: 1.2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      section['description'] ?? 'Manage details',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
                         fontSize: 10,
-                        color: Colors.grey[600],
-                        height: 1.4,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: 0.1,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF64748B),
+                        height: 1.3,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  const SizedBox(height: 10),
-                  // Enhanced accent line with gradient
-                  Container(
-                    width: 35,
-                    height: 3,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          section['color'].withOpacity(0.6),
-                          section['color'].withOpacity(0.2),
-                        ],
+                    const SizedBox(height: 12),
+                    // Action button lookalike
+                    Container(
+                      height: 4,
+                      width: 24,
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(100),
                       ),
-                      borderRadius: BorderRadius.circular(2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: section['color'].withOpacity(0.3),
-                          spreadRadius: 0,
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+              // Hover/Tap effect overlay
+              Positioned.fill(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => navigateToPage(section['title']),
+                    splashColor: color.withOpacity(0.1),
+                    highlightColor: color.withOpacity(0.05),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
