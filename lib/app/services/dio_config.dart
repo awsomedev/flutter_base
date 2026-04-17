@@ -10,7 +10,7 @@ import 'package:madeira/app/widgets/network_error_dialog.dart';
 class DioConfig {
   static Dio? _instance;
   static bool _isShowingNetworkError = false;
-  static const String baseUrl = 'http://localhost:8000/api/';
+  static const String baseUrl = 'http://159.65.147.75:8000/api/';
   static const Duration timeout = Duration(seconds: 30);
 
   static Future<Dio> getInstance() async {
