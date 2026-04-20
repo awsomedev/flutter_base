@@ -123,29 +123,68 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
     }
   }
 
-  Widget _buildTextField({
+  Widget _buildModernTextField({
     required TextEditingController controller,
     required String label,
+    required IconData icon,
     String? Function(String?)? validator,
     TextInputType? keyboardType,
+    int maxLines = 1,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          labelStyle: const TextStyle(color: AppColors.textPrimary),
-        ),
-        validator: validator ??
-            (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter $label';
-              }
+      padding: const EdgeInsets.only(bottom: 20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF475569),
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: controller,
+            maxLines: maxLines,
+            keyboardType: keyboardType,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1E293B),
+            ),
+            decoration: InputDecoration(
+              hintText: 'Enter $label',
+              hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontWeight: FontWeight.w400),
+              prefixIcon: Icon(icon, color: const Color(0xFF6366F1), size: 20),
+              filled: true,
+              fillColor: const Color(0xFFF8FAFC),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            ),
+            validator: validator ?? (value) {
+              if (value == null || value.isEmpty) return 'Please enter $label';
               return null;
             },
-        keyboardType: keyboardType,
+          ),
+        ],
       ),
     );
   }
@@ -153,171 +192,231 @@ class _CreateMaterialPageState extends State<CreateMaterialPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          widget.material != null ? 'Edit Material' : 'Create Material',
-          style: const TextStyle(color: AppColors.textPrimary),
-        ),
-        backgroundColor: AppColors.surface,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              _buildTextField(
-                controller: _nameController,
-                label: 'Name',
+      backgroundColor: const Color(0xFFF1F5F9),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 120.0,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: const Color(0xFF6366F1),
+            iconTheme: const IconThemeData(color: Colors.white),
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                widget.material != null ? 'Edit Material' : 'Initialize Material',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                  letterSpacing: -0.5,
+                ),
               ),
-              _buildTextField(
-                controller: _nameMalayalamController,
-                label: 'Name(Mal)',
+              centerTitle: false,
+              titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                  ),
+                ),
               ),
-              _buildTextField(
-                controller: _codeController,
-                label: 'Material Code',
-              ),
-              _buildTextField(
-                controller: _descriptionController,
-                label: 'Description',
-              ),
-              _buildTextField(
-                controller: _descriptionMalayalamController,
-                label: 'Description(Mal)',
-              ),
-              _buildTextField(
-                controller: _colourController,
-                label: 'Color',
-              ),
-              _buildTextField(
-                controller: _qualityController,
-                label: 'Quality',
-              ),
-              _buildTextField(
-                controller: _durabilityController,
-                label: 'Durability',
-              ),
-              _buildTextField(
-                controller: _priceController,
-                label: 'Price',
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter price';
-                  }
-                  if (double.tryParse(value) == null) {
-                    return 'Please enter a valid price';
-                  }
-                  return null;
-                },
-              ),
-              _buildTextField(
-                controller: _quantityController,
-                label: 'Quantity',
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    if (int.tryParse(value) == null) {
-                      return 'Please enter a valid quantity';
-                    }
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Row(
-                    children: [
-                      ..._existingImages
-                          .map((e) => Padding(
-                                padding: const EdgeInsets.all(5.0),
-                                child: Stack(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(5),
-                                      child: Image.network(
-                                        e,
-                                        height: 100,
-                                        width: 100,
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0F172A).withOpacity(0.05),
+                            offset: const Offset(0, 10),
+                            blurRadius: 20,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Basic Information',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF1E293B),
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          _buildModernTextField(
+                            controller: _nameController,
+                            label: 'Material Name',
+                            icon: Icons.inventory_2_outlined,
+                          ),
+                          _buildModernTextField(
+                            controller: _nameMalayalamController,
+                            label: 'Name (Malayalam)',
+                            icon: Icons.translate_rounded,
+                          ),
+                          _buildModernTextField(
+                            controller: _codeController,
+                            label: 'Material Code',
+                            icon: Icons.qr_code_rounded,
+                          ),
+                          _buildModernTextField(
+                            controller: _descriptionController,
+                            label: 'Description',
+                            icon: Icons.description_outlined,
+                            maxLines: 3,
+                          ),
+                          _buildModernTextField(
+                            controller: _descriptionMalayalamController,
+                            label: 'Description (Malayalam)',
+                            icon: Icons.translate_rounded,
+                            maxLines: 3,
+                          ),
+                          const Divider(height: 40, color: Color(0xFFF1F5F9)),
+                          const Text(
+                            'Specifications',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF1E293B),
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          _buildModernTextField(
+                            controller: _colourController,
+                            label: 'Color',
+                            icon: Icons.palette_outlined,
+                          ),
+                          _buildModernTextField(
+                            controller: _qualityController,
+                            label: 'Quality Standard',
+                            icon: Icons.verified_outlined,
+                          ),
+                          _buildModernTextField(
+                            controller: _durabilityController,
+                            label: 'Durability',
+                            icon: Icons.timer_outlined,
+                          ),
+                          const Divider(height: 40, color: Color(0xFFF1F5F9)),
+                          const Text(
+                            'Inventory & Media',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF1E293B),
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          _buildModernTextField(
+                            controller: _priceController,
+                            label: 'Unit Price (₹)',
+                            icon: Icons.payments_outlined,
+                            keyboardType: TextInputType.number,
+                          ),
+                          _buildModernTextField(
+                            controller: _quantityController,
+                            label: 'Stock Quantity',
+                            icon: Icons.numbers_rounded,
+                            keyboardType: TextInputType.number,
+                          ),
+                          const SizedBox(height: 16),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                ..._existingImages.map((e) => Padding(
+                                  padding: const EdgeInsets.only(right: 12),
+                                  child: Stack(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Image.network(e, height: 100, width: 100, fit: BoxFit.cover),
                                       ),
-                                    ),
-                                    Positioned(
-                                      top: 0,
-                                      right: 0,
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            _existingImages.remove(e);
-                                          });
-                                        },
-                                        child: Container(
-                                          decoration: const BoxDecoration(
-                                            color: Colors.red,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.close,
-                                            color: Colors.white,
-                                            size: 18,
+                                      Positioned(
+                                        top: 4,
+                                        right: 4,
+                                        child: GestureDetector(
+                                          onTap: () => setState(() => _existingImages.remove(e)),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                                            child: const Icon(Icons.close, color: Colors.white, size: 14),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
+                                )),
+                                Container(
+                                  height: 100,
+                                  width: 140,
+                                  child: ImageListPicker(
+                                    isSingle: true,
+                                    onAdd: (images, _) => setState(() => _images = images.map((e) => e.file!).toList()),
+                                    onRemove: (images, _) => setState(() => _images = images.map((e) => e.file!).toList()),
+                                  ),
                                 ),
-                              ))
-                          .toList(),
-                    ],
-                  ),
-                  Expanded(
-                    child: ImageListPicker(
-                      isSingle: true,
-                      onAdd: (images, _) {
-                        setState(() {
-                          _images = images.map((e) => e.file!).toList();
-                        });
-                      },
-                      onRemove: (images, _) {
-                        setState(() {
-                          _images = images.map((e) => e.file!).toList();
-                        });
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.background,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  onPressed: _isLoading ? null : _saveMaterial,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              AppColors.background,
+                              ],
                             ),
                           ),
-                        )
-                      : Text(widget.material != null
-                          ? 'Update Material'
-                          : 'Create Material'),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF6366F1).withOpacity(0.3),
+                              offset: const Offset(0, 8),
+                              blurRadius: 16,
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6366F1),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            elevation: 0,
+                          ),
+                          onPressed: _isLoading ? null : _saveMaterial,
+                          child: _isLoading
+                              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : Text(
+                                  widget.material != null ? 'SAVE CHANGES' : 'CREATE MATERIAL',
+                                  style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                                ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

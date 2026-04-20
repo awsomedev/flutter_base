@@ -1,11 +1,15 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:madeira/app/extensions/string_extension.dart';
 import 'package:madeira/app/models/enquiry_detail_response_model.dart';
-import 'package:madeira/app/models/manager_order_detail_model.dart';
 import 'package:madeira/app/pages/enquiry/create_enquiry_page.dart';
 import 'package:madeira/app/widgets/audio_player.dart';
+import 'package:madeira/app/widgets/downloadable_media_section.dart';
 import 'package:madeira/app/widgets/progress_indicator_widget.dart';
 
 import '../../models/enquiry_detail_response_model.dart' as detail_model;
@@ -14,7 +18,6 @@ import '../../services/services.dart';
 import '../../extensions/context_extensions.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../models/process_detail_model.dart';
 
 class EnquiryDetailPage extends StatefulWidget {
   final int enquiryId;
@@ -59,7 +62,7 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFF8FAFC),
       body: FutureBuilder<detail_model.EnquiryDetailResponse>(
         future: Services().getEnquiryDetails(widget.enquiryId),
         builder: (context, snapshot) {
@@ -103,45 +106,65 @@ class _EnquiryDetailPageState extends State<EnquiryDetailPage> {
           }
 
           final enquiryDetail = snapshot.data!;
+          log('${enquiryDetail}');
           return Scaffold(
-            backgroundColor: AppColors.background,
-            appBar: AppBar(
-              title: Text(
-                enquiryDetail.orderData?.productName ?? 'Enquiry Details',
-                style: const TextStyle(color: AppColors.textPrimary),
-              ),
-              backgroundColor: AppColors.surface,
-            ),
-            body: Stack(
-              children: [
-                EnquiryDetailContent(
-                  enquiryDetail: enquiryDetail,
-                  isCarpenterRequested: _isCarpenterRequested,
-                  onCarpenterRequested: (value) {
-                    setState(() {
-                      _isCarpenterRequested = value;
-                    });
-                  },
-                ),
-                if (enquiryDetail.orderData?.overDue == true)
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(10),
+            backgroundColor: const Color(0xFFF8FAFC),
+            body: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverAppBar(
+                  expandedHeight: 110.0,
+                  pinned: true,
+                  elevation: 0,
+                  backgroundColor: const Color(0xFF6366F1),
+                  iconTheme: const IconThemeData(color: Colors.white),
+                  flexibleSpace: FlexibleSpaceBar(
+                    title: Text(
+                      enquiryDetail.orderData?.productName ?? 'Enquiry Details',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 18,
+                        letterSpacing: -0.5,
                       ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: const Text(
-                        'Over Due',
-                        style: TextStyle(color: Colors.white),
+                    ),
+                    centerTitle: false,
+                    titlePadding: const EdgeInsets.only(left: 56, bottom: 14),
+                    background: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                        ),
                       ),
                     ),
                   ),
+                  actions: [
+                    if (enquiryDetail.orderData?.overDue == true)
+                      Container(
+                        margin: const EdgeInsets.only(right: 16, top: 12, bottom: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF6B6B),
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: const Text('Over Due', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                      ),
+                  ],
+                ),
+                SliverToBoxAdapter(
+                  child: EnquiryDetailContent(
+                    enquiryDetail: enquiryDetail,
+                    isCarpenterRequested: _isCarpenterRequested,
+                    onCarpenterRequested: (value) {
+                      setState(() {
+                        _isCarpenterRequested = value;
+                      });
+                    },
+                  ),
+                ),
               ],
             ),
           );
@@ -157,11 +180,11 @@ class EnquiryDetailContent extends StatelessWidget {
   final Function(bool) onCarpenterRequested;
 
   const EnquiryDetailContent({
-    Key? key,
+    super.key,
     required this.enquiryDetail,
     required this.isCarpenterRequested,
     required this.onCarpenterRequested,
-  }) : super(key: key);
+  });
 
   Future<void> _requestCarpenter(BuildContext context) async {
     try {
@@ -190,24 +213,21 @@ class EnquiryDetailContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final orderData = enquiryDetail.orderData;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ImageCarousel(
-            images: enquiryDetail.product?.materialImages ??
-                enquiryDetail.orderData?.images ??
-                [],
-          ),
           Column(
             children: [
               for (ServerAudio audio in enquiryDetail.orderData?.audio ?? [])
-                AudioPlayer(audioUrl: audio.audio.toString().toUrl ?? ''),
+                AudioPlayer(audioUrl: audio.audio.toString().toUrl),
             ],
           ),
           const SizedBox(height: 24),
           Section(
             title: 'Product Details',
+            icon: Icons.inventory_2,
+            color: const Color(0xFF667eea),
             children: [
               DetailRow(
                   label: 'Name',
@@ -237,6 +257,7 @@ class EnquiryDetailContent extends StatelessWidget {
                   label: 'Price',
                   value:
                       '₹${enquiryDetail.orderData?.estimatedPrice ?? 'N/A'}'),
+              const SizedBox(height: 16),
               ProgressIndicatorWidget(
                 totalSteps: 100,
                 currentStep: (enquiryDetail.completionPercentage ?? 0).toInt(),
@@ -244,20 +265,51 @@ class EnquiryDetailContent extends StatelessWidget {
               ),
             ],
           ),
+          // Media section with download
+          if ((enquiryDetail.product?.materialImages ?? enquiryDetail.orderData?.images ?? []).isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 0),
+              child: DownloadableMediaSection(
+                imageUrls: (enquiryDetail.product?.materialImages ?? enquiryDetail.orderData?.images ?? [])
+                    .map((img) => img is String ? img as String : img.image.toImageUrl)
+                    .toList(),
+                title: 'Product Media',
+              ),
+            ),
+          ],
           Section(
             title: 'Customer Information',
+            icon: Icons.person,
+            color: const Color(0xFF4ECDC4),
             children: [
               DetailRow(label: 'Name', value: orderData?.customerName ?? 'N/A'),
               DetailRow(
-                  label: 'Phone', value: orderData?.contactNumber ?? 'N/A'),
+                  label: 'Phone',
+                  value: orderData?.contactNumber ?? 'N/A',
+                  onTap: orderData?.contactNumber != null
+                      ? () async {
+                          final uri = Uri.parse('tel:${orderData!.contactNumber}');
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      : null),
               DetailRow(
-                  label: 'WhatsApp', value: orderData?.whatsappNumber ?? 'N/A'),
+                  label: 'WhatsApp',
+                  value: orderData?.whatsappNumber ?? 'N/A',
+                  onTap: orderData?.whatsappNumber != null
+                      ? () async {
+                          final uri = Uri.parse('tel:${orderData!.whatsappNumber}');
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      : null),
               DetailRow(label: 'Email', value: orderData?.email ?? 'N/A'),
               DetailRow(label: 'Address', value: orderData?.address ?? 'N/A'),
             ],
           ),
           Section(
             title: 'Order Status',
+            icon: Icons.track_changes,
+            color: const Color(0xFFFF6B6B),
             children: [
               DetailRow(
                   label: 'Priority',
@@ -295,6 +347,8 @@ class EnquiryDetailContent extends StatelessWidget {
           ),
           MaterialsList(materials: enquiryDetail.materials ?? []),
           const SizedBox(height: 24),
+          CustomEnquiries(enquiryDetail: enquiryDetail),
+          const SizedBox(height: 24),
           TeamSection(enquiryDetail: enquiryDetail),
           const SizedBox(height: 24),
           CompletedProcessesSection(
@@ -330,13 +384,165 @@ class EnquiryDetailContent extends StatelessWidget {
   }
 }
 
+class CustomEnquiries extends StatelessWidget {
+  const CustomEnquiries({
+    super.key,
+    required this.enquiryDetail,
+  });
+
+  final EnquiryDetailResponse enquiryDetail;
+
+  @override
+  Widget build(BuildContext context) {
+    if (enquiryDetail.enquiryList == null ||
+        enquiryDetail.enquiryList?.isEmpty == true) {
+      return const SizedBox.shrink();
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+            'Custom Enquiries', Icons.question_answer, const Color(0xFF95E1D3)),
+        const SizedBox(height: 16),
+        ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemBuilder: (context, index) => Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF95E1D3).withOpacity(0.2),
+                        blurRadius: 15,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                    border: Border.all(
+                      color: const Color(0xFF95E1D3).withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF95E1D3).withOpacity(0.2),
+                                const Color(0xFF95E1D3).withOpacity(0.1),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            enquiryDetail.enquiryList![index].enquiryType ??
+                                'N/A',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF2D3748),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        DetailRow(
+                          label: 'Name',
+                          value: enquiryDetail.enquiryList![index].userName ??
+                              'N/A',
+                        ),
+                        DetailRow(
+                          label: 'Phone',
+                          value:
+                              enquiryDetail.enquiryList![index].phone ?? 'N/A',
+                        ),
+                        DetailRow(
+                          label: 'Status',
+                          value: enquiryDetail.enquiryList![index].status
+                              .toUpperCase(),
+                        ),
+                        DetailRow(
+                          label: 'About Enquiry',
+                          value: enquiryDetail.enquiryList![index].aboutEnquiry,
+                        ),
+                        DetailRow(
+                          label: 'Description',
+                          value: enquiryDetail
+                                  .enquiryList![index].enquiryDescription ??
+                              'N/A',
+                        ),
+                        DetailRow(
+                          label: 'Cost',
+                          value:
+                              enquiryDetail.enquiryList![index].cost ?? 'N/A',
+                        ),
+                        DetailRow(
+                          label: 'Days Required',
+                          value: enquiryDetail
+                                      .enquiryList![index].completionTime !=
+                                  null
+                              ? enquiryDetail.enquiryList![index].completionTime
+                                  .toString()
+                              : 'N/A',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            separatorBuilder: (context, index) => const SizedBox(height: 16),
+            itemCount: enquiryDetail.enquiryList!.length),
+      ],
+    );
+  }
+}
+
+Widget _buildSectionHeader(String title, IconData icon, Color color) {
+  return Row(
+    children: [
+      Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.2), color.withOpacity(0.1)],
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: color, size: 24),
+      ),
+      const SizedBox(width: 12),
+      Text(
+        title,
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF2D3748),
+          letterSpacing: 0.3,
+        ),
+      ),
+    ],
+  );
+}
+
 class Section extends StatelessWidget {
   final String title;
+  final IconData icon;
+  final Color color;
   final List<Widget> children;
 
   const Section({
     Key? key,
     required this.title,
+    required this.icon,
+    required this.color,
     required this.children,
   }) : super(key: key);
 
@@ -345,16 +551,34 @@ class Section extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+        _buildSectionHeader(title, icon, color),
+        const SizedBox(height: 16),
+        Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.2),
+                blurRadius: 15,
+                offset: const Offset(0, 6),
+              ),
+            ],
+            border: Border.all(
+              color: color.withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
           ),
         ),
-        const SizedBox(height: 8),
-        ...children,
         const SizedBox(height: 24),
       ],
     );
@@ -364,38 +588,52 @@ class Section extends StatelessWidget {
 class DetailRow extends StatelessWidget {
   final String label;
   final String value;
+  final VoidCallback? onTap;
 
   const DetailRow({
     Key? key,
     required this.label,
     required this.value,
+    this.onTap,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final bool isPhone = onTap != null;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+      padding: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 130,
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Color(0xFF718096),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
+            Expanded(
+              child: Text(
+                value,
+                style: TextStyle(
+                  color: isPhone ? const Color(0xFF667eea) : const Color(0xFF2D3748),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  decoration: isPhone ? TextDecoration.underline : TextDecoration.none,
+                ),
               ),
             ),
-          ),
-        ],
+            if (isPhone)
+              const Icon(Icons.call_rounded, size: 18, color: Color(0xFF667eea)),
+          ],
+        ),
       ),
     );
   }
@@ -418,54 +656,64 @@ class ImageCarousel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Product Images',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
+        _buildSectionHeader(
+            'Product Images', Icons.photo_library, const Color(0xFFFFB6B9)),
         const SizedBox(height: 16),
         CarouselSlider(
           options: CarouselOptions(
-            height: 250,
+            height: 280,
             viewportFraction: 1,
-            enableInfiniteScroll: false,
+            enableInfiniteScroll: images.length > 1,
             enlargeCenterPage: true,
-            autoPlay: false,
+            autoPlay: images.length > 1,
           ),
           items: images.map((image) {
-            return Builder(
-              builder: (BuildContext context) {
-                return Container(
-                  width: MediaQuery.of(context).size.width,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        spreadRadius: 1,
-                        blurRadius: 5,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+            return Container(
+              width: MediaQuery.of(context).size.width,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    spreadRadius: 2,
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: CachedNetworkImage(
-                      imageUrl: image.image?.toString().toUrl ?? '',
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => const Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                      errorWidget: (context, url, error) => const Center(
-                        child: Icon(Icons.error),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: CachedNetworkImage(
+                  imageUrl: image.image?.toString().toUrl ?? '',
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFFFFB6B9).withOpacity(0.1),
+                          const Color(0xFFFFB6B9).withOpacity(0.05),
+                        ],
                       ),
                     ),
+                    child: const Center(
+                      child: CupertinoActivityIndicator(),
+                    ),
                   ),
-                );
-              },
+                  errorWidget: (context, url, error) => Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFFFFB6B9).withOpacity(0.1),
+                          const Color(0xFFFFB6B9).withOpacity(0.05),
+                        ],
+                      ),
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                    ),
+                  ),
+                ),
+              ),
             );
           }).toList(),
         ),
@@ -485,17 +733,15 @@ class MaterialsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (materials.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Materials',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
+        _buildSectionHeader(
+            'Materials', Icons.inventory, const Color(0xFFFEC8D8)),
         const SizedBox(height: 16),
         ListView.builder(
           shrinkWrap: true,
@@ -503,10 +749,29 @@ class MaterialsList extends StatelessWidget {
           itemCount: materials.length,
           itemBuilder: (context, index) {
             final material = materials[index];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 8),
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFEC8D8).withOpacity(0.2),
+                    blurRadius: 15,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+                border: Border.all(
+                  color: const Color(0xFFFEC8D8).withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(18),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -515,16 +780,65 @@ class MaterialsList extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: Color(0xFF2D3748),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(material?.description ?? 'N/A'),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
+                    Text(
+                      material?.description ?? 'N/A',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Quantity: ${material?.quantity}'),
-                        Text('Price: ₹${material?.price}'),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFFFEC8D8).withOpacity(0.2),
+                                const Color(0xFFFEC8D8).withOpacity(0.1),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'Qty: ${material?.quantity}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF2D3748),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF48BB78), Color(0xFF38A169)],
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF48BB78).withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            '₹${material?.price}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -551,28 +865,62 @@ class TeamSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Team Information',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
+        _buildSectionHeader(
+            'Team Information', Icons.groups, const Color(0xFFBAE1FF)),
         const SizedBox(height: 16),
-        Card(
+        Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFBAE1FF).withOpacity(0.2),
+                blurRadius: 15,
+                offset: const Offset(0, 6),
+              ),
+            ],
+            border: Border.all(
+              color: const Color(0xFFBAE1FF).withOpacity(0.3),
+              width: 1,
+            ),
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Main Manager',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFFBAE1FF).withOpacity(0.3),
+                            const Color(0xFFBAE1FF).withOpacity(0.15),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.star,
+                          color: Color(0xFF667eea), size: 20),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'Main Manager',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Color(0xFF2D3748),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 DetailRow(
                     label: 'Name',
                     value: enquiryDetail.mainManager?.name ?? 'N/A'),
@@ -588,19 +936,59 @@ class TeamSection extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         if (enquiryDetail.carpenterEnquiryData?.carpenterUser != null)
-          Card(
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFFDAB9).withOpacity(0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+              border: Border.all(
+                color: const Color(0xFFFFDAB9).withOpacity(0.3),
+                width: 1,
+              ),
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Carpenter',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFFFFDAB9).withOpacity(0.3),
+                              const Color(0xFFFFDAB9).withOpacity(0.15),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.construction,
+                            color: Color(0xFFFF8C00), size: 20),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Carpenter',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Color(0xFF2D3748),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   DetailRow(
                     label: 'Name',
                     value: enquiryDetail
@@ -639,10 +1027,29 @@ class TeamSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children:
                 enquiryDetail.carpenterEnquiryData!.carpenterData!.map((data) {
-              return Card(
-                margin: const EdgeInsets.only(top: 8.0),
+              return Container(
+                margin: const EdgeInsets.only(top: 12),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFD4A5A5).withOpacity(0.2),
+                      blurRadius: 15,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                  border: Border.all(
+                    color: const Color(0xFFD4A5A5).withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -652,18 +1059,41 @@ class TeamSection extends StatelessWidget {
                       DetailRow(
                           label: 'Material Name(Mal)',
                           value: data.material?.nameMal ?? 'N/A'),
-                      DetailRow(
-                          label: 'Material Length',
-                          value: '${data.materialLength ?? 'N/A'}'),
-                      DetailRow(
-                          label: 'Material Height',
-                          value: '${data.materialHeight ?? 'N/A'}'),
-                      DetailRow(
-                          label: 'Material Width',
-                          value: '${data.materialWidth ?? 'N/A'}'),
-                      DetailRow(
-                          label: 'Material Cost',
-                          value: '₹${data.material?.price ?? 'N/A'}'),
+                      if (data.type != null)
+                        DetailRow(
+                            label: 'Material Type',
+                            value:
+                                '${data.type?.replaceAll('_', ' ').capitalize}'),
+                      if (data.materialLength != null &&
+                          data.materialLength! > 0)
+                        DetailRow(
+                            label: 'Material Length',
+                            value: '${data.materialLength}'),
+                      if (data.materialHeight != null &&
+                          data.materialHeight! > 0)
+                        DetailRow(
+                            label: 'Material Height',
+                            value: '${data.materialHeight}'),
+                      if (data.materialGirth != null && data.materialGirth! > 0)
+                        DetailRow(
+                            label: 'Material Girth',
+                            value: '${data.materialGirth}'),
+                      if (data.materialWidth != null && data.materialWidth! > 0)
+                        DetailRow(
+                            label: 'Material Width',
+                            value: '${data.materialWidth}'),
+                      if (data.materialThickness != null &&
+                          data.materialThickness! > 0)
+                        DetailRow(
+                            label: 'Material Thickness',
+                            value: '${data.materialThickness}'),
+                      if (data.noOfPieces != null && data.noOfPieces! > 0)
+                        DetailRow(
+                            label: 'No of Pieces', value: '${data.noOfPieces}'),
+                      if (data.materialCost != null)
+                        DetailRow(
+                            label: 'Material Cost',
+                            value: '₹${data.materialCost}'),
                     ],
                   ),
                 ),
@@ -692,50 +1122,93 @@ class CompletedProcessesSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Completed Processes',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
+        _buildSectionHeader(
+            'Completed Processes', Icons.check_circle, const Color(0xFF10B981)),
         const SizedBox(height: 16),
         ...completedProcesses!.map((process) {
-          return Card(
-            margin: const EdgeInsets.only(bottom: 8),
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              border: Border.all(
+                color: Colors.grey.withOpacity(0.1),
+                width: 1,
+              ),
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    process.completedProcess?.name ?? 'N/A',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.done_all,
+                            color: Color(0xFF10B981), size: 20),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          process.completedProcess?.name ?? 'N/A',
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2D3748),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(process.completedProcess?.description ?? 'N/A'),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Text(
-                      'Status: ${process.completedProcessDetails?.processStatus ?? 'N/A'}'),
-                  const SizedBox(height: 8),
-                  Text(
-                      'Workers Salary: ${process.completedProcessDetails?.workersSalary ?? 'N/A'}'),
-                  const SizedBox(height: 8),
-                  Text(
-                      'Material Price: ${process.completedProcessDetails?.materialPrice ?? 'N/A'}'),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Total Price: ${process.completedProcessDetails?.totalPrice ?? 'N/A'}',
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    process.completedProcess?.description ?? 'N/A',
+                    style: TextStyle(color: Colors.grey[700], fontSize: 14),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildInfoChip(
+                        'Status',
+                        process.completedProcessDetails?.processStatus ?? 'N/A',
+                        Icons.info_outline,
+                        const Color(0xFF6B7280),
+                      ),
+                      _buildInfoChip(
+                        'Workers Salary',
+                        '₹${process.completedProcessDetails?.workersSalary ?? 'N/A'}',
+                        Icons.payment,
+                        const Color(0xFF6B7280),
+                      ),
+                      _buildInfoChip(
+                        'Material Price',
+                        '₹${process.completedProcessDetails?.materialPrice ?? 'N/A'}',
+                        Icons.inventory,
+                        const Color(0xFF6B7280),
+                      ),
+                      _buildInfoChip(
+                        'Total',
+                        '₹${process.completedProcessDetails?.totalPrice ?? 'N/A'}',
+                        Icons.account_balance_wallet,
+                        const Color(0xFF10B981),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   if (process.completedProcessDetails?.images != null &&
                       process.completedProcessDetails!.images!.isNotEmpty)
                     Column(
@@ -744,14 +1217,15 @@ class CompletedProcessesSection extends StatelessWidget {
                         const Text(
                           'Process Images',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 15,
                             fontWeight: FontWeight.bold,
+                            color: Color(0xFF2D3748),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         CarouselSlider(
                           options: CarouselOptions(
-                            height: 200,
+                            height: 220,
                             viewportFraction: 1,
                             enableInfiniteScroll: false,
                             enlargeCenterPage: true,
@@ -766,18 +1240,18 @@ class CompletedProcessesSection extends StatelessWidget {
                                   margin: const EdgeInsets.symmetric(
                                       horizontal: 5.0),
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
+                                        color: Colors.black.withOpacity(0.15),
                                         spreadRadius: 1,
-                                        blurRadius: 5,
-                                        offset: const Offset(0, 2),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
                                       ),
                                     ],
                                   ),
                                   child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(16),
                                     child: CachedNetworkImage(
                                       imageUrl: image.image.toImageUrl,
                                       fit: BoxFit.cover,
@@ -803,17 +1277,35 @@ class CompletedProcessesSection extends StatelessWidget {
                       null)
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        'Expected Completion: ${DateFormat('dd MMM yyyy').format(process.completedProcessDetails!.expectedCompletionDate!)}',
-                        style: const TextStyle(color: AppColors.textSecondary),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.schedule,
+                              size: 16, color: Color(0xFF718096)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Expected: ${DateFormat('dd MMM yyyy').format(process.completedProcessDetails!.expectedCompletionDate!)}',
+                            style: const TextStyle(
+                                color: Color(0xFF718096), fontSize: 13),
+                          ),
+                        ],
                       ),
                     ),
                   if (process.completedProcessDetails?.completionDate != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        'Completed On: ${DateFormat('dd MMM yyyy').format(process.completedProcessDetails!.completionDate!)}',
-                        style: const TextStyle(color: AppColors.textSecondary),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.check_circle,
+                              size: 16, color: Color(0xFF48BB78)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Completed: ${DateFormat('dd MMM yyyy').format(process.completedProcessDetails!.completionDate!)}',
+                            style: const TextStyle(
+                                color: Color(0xFF48BB78),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
                     ),
                   if (process.materialsUsed != null)
@@ -829,6 +1321,43 @@ class CompletedProcessesSection extends StatelessWidget {
       ],
     );
   }
+}
+
+Widget _buildInfoChip(String label, String value, IconData icon, Color color) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: [color.withOpacity(0.15), color.withOpacity(0.08)],
+      ),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: color.withOpacity(0.3), width: 1),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 6),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500),
+            ),
+            Text(
+              value,
+              style: TextStyle(
+                  fontSize: 13, color: color, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
 }
 
 class CurrentProcessSection extends StatelessWidget {
@@ -848,53 +1377,184 @@ class CurrentProcessSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Current Process',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
+        _buildSectionHeader(
+            'Current Process', Icons.sync, const Color(0xFF3B82F6)),
         const SizedBox(height: 16),
-        Card(
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(
+              color: Colors.grey.withOpacity(0.1),
+              width: 1,
+            ),
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  currentProcess!.currentProcess?.name ?? 'N/A',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF3B82F6).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.hourglass_top,
+                          color: Color(0xFF3B82F6), size: 20),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        currentProcess!.currentProcess?.name ?? 'N/A',
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2D3748),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(currentProcess!.currentProcess?.description ?? 'N/A'),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Text(
-                  'Status: ${currentProcess!.currentProcessDetails?.processStatus?.replaceAll('_', ' ').capitalize ?? 'N/A'}',
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Expected Completion: ${DateFormat('dd MMM yyyy').format(currentProcess!.currentProcessDetails?.expectedCompletionDate ?? DateTime.now())}',
+                  currentProcess!.currentProcess?.description ?? 'N/A',
+                  style: TextStyle(color: Colors.grey[700], fontSize: 14),
                 ),
                 const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF3B82F6).withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFF3B82F6).withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.settings,
+                              size: 18, color: Color(0xFF3B82F6)),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Status: ${currentProcess!.currentProcessDetails?.processStatus?.replaceAll('_', ' ').capitalize ?? 'N/A'}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF2D3748)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_today,
+                        size: 16, color: Color(0xFF718096)),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Expected: ${DateFormat('dd MMM yyyy').format(currentProcess!.currentProcessDetails?.expectedCompletionDate ?? DateTime.now())}',
+                      style: const TextStyle(
+                          color: Color(0xFF718096), fontSize: 13),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                if (currentProcess!.currentProcessDetails?.images != null &&
+                    currentProcess!.currentProcessDetails!.images!.isNotEmpty) ...[
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Process Images',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2D3748),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      CarouselSlider(
+                        options: CarouselOptions(
+                          height: 220,
+                          viewportFraction: 1,
+                          enableInfiniteScroll: false,
+                          enlargeCenterPage: true,
+                          autoPlay: true,
+                        ),
+                        items: currentProcess!.currentProcessDetails!.images!
+                            .map((image) {
+                          return Builder(
+                            builder: (BuildContext context) {
+                              return Container(
+                                width: MediaQuery.of(context).size.width,
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 5.0),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.15),
+                                      spreadRadius: 1,
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: CachedNetworkImage(
+                                    imageUrl: image.image.toImageUrl,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) =>
+                                        const Center(
+                                      child: CupertinoActivityIndicator(),
+                                    ),
+                                    errorWidget: (context, url, error) =>
+                                        const Center(
+                                      child: Icon(Icons.error_outline),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 WorkerList(
                     workerData: currentProcess!.currentProcessWorkers ?? []),
                 const SizedBox(height: 16),
                 if (currentProcess!.currentProcessMaterialsUsed != null)
                   const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Materials Used',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          color: Color(0xFF2D3748),
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: 12),
                     ],
                   ),
                 if (currentProcess!.currentProcessMaterialsUsed != null)
@@ -907,20 +1567,20 @@ class CurrentProcessSection extends StatelessWidget {
                           material.currentMaterialUsedInProcess;
                       return Container(
                         margin: const EdgeInsets.symmetric(vertical: 8.0),
-                        padding: const EdgeInsets.all(12.0),
+                        padding: const EdgeInsets.all(16.0),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8.0),
+                          color: Colors.grey.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(16.0),
                           border: Border.all(
-                            color: Colors.grey.withOpacity(0.2),
+                            color: Colors.grey.withOpacity(0.15),
                             width: 1,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.grey.withOpacity(0.1),
+                              color: Colors.grey.withOpacity(0.08),
                               spreadRadius: 1,
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
                             ),
                           ],
                         ),
@@ -934,43 +1594,84 @@ class CurrentProcessSection extends StatelessWidget {
                                     materialDetails?.name ?? 'N/A',
                                     style: const TextStyle(
                                       fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF2D3748),
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: 8),
                                   Row(
                                     children: [
-                                      const Icon(
-                                        Icons.inventory_2_outlined,
-                                        size: 16,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        'Qty: ${materialUsedInProcess?.quantity ?? 'N/A'}',
-                                        style: const TextStyle(
-                                          color: AppColors.textSecondary,
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.inventory_2_outlined,
+                                              size: 14,
+                                              color: Color(0xFF6B7280),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Qty: ${materialUsedInProcess?.quantity ?? 'N/A'}',
+                                              style: const TextStyle(
+                                                color: Color(0xFF374151),
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                      const SizedBox(width: 16),
-                                      const Icon(
-                                        Icons.currency_rupee,
-                                        size: 16,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                      Text(
-                                        '${materialUsedInProcess?.materialPrice ?? 'N/A'}',
-                                        style: const TextStyle(
-                                          color: AppColors.textSecondary,
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.currency_rupee,
+                                              size: 14,
+                                              color: Color(0xFF6B7280),
+                                            ),
+                                            Text(
+                                              '${materialUsedInProcess?.materialPrice ?? 'N/A'}',
+                                              style: const TextStyle(
+                                                color: Color(0xFF374151),
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],
                                   ),
-                                  Text(
-                                    'Total Price: ₹${materialUsedInProcess?.totalPrice ?? 'N/A'}',
-                                    style: const TextStyle(
-                                      color: AppColors.textPrimary,
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF10B981),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      'Total: ₹${materialUsedInProcess?.totalPrice ?? 'N/A'}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -1001,21 +1702,44 @@ class RequestCarpenterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      child: ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
         ),
-        onPressed: onPressed,
-        icon: const Icon(Icons.build),
-        label: const Text(
-          'Send to Carpenter',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF667eea).withOpacity(0.4),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Container(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(16),
+          child: const Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.build, color: Colors.white, size: 24),
+                SizedBox(width: 12),
+                Text(
+                  'Send to Carpenter',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1033,20 +1757,44 @@ class EditEnquiryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      child: ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4ECDC4), Color(0xFF44A08D)],
         ),
-        onPressed: onPressed,
-        label: const Text(
-          'Edit Enquiry',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4ECDC4).withOpacity(0.4),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Container(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(16),
+          child: const Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.edit, color: Colors.white, size: 24),
+                SizedBox(width: 12),
+                Text(
+                  'Edit Enquiry',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1066,13 +1814,16 @@ class DetailCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const SizedBox(height: 16),
         const Text(
           'Materials Used',
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 15,
             fontWeight: FontWeight.bold,
+            color: Color(0xFF2D3748),
           ),
         ),
+        const SizedBox(height: 8),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: process.materialsUsed!.map((material) {
@@ -1080,73 +1831,106 @@ class DetailCard extends StatelessWidget {
             final materialUsedInProcess = material.materialUsedInProcess;
             return Container(
               margin: const EdgeInsets.symmetric(vertical: 8.0),
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8.0),
+                color: Colors.grey.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16.0),
                 border: Border.all(
-                  color: Colors.grey.withOpacity(0.2),
+                  color: Colors.grey.withOpacity(0.15),
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
+                    color: Colors.grey.withOpacity(0.08),
                     spreadRadius: 1,
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          materialDetails?.name ?? 'N/A',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
+                  Text(
+                    materialDetails?.name ?? 'N/A',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF2D3748),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
                         ),
-                        const SizedBox(height: 4),
-                        Row(
+                        child: Row(
                           children: [
                             const Icon(
                               Icons.inventory_2_outlined,
-                              size: 16,
-                              color: AppColors.textSecondary,
+                              size: 14,
+                              color: Color(0xFF6B7280),
                             ),
                             const SizedBox(width: 4),
                             Text(
                               'Qty: ${materialUsedInProcess?.quantity ?? 'N/A'}',
                               style: const TextStyle(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            const Icon(
-                              Icons.currency_rupee,
-                              size: 16,
-                              color: AppColors.textSecondary,
-                            ),
-                            Text(
-                              '${materialUsedInProcess?.materialPrice ?? 'N/A'}',
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
+                                color: Color(0xFF374151),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
                         ),
-                        Text(
-                          'Total Price: ₹${materialUsedInProcess?.totalPrice ?? 'N/A'}',
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                          ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
                         ),
-                      ],
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.currency_rupee,
+                              size: 14,
+                              color: Color(0xFF6B7280),
+                            ),
+                            Text(
+                              '${materialUsedInProcess?.materialPrice ?? 'N/A'}',
+                              style: const TextStyle(
+                                color: Color(0xFF374151),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Total: ₹${materialUsedInProcess?.totalPrice ?? 'N/A'}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ],
@@ -1168,16 +1952,22 @@ class WorkerList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (workerData.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Workers',
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 15,
             fontWeight: FontWeight.bold,
+            color: Color(0xFF2D3748),
           ),
         ),
+        const SizedBox(height: 8),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: workerData.map((worker) {
@@ -1200,25 +1990,38 @@ class WorkersDetailWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8.0),
+        color: Colors.grey.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16.0),
         border: Border.all(
-          color: Colors.grey.withOpacity(0.2),
+          color: Colors.grey.withOpacity(0.15),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withOpacity(0.08),
             spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Row(
         children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.person,
+              color: Color(0xFF6B7280),
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1227,35 +2030,67 @@ class WorkersDetailWidget extends StatelessWidget {
                   worker.name ?? 'N/A',
                   style: const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF2D3748),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Row(
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    const Icon(
-                      Icons.currency_rupee,
-                      size: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Salary: ${worker.salaryPerHr ?? 'N/A'}',
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF48BB78).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.currency_rupee,
+                            size: 14,
+                            color: Color(0xFF48BB78),
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            '${worker.salaryPerHr ?? 'N/A'}/hr',
+                            style: const TextStyle(
+                              color: Color(0xFF48BB78),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    const Icon(
-                      Icons.phone_outlined,
-                      size: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                    Text(
-                      '${worker.phone}',
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF667eea).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.phone_outlined,
+                            size: 14,
+                            color: Color(0xFF667eea),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${worker.phone}',
+                            style: const TextStyle(
+                              color: Color(0xFF667eea),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],

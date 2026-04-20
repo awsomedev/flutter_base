@@ -1,3 +1,5 @@
+import 'package:madeira/app/models/decoration_enquiry_response.dart';
+
 class EnquiryDetailMaterial {
   final int id;
   final List<String> materialImages;
@@ -98,6 +100,10 @@ class CarpenterData {
   final String? status;
   final int? carpenterId;
   final double? materialCost;
+  final String? type;
+  final int? noOfPieces;
+  final double? materialGirth;
+  final double? materialThickness;
   final Material? material;
 
   CarpenterData({
@@ -110,10 +116,15 @@ class CarpenterData {
     this.status,
     this.carpenterId,
     this.materialCost,
+    this.type,
+    this.noOfPieces,
+    this.materialGirth,
+    this.materialThickness,
     this.material,
   });
 
   factory CarpenterData.fromJson(Map<String, dynamic> json) {
+    print(json);
     return CarpenterData(
       id: json['id'] as int?,
       orderId: json['order_id'] as int?,
@@ -123,7 +134,13 @@ class CarpenterData {
       materialWidth: (json['material_width'] as num?)?.toDouble(),
       status: json['status'] as String?,
       carpenterId: json['carpenter_id'] as int?,
-      materialCost: (json['material_cost'] as num?)?.toDouble(),
+      materialCost: json['material_cost'] != null
+          ? double.parse(json['material_cost'].toString())
+          : null,
+      type: json['type'] as String?,
+      noOfPieces: json['no_of_pieces'] as int?,
+      materialGirth: (json['material_girth'] as num?)?.toDouble(),
+      materialThickness: (json['material_thickness'] as num?)?.toDouble(),
       material:
           json['material'] != null ? Material.fromJson(json['material']) : null,
     );
@@ -497,7 +514,7 @@ class EnquiryDetailResponse {
   final List<CompletedProcessData>? completedProcessData;
   final CurrentProcess? currentProcess;
   final double? completionPercentage;
-
+  final List<DecorEnquiry>? enquiryList;
   EnquiryDetailResponse({
     required this.product,
     required this.orderData,
@@ -507,6 +524,7 @@ class EnquiryDetailResponse {
     required this.completedProcessData,
     required this.currentProcess,
     required this.completionPercentage,
+    required this.enquiryList,
   });
 
   factory EnquiryDetailResponse.fromJson(Map<String, dynamic> json) {
@@ -532,6 +550,9 @@ class EnquiryDetailResponse {
           ? CurrentProcess.fromJson(json['current_process'])
           : null,
       completionPercentage: (json['completion_percentage'] as num?)?.toDouble(),
+      enquiryList: (json['enquiry_list'] as List<dynamic>?)
+          ?.map((process) => DecorEnquiry.fromJson(process))
+          .toList(),
     );
   }
 }

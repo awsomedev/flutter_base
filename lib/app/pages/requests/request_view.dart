@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:madeira/app/app_essentials/colors.dart';
@@ -21,6 +23,7 @@ class RequestViewPage extends StatefulWidget {
 class _RequestViewPageState extends State<RequestViewPage> {
   late Future<RequestDetail> _requestDetailFuture;
   final Map<int, Map<String, TextEditingController>> _dimensionControllers = {};
+  final Map<int, String> _dimentionType = {};
   int _currentImageIndex = 0;
 
   @override
@@ -31,7 +34,6 @@ class _RequestViewPageState extends State<RequestViewPage> {
 
   @override
   void dispose() {
-    // Dispose all controllers
     for (var controllers in _dimensionControllers.values) {
       controllers.values.forEach((controller) => controller.dispose());
     }
@@ -40,17 +42,27 @@ class _RequestViewPageState extends State<RequestViewPage> {
 
   Future<void> _updateDimensions(
       BuildContext context, List<MaterialWithEnquiry> materials) async {
-    // Validate all fields are filled
     bool hasEmptyFields = false;
     String emptyFieldMaterial = '';
 
     for (var material in materials) {
       final controllers = _dimensionControllers[material.id];
       if (controllers == null) continue;
+      final type = _dimentionType[material.id];
 
-      if (controllers['length']!.text.isEmpty ||
-          controllers['width']!.text.isEmpty ||
-          controllers['height']!.text.isEmpty) {
+      if (type == 'round_log' &&
+          (controllers['length']!.text.isEmpty ||
+              controllers['gridth']!.text.isEmpty)) {
+        hasEmptyFields = true;
+        emptyFieldMaterial = material.name;
+        break;
+      }
+
+      if (type == 'rectangular_wood' &&
+          (controllers['length']!.text.isEmpty ||
+              controllers['width']!.text.isEmpty ||
+              controllers['thickness']!.text.isEmpty ||
+              controllers['no_of_pieces']!.text.isEmpty)) {
         hasEmptyFields = true;
         emptyFieldMaterial = material.name;
         break;
@@ -64,6 +76,7 @@ class _RequestViewPageState extends State<RequestViewPage> {
             content: Text('Please fill all dimensions for $emptyFieldMaterial'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.red,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -72,22 +85,24 @@ class _RequestViewPageState extends State<RequestViewPage> {
 
     bool? isAccepted = await ConfirmationDialog.show(
         context: context,
-        title: 'Do you want to update',
-        message: 'You can change when ever needed');
+        title: 'Update Dimensions',
+        message: 'Are you sure you want to update these dimensions?');
 
-    if (isAccepted != true) {
-      return;
-    }
+    if (isAccepted != true) return;
 
-    // Prepare data for API
     final List<Map<String, dynamic>> updateData = materials.map((material) {
       final controllers = _dimensionControllers[material.id]!;
       return {
         'order_id': widget.orderId,
         'material_id': material.id,
+        'type': _dimentionType[material.id],
         'material_length': double.parse(controllers['length']!.text),
-        'material_height': double.parse(controllers['height']!.text),
-        'material_width': double.parse(controllers['width']!.text),
+        'material_width': double.tryParse(controllers['width']!.text) ?? 0,
+        'material_gridth': double.tryParse(controllers['gridth']!.text) ?? 0,
+        'material_no_of_pieces':
+            double.tryParse(controllers['no_of_pieces']!.text) ?? 0,
+        'material_thickness':
+            double.tryParse(controllers['thickness']!.text) ?? 0,
       };
     }).toList();
 
@@ -98,9 +113,9 @@ class _RequestViewPageState extends State<RequestViewPage> {
           const SnackBar(
             content: Text('Dimensions updated successfully'),
             behavior: SnackBarBehavior.floating,
+            backgroundColor: Color(0xFF10B981),
           ),
         );
-        // Refresh the data
         setState(() {
           _requestDetailFuture = Services().getRequestDetail(widget.orderId);
         });
@@ -109,7 +124,7 @@ class _RequestViewPageState extends State<RequestViewPage> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update dimensions: ${e.toString()}'),
+            content: Text('Failed to update: ${e.toString()}'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.red,
           ),
@@ -122,15 +137,12 @@ class _RequestViewPageState extends State<RequestViewPage> {
     bool? isAccepted = await ConfirmationDialog.show(
       context: context,
       title: 'Finish Request',
-      message:
-          'Are you sure you want to finish this request? This action cannot be undone.',
+      message: 'Are you sure you want to finish this request? This action cannot be undone.',
       confirmText: 'Finish',
       cancelText: 'Cancel',
     );
 
-    if (isAccepted != true) {
-      return;
-    }
+    if (isAccepted != true) return;
 
     try {
       await Services().finishRequest(widget.orderId);
@@ -139,9 +151,9 @@ class _RequestViewPageState extends State<RequestViewPage> {
           const SnackBar(
             content: Text('Request finished successfully'),
             behavior: SnackBarBehavior.floating,
+            backgroundColor: Color(0xFF10B981),
           ),
         );
-        // Refresh the data
         setState(() {
           _requestDetailFuture = Services().getRequestDetail(widget.orderId);
         });
@@ -150,7 +162,7 @@ class _RequestViewPageState extends State<RequestViewPage> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to finish request: ${e.toString()}'),
+            content: Text('Failed to finish: ${e.toString()}'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.red,
           ),
@@ -162,14 +174,12 @@ class _RequestViewPageState extends State<RequestViewPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Request Details'),
-      ),
+      backgroundColor: const Color(0xFFF1F5F9),
       body: FutureBuilder<RequestDetail>(
         future: _requestDetailFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingWidget();
+            return const Center(child: CupertinoActivityIndicator(radius: 16));
           }
 
           if (snapshot.hasError) {
@@ -177,458 +187,417 @@ class _RequestViewPageState extends State<RequestViewPage> {
               error: snapshot.error.toString(),
               onRetry: () {
                 setState(() {
-                  _requestDetailFuture =
-                      Services().getRequestDetail(widget.orderId);
+                  _requestDetailFuture = Services().getRequestDetail(widget.orderId);
                 });
               },
             );
           }
 
           final request = snapshot.data!;
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildProductSection(request),
-                const SizedBox(height: 24),
-                _buildMaterialsSection(
-                    request.materials, request.status == 'completed'),
-                const SizedBox(height: 16),
-                if (request.status != 'completed')
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () =>
-                          _updateDimensions(context, request.materials),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[400],
-                      ),
-                      child: const Text(
-                        'Update Dimensions',
-                        style: TextStyle(color: Colors.white),
-                      ),
+          return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 110.0,
+                pinned: true,
+                elevation: 0,
+                backgroundColor: const Color(0xFF6366F1),
+                iconTheme: const IconThemeData(color: Colors.white),
+                flexibleSpace: FlexibleSpaceBar(
+                  title: Text(
+                    request.productName ?? 'Request Details',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 18,
+                      letterSpacing: -0.5,
                     ),
                   ),
-                const SizedBox(height: 8),
-                if (request.status != 'completed')
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => _handleFinishRequest(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[400],
+                  centerTitle: false,
+                  titlePadding: const EdgeInsets.only(left: 56, bottom: 14),
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                          ),
+                        ),
                       ),
-                      child: const Text(
-                        'Finish request',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
+                      if (request.images.isNotEmpty)
+                        Opacity(
+                          opacity: 0.6,
+                          child: CarouselSlider(
+                            options: CarouselOptions(
+                              height: 110,
+                              viewportFraction: 1.0,
+                              autoPlay: request.images.length > 1,
+                              onPageChanged: (index, _) => setState(() => _currentImageIndex = index),
+                            ),
+                            items: request.images.map((img) => Image.network(img.image.toImageUrl, fit: BoxFit.cover)).toList(),
+                          ),
+                        ),
+                    ],
                   ),
-                const SizedBox(height: 24),
-              ],
-            ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInfoSection(request),
+                      const SizedBox(height: 24),
+                      _buildMaterialsSection(request.materials, request.status == 'completed'),
+                      const SizedBox(height: 32),
+                      if (request.status != 'completed') ...[
+                        _buildActionButton(
+                          label: 'Update Dimensions',
+                          onPressed: () => _updateDimensions(context, request.materials),
+                          color: const Color(0xFF6366F1),
+                          icon: Icons.straighten_rounded,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildActionButton(
+                          label: 'Finish Request',
+                          onPressed: () => _handleFinishRequest(context),
+                          color: const Color(0xFF10B981),
+                          icon: Icons.check_circle_rounded,
+                        ),
+                      ],
+                      const SizedBox(height: 100),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           );
         },
       ),
     );
   }
 
-  Widget _buildProductSection(RequestDetail request) {
-    return Column(
-      children: [
-        if (request.images.isNotEmpty) ...[
-          Stack(
-            alignment: Alignment.bottomCenter,
+  Widget _buildActionButton({
+    required String label,
+    required VoidCallback onPressed,
+    required Color color,
+    required IconData icon,
+  }) {
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CarouselSlider(
-                options: CarouselOptions(
-                  height: 200,
-                  viewportFraction: 1.0,
-                  enlargeCenterPage: false,
-                  autoPlay: request.images.length > 1,
-                  autoPlayInterval: const Duration(seconds: 3),
-                  onPageChanged: (index, reason) {
-                    setState(() {
-                      _currentImageIndex = index;
-                    });
-                  },
+              Icon(icon, color: Colors.white, size: 22),
+              const SizedBox(width: 12),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  letterSpacing: 0.5,
                 ),
-                items: request.images.map((image) {
-                  return Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        image.image.toImageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[200],
-                            child: const Center(
-                              child: Icon(
-                                Icons.error_outline,
-                                color: Colors.grey,
-                                size: 32,
-                              ),
-                            ),
-                          );
-                        },
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            color: Colors.grey[200],
-                            child: const Center(
-                              child: CupertinoActivityIndicator(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  );
-                }).toList(),
               ),
-              if (request.images.length > 1)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: request.images.asMap().entries.map((entry) {
-                      return Container(
-                        width: 8,
-                        height: 8,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(
-                            _currentImageIndex == entry.key ? 0.9 : 0.4,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
             ],
           ),
-          const SizedBox(height: 16),
-        ],
-        Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.grey.shade300),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Product Details',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildDetailRow('Name', request.productName),
-                if (request.productNameMal != null)
-                  _buildDetailRow('Name (Malayalam)', request.productNameMal!),
-                if (request.productDescription != null)
-                  _buildDetailRow('Description', request.productDescription!),
-                if (request.productDescriptionMal != null)
-                  _buildDetailRow('Description (Malayalam)',
-                      request.productDescriptionMal!),
-                const SizedBox(height: 16),
-                const Text(
-                  'Dimensions',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child:
-                          _buildDimensionField('Length', request.productLength),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child:
-                          _buildDimensionField('Width', request.productWidth),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child:
-                          _buildDimensionField('Height', request.productHeight),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _buildDetailRow('Finish', request.finish),
-                _buildDetailRow('Event', request.event),
-                _buildDetailRow('Priority', request.priority),
-                _buildDetailRow('Status', request.status),
-              ],
-            ),
-          ),
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildMaterialsSection(
-      List<MaterialWithEnquiry> materials, bool isCompleted) {
+  Widget _buildInfoSection(RequestDetail request) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withOpacity(0.04),
+            offset: const Offset(0, 10),
+            blurRadius: 20,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.info_outline_rounded, color: Color(0xFF6366F1), size: 20),
+              const SizedBox(width: 8),
+              const Text(
+                'Product Details',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF64748B),
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const Spacer(),
+              _buildBadge(request.priority?.toUpperCase() ?? 'NORMAL', const Color(0xFF6366F1)),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(
+            request.productName ?? 'Unnamed Product',
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF1E293B),
+              letterSpacing: -0.5,
+            ),
+          ),
+          if (request.productNameMal != null)
+            Text(
+              request.productNameMal!,
+              style: TextStyle(fontSize: 15, color: Colors.grey[600], fontWeight: FontWeight.w500),
+            ),
+          const SizedBox(height: 20),
+          _buildInfoBox(request.productDescription, request.productDescriptionMal),
+          const SizedBox(height: 24),
+          const Divider(color: Color(0xFFF1F5F9), thickness: 2),
+          const SizedBox(height: 24),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              _buildMetricItem('Length', '${request.productLength ?? 0}', 'ft'),
+              _buildMetricItem('Width', '${request.productWidth ?? 0}', 'ft'),
+              _buildMetricItem('Height', '${request.productHeight ?? 0}', 'ft'),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildDetailRow('Finish', request.finish),
+          _buildDetailRow('Event', request.event),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoBox(String? eng, String? mal) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            eng ?? 'No description',
+            style: const TextStyle(fontSize: 14, color: Color(0xFF475569), height: 1.5),
+          ),
+          if (mal != null) ...[
+            const SizedBox(height: 6),
+            Text(mal, style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricItem(String label, String value, String unit) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF1E293B))),
+              const SizedBox(width: 2),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Text(unit, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF94A3B8))),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String? value) {
+    if (value == null || value.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Text('$label: ', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
+          Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF1E293B))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBadge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(100)),
+      child: Text(text, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: color, letterSpacing: 0.5)),
+    );
+  }
+
+  Widget _buildMaterialsSection(List<MaterialWithEnquiry> materials, bool isCompleted) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Materials',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
+        const Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 16),
+          child: Text(
+            'MATERIALS & DIMENSIONS',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Color(0xFF64748B), letterSpacing: 1),
           ),
         ),
-        const SizedBox(height: 16),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: materials.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 16),
-          itemBuilder: (context, index) =>
-              _buildMaterialCard(materials[index], isCompleted),
-        ),
+        ...materials.asMap().entries.map((entry) => _buildMaterialCard(entry.value, entry.key, isCompleted)).toList(),
       ],
     );
   }
 
-  Widget _buildMaterialCard(MaterialWithEnquiry material, bool isCompleted) {
-    // Initialize controllers if not already done
+  Widget _buildMaterialCard(MaterialWithEnquiry material, int index, bool isCompleted) {
     if (!_dimensionControllers.containsKey(material.id)) {
       _dimensionControllers[material.id] = {
-        'length': TextEditingController(
-          text: material.enquiryData.materialLength?.toString() ?? '',
-        ),
-        'width': TextEditingController(
-          text: material.enquiryData.materialWidth?.toString() ?? '',
-        ),
-        'height': TextEditingController(
-          text: material.enquiryData.materialHeight?.toString() ?? '',
-        ),
+        'length': TextEditingController(text: material.enquiryData.materialLength?.toString() ?? ''),
+        'width': TextEditingController(text: material.enquiryData.materialWidth?.toString() ?? ''),
+        'thickness': TextEditingController(text: material.enquiryData.materialHeight?.toString() ?? ''),
+        'no_of_pieces': TextEditingController(text: ''),
+        'gridth': TextEditingController(text: ''),
       };
+      _dimentionType[material.id] = 'round_log';
     }
 
     final controllers = _dimensionControllers[material.id]!;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade300),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withOpacity(0.04),
+            offset: const Offset(0, 10),
+            blurRadius: 20,
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              material.name,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            material.name,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF1E293B)),
+          ),
+          if (material.nameMal != null)
+            Text(material.nameMal, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          const SizedBox(height: 16),
+          _buildInfoBox(material.description, material.descriptionMal),
+          const SizedBox(height: 24),
+          DropdownButtonFormField<String>(
+            value: _dimentionType[material.id],
+            decoration: InputDecoration(
+              labelText: 'Dimension Type',
+              labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+              filled: true,
+              fillColor: const Color(0xFFF8FAFC),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
             ),
-            if (material.nameMal != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                material.nameMal,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-            const SizedBox(height: 8),
-            Text(material.description),
-            if (material.descriptionMal != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                material.descriptionMal,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-            const SizedBox(height: 16),
-            _buildDetailRow('Color', material.colour),
-            _buildDetailRow('Quality', material.quality),
-            _buildDetailRow('Durability', material.durability),
-            const SizedBox(height: 16),
-            const Text(
-              'Required Dimensions',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
+            items: ['round_log', 'rectangular_wood']
+                .map((t) => DropdownMenuItem(value: t, child: Text(t.replaceAll('_', ' ').toUpperCase(), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800))))
+                .toList(),
+            onChanged: isCompleted ? null : (v) => setState(() => _dimentionType[material.id] = v!),
+          ),
+          const SizedBox(height: 20),
+          if (_dimentionType[material.id] == 'round_log')
             Row(
               children: [
-                Expanded(
-                  child: _buildDimensionTextField(
-                      'Length', controllers['length']!,
-                      isDisabled: isCompleted),
+                Expanded(child: _buildInput('Length', controllers['length']!, isCompleted, 'ft')),
+                const SizedBox(width: 12),
+                Expanded(child: _buildInput('Gridth', controllers['gridth']!, isCompleted, 'in')),
+              ],
+            )
+          else
+            Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: _buildInput('Length', controllers['length']!, isCompleted, 'ft')),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildInput('Width', controllers['width']!, isCompleted, 'in')),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildDimensionTextField(
-                      'Width', controllers['width']!,
-                      isDisabled: isCompleted),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildDimensionTextField(
-                      'Height', controllers['height']!,
-                      isDisabled: isCompleted),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _buildInput('Thickness', controllers['thickness']!, isCompleted, 'in')),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildInput('Pieces', controllers['no_of_pieces']!, isCompleted, 'pcs')),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDimensionTextField(
-    String label,
-    TextEditingController controller, {
-    Function(String)? onChanged,
-    bool isDisabled = false,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: Colors.grey.shade300,
-            ),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: controller,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  onChanged: onChanged,
-                  readOnly: isDisabled,
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    border: InputBorder.none,
-                    isDense: true,
-                    hintText: '0.0',
-                    suffixText: 'ft',
-                    suffixStyle: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(value),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildDimensionField(String label, double? value) {
+  Widget _buildInput(String label, TextEditingController controller, bool readOnly, String unit) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
+        const SizedBox(height: 6),
         Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 8,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                value?.toString() ?? '',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const Text(
-                'ft',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
-              ),
-            ],
+          decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFF1F5F9))),
+          child: TextFormField(
+            controller: controller,
+            readOnly: readOnly,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: InputBorder.none,
+              hintText: '0.0',
+              suffixText: unit,
+              suffixStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF94A3B8)),
+            ),
           ),
         ),
       ],

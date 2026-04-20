@@ -35,6 +35,10 @@
 	<string>This app needs access to your notifications to receive updates</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app needs access to your microphone to record voice attachments for enquiries to better explain your order details</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>TimberRoot needs access to save order media images to your photo library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>TimberRoot needs access to your photo library to save order media images.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>
@@ -56,6 +60,11 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tel</string>
+		<string>telprompt</string>
 	</array>
 </dict>
 </plist>

@@ -1,6 +1,10 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:madeira/app/models/decoration_enquiry_detail_response.dart';
+import 'package:madeira/app/models/decoration_enquiry_response.dart';
+import 'package:madeira/app/models/decorations_response_model.dart';
 import 'package:madeira/app/models/enquiry_model.dart';
 import 'package:madeira/app/models/login_model.dart';
 import 'package:madeira/app/models/category_model.dart';
@@ -17,6 +21,7 @@ import 'package:madeira/app/models/process_detail_model.dart';
 import 'package:madeira/app/models/enquiry_detail_response_model.dart'
     as detail_model;
 import 'package:madeira/app/models/process_completion_request_model.dart';
+import 'package:madeira/app/pages/sale/sale_order.dart';
 import 'package:madeira/app/services/firebase_messaging_service.dart';
 import 'package:madeira/app/services/service_base.dart';
 import 'package:madeira/app/widgets/admin_only_widget.dart';
@@ -46,8 +51,15 @@ class Services extends ServiceBase {
     required String phone,
     required String password,
   }) async {
-    final fcmToken = FirebaseMessagingService.fcmToken ??
-        await FirebaseMessaging.instance.getToken();
+    String? fcmToken = FirebaseMessagingService.fcmToken;
+    try {
+      fcmToken ??= await FirebaseMessaging.instance
+          .getToken()
+          .timeout(const Duration(seconds: 5));
+    } catch (e) {
+      print('FCM token generation timeout/error: $e');
+    }
+
     final response = await post(
       endpoint: 'users/login/',
       body: {
@@ -536,6 +548,93 @@ class Services extends ServiceBase {
       body: {
         'current_password': currentPassword,
         'new_password': newPassword,
+      },
+    );
+  }
+
+  //Decoration APIs
+  Future<void> createDecoration(String enquiryName) async {
+    await post(
+      endpoint: 'enquiry_types/create/',
+      body: {'enquiry_name': enquiryName},
+    );
+  }
+
+  Future<List<DecorationResponse>> fetchDecorations() async {
+    final response = await get(
+      endpoint: 'enquiry_types',
+    );
+    if (response is List) {
+      return response.map((json) => DecorationResponse.fromJson(json)).toList();
+    } else {
+      return [];
+    }
+  }
+
+  Future<void> updateDecoration(int decorationId, String enquiryName) async {
+    await put(
+      endpoint: 'enquiry_types/${decorationId}/update/',
+      body: {'enquiry_name': enquiryName},
+    );
+  }
+
+  Future<DecorationEnquiryResponse> fetchDecorationsEnquiries() async {
+    final response = await get(
+      endpoint: 'enquiries',
+    );
+    return DecorationEnquiryResponse.fromJson(response);
+  }
+
+  Future<void> acceptDecorationEnquiryRequest(int enquiryId) async {
+    await put(
+      endpoint: 'enquiries/$enquiryId/accept/',
+      body: {},
+    );
+  }
+
+  Future<DecorationEnquiryDetailResponse> getDecorEnquiryDetail(
+      int enquiryId) async {
+    final response = await get(endpoint: 'enquiries/$enquiryId/');
+    return DecorationEnquiryDetailResponse.fromJson(response);
+  }
+
+  Future<void> updateEnquiryDetails(
+      int enquiryId, Map<String, dynamic> data) async {
+    await put(
+      endpoint: 'enquiries/$enquiryId/update/',
+      body: data,
+    );
+  }
+
+  Future<void> CreateSaleOrder(Map<String, dynamic> data) async {
+    await post(
+      endpoint: 'sale/create/',
+      body: data,
+    );
+  }
+
+  Future<List<Sale>> fetchSales() async {
+    final response = await get(
+      endpoint: 'sale/',
+    );
+
+    if (response is List) {
+      return response.map((json) => Sale.fromJson(json)).toList();
+    } else {
+      return [];
+    }
+  }
+
+  Future<void> updateSaleStatusAndRating({
+    required int id,
+    required String status,
+    required int rating,
+  }) async {
+    await put(
+      endpoint: 'sale/$id/update/',
+      body: {
+        'delivery_status': status,
+        'rating': rating,
       },
     );
   }

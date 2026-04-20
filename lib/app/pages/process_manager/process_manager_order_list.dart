@@ -45,9 +45,7 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Process Orders'),
-      ),
+      backgroundColor: const Color(0xFFF8FAFC),
       body: isLoading
           ? const LoadingWidget()
           : FutureBuilder<ProcessManagerOrderResponse>(
@@ -64,23 +62,68 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
                   );
                 }
 
-                if (!snapshot.hasData || snapshot.data!.data.isEmpty) {
-                  return const Center(
-                    child: Text('No orders found'),
-                  );
-                }
+                final orders = snapshot.data?.data ?? [];
 
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: snapshot.data!.data.length,
-                  itemBuilder: (context, index) {
-                    final order = snapshot.data!.data[index];
-                    return _buildOrderCard(
-                      order.orderData,
-                      order.process,
-                      order.processDetails,
-                    );
-                  },
+                return CustomScrollView(
+                  slivers: [
+                    SliverAppBar(
+                      expandedHeight: 110.0,
+                      floating: false,
+                      pinned: true,
+                      stretch: true,
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                      flexibleSpace: FlexibleSpaceBar(
+                        stretchModes: const [StretchMode.zoomBackground],
+                        title: const Text(
+                          'Process Orders',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 20,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        centerTitle: true,
+                        background: Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (orders.isEmpty)
+                      const SliverFillRemaining(
+                        child: Center(
+                          child: Text(
+                            'No orders found',
+                            style: TextStyle(color: Color(0xFF64748B), fontSize: 16),
+                          ),
+                        ),
+                      )
+                    else
+                      SliverPadding(
+                        padding: const EdgeInsets.all(20),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final order = orders[index];
+                              return _buildOrderCard(
+                                index,
+                                order.orderData,
+                                order.process,
+                                order.processDetails,
+                              );
+                            },
+                            childCount: orders.length,
+                          ),
+                        ),
+                      ),
+                  ],
                 );
               },
             ),
@@ -88,217 +131,259 @@ class _ProcessManagerOrderListState extends State<ProcessManagerOrderList> {
   }
 
   Widget _buildOrderCard(
-      OrderData order, Process process, ProcessDetails details) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: InkWell(
-        onTap: () {
-          context.push(
-            () => ProcessDetailPage(
-              processDetailsId: details.id ?? 0,
-              processName: process.name ?? '',
+      int index, OrderData order, Process process, ProcessDetails details) {
+    final bool isOverdue = order.overDue ?? false;
+
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 400 + (index * 100)),
+      tween: Tween(begin: 0.0, end: 1.0),
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - value)),
+          child: Opacity(
+            opacity: value.clamp(0.0, 1.0),
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withOpacity(0.04),
+              offset: const Offset(0, 8),
+              blurRadius: 16,
             ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      order.productName ?? '',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: order.overDue ?? false
-                          ? AppColors.error.withOpacity(0.1)
-                          : AppColors.success.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      order.overDue ?? false ? 'OVERDUE' : 'ON TIME',
-                      style: TextStyle(
-                        color: order.overDue ?? false
-                            ? AppColors.error
-                            : AppColors.success,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
+          ],
+        ),
+        child: InkWell(
+          onTap: () {
+            context.push(
+              () => ProcessDetailPage(
+                processDetailsId: details.id ?? 0,
+                processName: process.name ?? '',
               ),
-              const SizedBox(height: 8),
-              Text(
-                order.productDescription ?? '',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+            );
+          },
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        order.productName ?? '',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF1E293B),
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ),
+                    _buildStatusBadge(
+                      isOverdue ? 'OVERDUE' : 'ON TIME',
+                      isOverdue ? const Color(0xFFEF4444) : const Color(0xFF10B981),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              _buildInfoChip(
-                label: 'Process',
-                value: '${process.name} (${process.nameMal})',
-                color: _getPriorityColor(order.priority ?? ''),
-              ),
-              Row(
-                children: [
-                  _buildInfoChip(
-                    label: 'Priority',
-                    value: order.priorityText,
-                    color: _getPriorityColor(order.priority ?? ''),
+                const SizedBox(height: 12),
+                Text(
+                  order.productDescription ?? '',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 14,
+                    height: 1.5,
                   ),
-                  const SizedBox(width: 8),
-                  _buildInfoChip(
-                    label: 'Status',
-                    value: order.statusText,
-                    color: _getStatusColor(order.currentProcessStatus ?? ''),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.calendar_today,
-                    size: 16,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Delivery: ${order.formattedDeliveryDate}',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                ),
+                const SizedBox(height: 20),
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildVerticalInfo(
+                        'Process',
+                        process.name ?? 'N/A',
+                        Icons.auto_awesome_rounded,
+                        const Color(0xFF6366F1),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              if (details.processStatus?.toLowerCase() == 'requested')
-                SizedBox(
+                    Expanded(
+                      child: _buildVerticalInfo(
+                        'Priority',
+                        order.priorityText,
+                        Icons.priority_high_rounded,
+                        _getPriorityColor(order.priority ?? ''),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildVerticalInfo(
+                        'Status',
+                        order.statusText,
+                        Icons.info_rounded,
+                        _getStatusColor(order.currentProcessStatus ?? ''),
+                      ),
+                    ),
+                    Expanded(
+                      child: _buildVerticalInfo(
+                        'Delivery',
+                        order.formattedDeliveryDate,
+                        Icons.calendar_today_rounded,
+                        const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Container(
                   width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => _acceptOrder(order.id ?? 0),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                     ),
-                    child: const Text('Accept'),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF6366F1).withOpacity(0.25),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      context.push(
+                        () => ProcessDetailPage(
+                          processDetailsId: details.id ?? 0,
+                          processName: process.name ?? '',
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: const Text(
+                      'View Details',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
                 ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Future<void> _acceptOrder(int processId) async {
-    final result = await ConfirmationDialog.show(
-      context: context,
-      title: 'Confirmation',
-      message: 'Are you sure you want to accept this order?',
-    );
-    if (result != true) {
-      return;
-    }
-    try {
-      await Services().acceptProcessOrder(processId);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Order accepted successfully'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-        _loadOrders(); // Reload the list after accepting
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error accepting order: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
-
-  Widget _buildInfoChip({
-    required String label,
-    required String value,
-    required Color color,
-  }) {
+  Widget _buildStatusBadge(String text, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 4,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '$label: ',
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
-        ],
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w800,
+          fontSize: 10,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
+
+  Widget _buildVerticalInfo(String label, String value, IconData icon, Color color) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 16, color: color),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Color(0xFF1E293B),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
 
   Color _getPriorityColor(String priority) {
     switch (priority.toLowerCase()) {
       case 'high':
-        return AppColors.error;
+        return const Color(0xFFEF4444);
       case 'medium':
-        return AppColors.warning;
+        return const Color(0xFFF59E0B);
       case 'low':
-        return AppColors.success;
+        return const Color(0xFF10B981);
       default:
-        return AppColors.textSecondary;
+        return const Color(0xFF64748B);
     }
   }
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'on_going':
-        return AppColors.primary;
+        return const Color(0xFF6366F1);
       case 'completed':
-        return AppColors.success;
+        return const Color(0xFF10B981);
       case 'pending':
-        return AppColors.warning;
+        return const Color(0xFFF59E0B);
       default:
-        return AppColors.textSecondary;
+        return const Color(0xFF64748B);
     }
   }
 }
